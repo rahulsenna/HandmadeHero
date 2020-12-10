@@ -52,9 +52,9 @@ struct thread_context
 
 #if HANDMADE_INTERNAL
 #define DEBUG_PLATFORM_READ_ENTIRE_FILE(FunctionName) \
-debug_read_file_result FunctionName(thread_context *Thread, char *FileName)
+debug_read_file_result FunctionName(thread_context *Thread, char *Filename)
 #define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(FunctionName) \
-bool32 FunctionName(thread_context *Thread, char *FileName, uint32 FileSize, void *Memory)
+bool32 FunctionName(thread_context *Thread, char *Filename, uint32 FileSize, void *Memory)
 #define DEBUG_PLATFORM_FREE_FILE_MEMORY(FunctionName) void FunctionName(thread_context *Thread, void *Memory)
 
 typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);

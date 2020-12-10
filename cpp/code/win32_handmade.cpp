@@ -500,7 +500,7 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 {
     debug_read_file_result Result = {};
 
-    HANDLE FileHandle = CreateFileA(FileName, GENERIC_READ, FILE_SHARE_READ,
+    HANDLE FileHandle = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ,
                                     0, OPEN_EXISTING, 0, 0);
 
     if (FileHandle != INVALID_HANDLE_VALUE)
@@ -543,7 +543,7 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
 {
     bool32 Result = false;
-    HANDLE FileHandle = CreateFileA(FileName, GENERIC_WRITE,
+    HANDLE FileHandle = CreateFileA(Filename, GENERIC_WRITE,
                                     0, 0,
                                     CREATE_ALWAYS, 0, 0);
 
