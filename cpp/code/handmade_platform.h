@@ -6,10 +6,32 @@
 #pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 
 #ifdef __cplusplus
-extern "C"  {
+extern "C" {
 #endif
 
 #include <stdint.h>
+
+#ifndef COMPILER_MSVC
+#define COMPILER_MSVC 0
+#endif
+
+#ifndef COMPILER_LLVM
+#define COMPILER_LLVM 0
+#endif
+
+#if !COMPILER_MSVC && !COMPILER_LLVM
+#if _MSC_VER
+#undef COMPILER_MSVC
+#define COMPILER_MSVC 1
+#else
+#undef COMPILER_LLVM
+#define COMPILER_LLVM 1
+#endif
+#endif
+
+#if COMPILER_MSVC
+#include <intrin.h>
+#endif
 
 #define internal static
 #define global_variable static
@@ -149,9 +171,8 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
-
 #ifdef __cplusplus
-  }
+}
 #endif
 
 #define HANDMADEHERO_HANDMADE_PLATFORM_H

@@ -1,5 +1,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic push
+#pragma ide diagnostic ignored "bugprone-incorrect-roundings"
 
 #pragma ide diagnostic ignored "UnusedValue"
 #pragma ide diagnostic ignored "UnusedLocalVariable"
@@ -48,7 +49,7 @@ GameOutputSound(game_output_sound_buffer *SoundBuffer, game_state *GameState)
     }
 }
 
-/*
+#if 0
 void
 RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, int YOffset)
 {
@@ -65,7 +66,7 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, int YOffset)
         Row += Buffer->Pitch;
     }
 }
-*/
+#endif
 
 internal void
 DrawRectangle(game_offscreen_buffer *Buffer,
@@ -143,7 +144,24 @@ DrawBitmap(const game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 Re
         uint32 *Source = (uint32 *) SourceRow;
         for (int X = MinX; X < MaxX; ++X)
         {
-            *Dest++ = *Source++;
+            real32 A = (real32) ((*Source >> 24) & 0xFF) / 255.0f;
+            real32 SR = (real32) ((*Source >> 16) & 0xFF);
+            real32 SG = (real32) ((*Source >> 8) & 0xFF);
+            real32 SB = (real32) ((*Source >> 0) & 0xFF);
+
+            real32 DR = (real32) ((*Dest >> 16) & 0xFF);
+            real32 DG = (real32) ((*Dest >> 8) & 0xFF);
+            real32 DB = (real32) ((*Dest >> 0) & 0xFF);
+
+            real32 R = (1.0f - A) * DR + A * SR;
+            real32 G = (1.0f - A) * DG + A * SG;
+            real32 B = (1.0f - A) * DB + A * SB;
+
+            *Dest = (((uint32) (R + 0.5f) << 16) |
+                     ((uint32) (G + 0.5f) << 8) |
+                     ((uint32) (B + 0.5f) << 0));
+            Dest++;
+            Source++;
         }
         DestRow += Buffer->Pitch;
         SourceRow -= Bitmap->Width;
@@ -200,12 +218,28 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
         Result.Height = Header->Height;
         Result.Pixels = Pixels;
 
+        Assert(Header->Compression == 3)
+
+        bit_scan_result RedShift = FindLeastSignificantSetBit(Header->RedMask);
+        bit_scan_result GreenShift = FindLeastSignificantSetBit(Header->GreenMask);
+        bit_scan_result BlueShift = FindLeastSignificantSetBit(Header->BlueMask);
+        bit_scan_result AlphaShift = FindLeastSignificantSetBit(Header->AlphaMask);
+
+        Assert(RedShift.Found)
+        Assert(GreenShift.Found)
+        Assert(BlueShift.Found)
+        Assert(AlphaShift.Found)
+
         uint32 *Source = Pixels;
         for (uint32 Y = 0; Y < Header->Height; ++Y)
         {
             for (uint32 X = 0; X < Header->Width; ++X)
             {
-                *Source = (*Source >> 8) | (*Source << 24);
+                *Source = (((*Source >> AlphaShift.Index) & 0xFF) << 24) |
+                          (((*Source >> RedShift.Index) & 0xFF) << 16) |
+                          (((*Source >> GreenShift.Index) & 0xFF) << 8) |
+                          (((*Source >> BlueShift.Index) & 0xFF) << 0);
+
                 ++Source;
             }
         }
@@ -536,3 +570,4 @@ extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     game_state *GameState = (game_state *) Memory->PermanentStorage;
     GameOutputSound(SoundBuffer, GameState);
 }
+#pragma clang diagnostic pop
