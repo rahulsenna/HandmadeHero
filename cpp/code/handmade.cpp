@@ -1,10 +1,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic push
 
-//#pragma ide diagnostic ignored "UnusedValue"
+#pragma ide diagnostic ignored "UnusedValue"
 #pragma ide diagnostic ignored "UnusedLocalVariable"
 //#pragma ide diagnostic ignored "bugprone-branch-clone"
-//#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 
 #pragma ide diagnostic ignored "hicpp-signed-bitwise"
 #pragma ide diagnostic ignored "modernize-use-auto"
@@ -110,6 +110,47 @@ DrawRectangle(game_offscreen_buffer *Buffer,
 }
 
 internal void
+DrawBitmap(const game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 RealX, real32 RealY)
+{
+    int32 MinX = RoundReal32ToInt32(RealX);
+    int32 MinY = RoundReal32ToInt32(RealY);
+    int32 MaxX = RoundReal32ToInt32(RealX + (real32) Bitmap->Width);
+    int32 MaxY = RoundReal32ToInt32(RealY + (real32) Bitmap->Height);
+    if (MinX < 0)
+    {
+        MinX = 0;
+    }
+    if (MinY < 0)
+    {
+        MinY = 0;
+    }
+    if (MaxX > Buffer->Width)
+    {
+        MaxX = Buffer->Width;
+    }
+    if (MaxY > Buffer->Height)
+    {
+        MaxY = Buffer->Height;
+    }
+
+    uint32 *SourceRow = Bitmap->Pixels + Bitmap->Width * (Bitmap->Height - 1);
+    uint8 *DestRow = ((uint8 *) Buffer->Memory +
+                      MinX * Buffer->BytesPerPixel +
+                      MinY * Buffer->Pitch);
+    for (int Y = MinY; Y < MaxY; ++Y)
+    {
+        uint32 *Dest = (uint32 *) DestRow;
+        uint32 *Source = (uint32 *) SourceRow;
+        for (int X = MinX; X < MaxX; ++X)
+        {
+            *Dest++ = *Source++;
+        }
+        DestRow += Buffer->Pitch;
+        SourceRow -= Bitmap->Width;
+    }
+}
+
+internal void
 InitializeArena(memory_arena *Arena, mem_index Size, uint8 *Base)
 {
     Arena->Size = Size;
@@ -131,28 +172,49 @@ struct bitmap_header
     uint32 Height;
     uint16 Planes;
     uint16 BitCount;
+
+    uint32 Compression;
+    uint32 SizeImage;
+    int32 XPelsPerMeter;
+    int32 YPelsPerMeter;
+    uint32 ClrUsed;
+    uint32 ClrImportant;
+    uint32 RedMask;
+    uint32 GreenMask;
+    uint32 BlueMask;
+    uint32 AlphaMask;
 };
 #pragma pack(pop)
 
-internal uint32 *
+internal loaded_bitmap
 DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntireFile, char *Filename)
 {
     debug_read_file_result ReadResult = ReadEntireFile(Thread, Filename);
 
-    uint32 *Result = 0;
+    loaded_bitmap Result = {};
     if (ReadResult.ContentsSize != 0)
     {
         bitmap_header *Header = (bitmap_header *) ReadResult.Contents;
         uint32 *Pixels = (uint32 *) ((uint8 *) ReadResult.Contents + Header->FileOffBits);
-        Result = Pixels;
+        Result.Width = Header->Width;
+        Result.Height = Header->Height;
+        Result.Pixels = Pixels;
+
+        uint32 *Source = Pixels;
+        for (uint32 Y = 0; Y < Header->Height; ++Y)
+        {
+            for (uint32 X = 0; X < Header->Width; ++X)
+            {
+                *Source = (*Source >> 8) | (*Source << 24);
+                ++Source;
+            }
+        }
     }
     return (Result);
 }
 
-
-
 //#pragma clang diagnostic ignored "-Wnull-dereference"
-//#pragma clang diagnostic ignored "-Wwritable-strings"
+#pragma clang diagnostic ignored "-Wwritable-strings"
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
@@ -163,9 +225,19 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     game_state *GameState = (game_state *) Memory->PermanentStorage;
     if (!Memory->IsInitialized)
     {
-        GameState->PIxelPointer = DEBUGLoadBMP(Thread,
-                                               Memory->DEBUGPlatformReadEntireFile,
-                                               "test/test_background.bmp");
+        GameState->Backdrop = DEBUGLoadBMP(Thread,
+                                           Memory->DEBUGPlatformReadEntireFile,
+                                           "test/test_background.bmp");
+
+        GameState->HeroHead = DEBUGLoadBMP(Thread,
+                                           Memory->DEBUGPlatformReadEntireFile,
+                                           "test/test_hero_front_head.bmp");
+        GameState->HeroTorso = DEBUGLoadBMP(Thread,
+                                            Memory->DEBUGPlatformReadEntireFile,
+                                            "test/test_hero_front_torso.bmp");
+        GameState->HeroCape = DEBUGLoadBMP(Thread,
+                                           Memory->DEBUGPlatformReadEntireFile,
+                                           "test/test_hero_front_cape.bmp");
         Memory->IsInitialized = true;
 
         GameState->PlayerP.AbsTileX = 3;
@@ -392,8 +464,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
         }
     }
-    DrawRectangle(Buffer, 0.0f, 0.0f, (real32) Buffer->Width, (real32) Buffer->Height,
-                  1.0f, 0.0f, 0.0f);
+
+    DrawBitmap(Buffer, &GameState->Backdrop, 0, 0);
 
     real32 ScreenCenterX = (real32) Buffer->Width * 0.5f;
     real32 ScreenCenterY = (real32) Buffer->Height * 0.5f;
@@ -410,7 +482,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
             uint32 TileID = GetTileValue(TileMap, Column, Row, GameState->PlayerP.AbsTileZ);
 
-            if (TileID > 0)
+            if (TileID > 1)
             {
                 real32 Gray = 0.2f;
                 if (TileID == 2)
@@ -451,20 +523,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     real32 PlayerLeft = ScreenCenterX - (0.5f * PlayerWidth * MetersToPixel);
     real32 PlayerTop = ScreenCenterY - (PlayerHeight * MetersToPixel);
 
-    DrawRectangle(Buffer, PlayerLeft, PlayerTop,
-                  PlayerLeft + PlayerWidth * MetersToPixel,
-                  PlayerTop + PlayerHeight * MetersToPixel,
-                  1, 1, 0);
+//    DrawRectangle(Buffer, PlayerLeft, PlayerTop,
+//                  PlayerLeft + PlayerWidth * MetersToPixel,
+//                  PlayerTop + PlayerHeight * MetersToPixel,
+//                  1, 1, 0);
 
-    uint32  *Source = GameState->PIxelPointer;
-    uint32 *Dest = (uint32 *)Buffer->Memory;
-    for (int Y = 0; Y < Buffer->Height; ++Y)
-    {
-        for (int X = 0; X < Buffer->Width; ++X)
-        {
-            *Dest++ = *Source++;
-        }
-    }
+    DrawBitmap(Buffer, &GameState->HeroHead, PlayerLeft, PlayerTop);
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
