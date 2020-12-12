@@ -64,17 +64,26 @@ struct loaded_bitmap
     uint32 *Pixels;
 };
 
+struct hero_bitmaps
+{
+    int32 AlignX;
+    int32 AlignY;
+    loaded_bitmap HeroHead;
+    loaded_bitmap HeroTorso;
+    loaded_bitmap HeroCape;
+};
+
 struct game_state
 {
     memory_arena WorldArena;
     world *World;
     tile_map_position PlayerP;
+    tile_map_position CameraP;
 
     loaded_bitmap Backdrop;
-    loaded_bitmap HeroHead;
-    loaded_bitmap HeroTorso;
-    loaded_bitmap HeroCape;
-
+    loaded_bitmap HeroShadow;
+    hero_bitmaps HeroBitmaps[4];
+    uint32 HeroFacingDirection;
 };
 
 #define HANDMADEHERO_HANDMADE_H

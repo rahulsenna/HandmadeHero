@@ -13,6 +13,12 @@ struct tile_chunk_position
     uint32 TileChunkZ;
 };
 
+struct tile_map_difference
+{
+    real32 dX;
+    real32 dY;
+    real32 dZ;
+};
 struct tile_map_position
 {
     uint32 AbsTileX;

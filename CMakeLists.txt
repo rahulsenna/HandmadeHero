@@ -20,10 +20,20 @@ if (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|Ninja)")
     target_link_libraries(HandmadeHero winmm.lib)
     target_link_options(HandmadeHero PUBLIC /opt:ref /INCREMENTAL:NO)
 
+
     include(GenerateExportHeader)
     add_library(handmade SHARED cpp/code/handmade.cpp)
     target_link_options(handmade PUBLIC /EXPORT:GameUpdateAndRender /EXPORT:GameGetSoundSamples /PDB:handmade_pdb%random%.pdb)
 
+
+    ADD_CUSTOM_COMMAND(TARGET handmade
+            PRE_BUILD
+            COMMAND cmd /c echo Build Lock > lock.tmp
+            )
+    ADD_CUSTOM_COMMAND(TARGET handmade
+            POST_BUILD
+            COMMAND cmd /c del lock.tmp
+            )
 
     ADD_CUSTOM_COMMAND(TARGET handmade
             PRE_BUILD
