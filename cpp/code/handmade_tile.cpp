@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "modernize-use-nullptr"
 //
 // Created by AgentOfChaos on 12/7/2020.
 //
@@ -162,3 +164,4 @@ Subtract(tile_map *TileMap, tile_map_position *A, tile_map_position *B)
     Result.dZ = dTileZ * TileMap->TileSideInMeters + (0.0f);
     return (Result);
 }
+#pragma clang diagnostic pop

@@ -1,4 +1,5 @@
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnull-dereference"
 
 #pragma ide diagnostic ignored "modernize-loop-convert"
 #pragma clang diagnostic ignored "-Wwritable-strings"
@@ -17,7 +18,7 @@
 
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
 
-#include "handmade.h"
+#include "handmade_platform.h"
 
 #include <windows.h>
 #include <xinput.h>
@@ -31,7 +32,8 @@ global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
 global_variable int64 GlobalQPerfFrequency;
-
+global_variable bool32 DEBUGGlobalShowCursor;
+global_variable WINDOWPLACEMENT GlobalWindowPlacement = {sizeof(GlobalWindowPlacement)};
 
 //NOTE:(rahul): XInputSET GET STATE
 #define X_INPUT_GET_STATE(FunctionName) DWORD WINAPI FunctionName(DWORD dwUserIndex, XINPUT_STATE *pState)
@@ -299,20 +301,31 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 internal void
 Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer, HDC DeviceContext, int WindowWidth, int WindowHeight)
 {
-    int OffsetX = 10;
-    int OffsetY = 10;
+    if ((WindowWidth >= Buffer->Width * 2) && WindowHeight >= Buffer->Height * 2)
+    {
+        StretchDIBits(DeviceContext,
+                      0, 0, WindowWidth, WindowHeight,
+                      0, 0, Buffer->Width, Buffer->Height,
+                      Buffer->Memory,
+                      &Buffer->Info,
+                      DIB_RGB_COLORS, SRCCOPY);
+    } else
+    {
+        int OffsetX = 10;
+        int OffsetY = 10;
 
-    PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
-    PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
-    PatBlt(DeviceContext, 0, Buffer->Height + OffsetY, WindowWidth, WindowHeight - Buffer->Height, BLACKNESS);
-    PatBlt(DeviceContext, Buffer->Width + OffsetX, 0, WindowWidth - Buffer->Width, WindowHeight, BLACKNESS);
+        PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+        PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+        PatBlt(DeviceContext, 0, Buffer->Height + OffsetY, WindowWidth, WindowHeight - Buffer->Height, BLACKNESS);
+        PatBlt(DeviceContext, Buffer->Width + OffsetX, 0, WindowWidth - Buffer->Width, WindowHeight, BLACKNESS);
 
-    StretchDIBits(DeviceContext,
-                  OffsetX, OffsetY, Buffer->Width, Buffer->Height,
-                  0, 0, Buffer->Width, Buffer->Height,
-                  Buffer->Memory,
-                  &Buffer->Info,
-                  DIB_RGB_COLORS, SRCCOPY);
+        StretchDIBits(DeviceContext,
+                      OffsetX, OffsetY, Buffer->Width, Buffer->Height,
+                      0, 0, Buffer->Width, Buffer->Height,
+                      Buffer->Memory,
+                      &Buffer->Info,
+                      DIB_RGB_COLORS, SRCCOPY);
+    }
 }
 
 internal LRESULT CALLBACK
@@ -339,6 +352,17 @@ Win32MainWindowCallback(
                 SetLayeredWindowAttributes(Window, RGB(0, 0, 0), 128, LWA_ALPHA);
             }
 #endif
+        }
+            break;
+        case WM_SETCURSOR:
+        {
+            if (DEBUGGlobalShowCursor)
+            {
+                Result = DefWindowProcA(Window, Message, wParam, lParam);
+            } else
+            {
+                SetCursor(0);
+            }
         }
             break;
 
@@ -385,7 +409,6 @@ Win32MainWindowCallback(
         default:
         {
             Result = DefWindowProcA(Window, Message, wParam, lParam);
-//            OutputDebugStringA("default\n");
         }
             break;
     }
@@ -788,6 +811,34 @@ Win32PlayBackInput(win32_state *Win32State, game_input *Input)
 }
 
 internal void
+ToggleFullScreen(HWND Window)
+{
+    DWORD Style = GetWindowLong(Window, GWL_STYLE);
+    if (Style & WS_OVERLAPPEDWINDOW)
+    {
+        MONITORINFO MonitorInfo = {sizeof(MonitorInfo)};
+        if (GetWindowPlacement(Window, &GlobalWindowPlacement) &&
+            GetMonitorInfo(MonitorFromWindow(Window, MONITOR_DEFAULTTOPRIMARY), &MonitorInfo))
+        {
+            SetWindowLong(Window, GWL_STYLE, Style & ~WS_OVERLAPPEDWINDOW);
+            SetWindowPos(Window, HWND_TOP,
+                         MonitorInfo.rcMonitor.left, MonitorInfo.rcMonitor.top,
+                         MonitorInfo.rcMonitor.right - MonitorInfo.rcMonitor.left,
+                         MonitorInfo.rcMonitor.bottom - MonitorInfo.rcMonitor.top,
+                         SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        }
+    } else
+    {
+        SetWindowLong(Window, GWL_STYLE,
+                      Style | WS_OVERLAPPEDWINDOW);
+        SetWindowPlacement(Window, &GlobalWindowPlacement);
+        SetWindowPos(Window, NULL, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                     SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+}
+
+internal void
 Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *KeyboardController)
 {
     MSG Message;
@@ -884,6 +935,16 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
                     {
                         GlobalRunning = false;
                     }
+                    if (IsDown)
+                    {
+                        if ((VKCode == VK_RETURN) && AltKeyWasDown)
+                        {
+                            if (Message.hwnd)
+                            {
+                                ToggleFullScreen(Message.hwnd);
+                            }
+                        }
+                    }
                 }
             }
                 break;
@@ -923,12 +984,17 @@ WinMain(
 
     Win32LoadXInput();
 
+#if HANDMADE_INTERNAL
+    DEBUGGlobalShowCursor = true;
+#endif
+
     WNDCLASS WindowClass = {};
     Win32ResizeDIBSection(&GlobalBackBuffer, 960, 540);
 
     WindowClass.style = CS_VREDRAW | CS_HREDRAW;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
     WindowClass.hInstance = hInstance;
+    WindowClass.hCursor = LoadCursorA(0, IDC_ARROW);
 //        HICON     hIcon;
     WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 

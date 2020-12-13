@@ -121,6 +121,11 @@ DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 RealX, r
     int32 MaxX = RoundReal32ToInt32(RealX + (real32) Bitmap->Width);
     int32 MaxY = RoundReal32ToInt32(RealY + (real32) Bitmap->Height);
 
+    if (AlignX == 72)
+    {
+        int y = 0;
+    }
+
     int32 SourceOffsetX = 0;
     if (MinX < 0)
     {
@@ -276,6 +281,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->HeroShadow = DEBUGLoadBMP(Thread,
                                              Memory->DEBUGPlatformReadEntireFile,
                                              "test/test_hero_shadow.bmp");
+
+        GameState->Tree = DEBUGLoadBMP(Thread,
+                                       Memory->DEBUGPlatformReadEntireFile,
+                                       "test2/tree00.bmp");
 
         hero_bitmaps *Bitmap;
         Bitmap = GameState->HeroBitmaps;
@@ -583,7 +592,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
     }
 
-    DrawBitmap(Buffer, &GameState->Backdrop, 0, 0);
+//    DrawBitmap(Buffer, &GameState->Backdrop, 0, 0);
+    DrawRectangle(Buffer, 0.0f, 0.0f,
+                  (real32) Buffer->Width, (real32) Buffer->Height,
+                  0.3f, 0.4f, 0.0f);
 
     real32 ScreenCenterX = (real32) Buffer->Width * 0.5f;
     real32 ScreenCenterY = (real32) Buffer->Height * 0.5f;
@@ -603,10 +615,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             if (TileID > 1)
             {
                 real32 Gray = 0.2f;
-                if (TileID == 2)
-                {
-                    Gray = 1.0f;
-                }
+
                 if (TileID > 2)
                 {
                     Gray = 0.5f;
@@ -625,7 +634,15 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                 real32 MaxX = CenterX + 0.5f * TileSideInPixels;
                 real32 MaxY = CenterY + 0.5f * TileSideInPixels;
-                DrawRectangle(Buffer, MinX, MinY, MaxX, MaxY, Gray, Gray, Gray);
+                if (TileID == 2)
+                {
+//                    Gray = 1.0f;
+
+                    DrawBitmap(Buffer, &GameState->Tree, MinX, MinY, 0, 0);
+                } else
+                {
+                    DrawRectangle(Buffer, MinX, MinY, MaxX, MaxY, Gray, Gray, Gray);
+                }
             }
         }
     }

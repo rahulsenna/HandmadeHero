@@ -61,6 +61,19 @@ typedef size_t mem_index;
 #define Assert(Expression)
 #endif
 
+#define ArrayCount(Array) (sizeof(Array)/sizeof((Array)[0]))
+#define Kilobytes(Value) ((Value) * 1024)
+#define Megabytes(Value) (Kilobytes(Value) * 1024)
+#define Gigabytes(Value) (Megabytes(Value) * 1024)
+#define Terabytes(Value) (Gigabytes(Value) * 1024)
+
+inline uint32 SafeTruncateUInt64(uint64 Value)
+{
+    Assert(Value <= 0xFFFFFFFF)
+    uint32 Result = (uint32) Value;
+    return (Result);
+}
+
 struct debug_read_file_result
 {
     void *Contents;
@@ -161,6 +174,13 @@ struct game_input
     real32 SecondsToAdvancePerFrame;
     game_controller_input Controllers[5];
 };
+
+inline game_controller_input *GetController(game_input *Input, int ControllerIndex)
+{
+    Assert(ControllerIndex < ArrayCount(Input->Controllers))
+    game_controller_input *Result = &Input->Controllers[ControllerIndex];
+    return Result;
+}
 
 #define GAME_UPDATE_AND_RENDER(FunctionName) \
 void FunctionName(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)

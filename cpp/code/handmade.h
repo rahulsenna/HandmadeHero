@@ -10,26 +10,6 @@
 
 #ifndef HANDMADEHERO_HANDMADE_H
 
-#define ArrayCount(Array) (sizeof(Array)/sizeof((Array)[0]))
-#define Kilobytes(Value) ((Value) * 1024)
-#define Megabytes(Value) (Kilobytes(Value) * 1024)
-#define Gigabytes(Value) (Megabytes(Value) * 1024)
-#define Terabytes(Value) (Gigabytes(Value) * 1024)
-
-inline uint32 SafeTruncateUInt64(uint64 Value)
-{
-    Assert(Value <= 0xFFFFFFFF)
-    uint32 Result = (uint32) Value;
-    return (Result);
-}
-
-inline game_controller_input *GetController(game_input *Input, int ControllerIndex)
-{
-    Assert(ControllerIndex < ArrayCount(Input->Controllers))
-    game_controller_input *Result = &Input->Controllers[ControllerIndex];
-    return Result;
-}
-
 struct memory_arena
 {
     mem_index Size;
@@ -80,6 +60,7 @@ struct game_state
     tile_map_position PlayerP;
     tile_map_position CameraP;
 
+    loaded_bitmap Tree;
     loaded_bitmap Backdrop;
     loaded_bitmap HeroShadow;
     hero_bitmaps HeroBitmaps[4];

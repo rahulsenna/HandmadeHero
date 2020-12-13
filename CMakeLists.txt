@@ -13,6 +13,7 @@ if (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|Ninja)")
     add_compile_options(/W4 /WX /wd4201 /wd4100 /wd4189 /wd4068 /wd4505
             #            /wd4244 /wd4018  /wd4456 /wd4459
             /MTd /GR- /Gm- /EHa- /Oi /Od /FC /Zi /FS
+            /diagnostics:column
             )
     add_link_options(/MAP /incremental:no)
 
