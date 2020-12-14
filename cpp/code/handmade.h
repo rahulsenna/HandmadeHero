@@ -6,7 +6,6 @@
 // Created by AgentOfChaos on 11/20/2020.
 //
 
-#include "handmade_platform.h"
 
 #ifndef HANDMADEHERO_HANDMADE_H
 
