@@ -13,7 +13,7 @@ struct v2
             real32 X, Y;
         };
         real32 E[2];
-    }
+    };
 };
 
 /*    real32 &operator[](int Index)
@@ -43,6 +43,13 @@ operator*(real32 A, v2 B)
     v2 Result = {};
     Result.X = A * B.X;
     Result.Y = A * B.Y;
+    return (Result);
+}
+
+inline v2
+operator*(v2 B, real32 A)
+{
+    v2 Result = A * B;
     return (Result);
 }
 
