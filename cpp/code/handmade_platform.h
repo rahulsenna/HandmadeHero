@@ -171,7 +171,7 @@ struct game_input
     game_button_state MouseButtons[5];
     int MouseX, MouseY, MouseZ;
 
-    real32 SecondsToAdvancePerFrame;
+    real32 dtForFrame;
     game_controller_input Controllers[5];
 };
 

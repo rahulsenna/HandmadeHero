@@ -85,6 +85,20 @@ operator+=(v2 &B, v2 A)
     return (B);
 }
 
+inline real32
+Square(real32 A)
+{
+    real32 Result = A * A;
+    return(Result);
+}
+
+inline real32
+DotProduct(v2 A, v2 B)
+{
+    real32 Result = A.X * B.X + A.Y * B.Y;
+    return(Result);
+}
+
 #define HANDMADEHERO_HANDMADE_MATH_H
 
 #endif //HANDMADEHERO_HANDMADE_MATH_H

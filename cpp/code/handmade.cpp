@@ -511,40 +511,45 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {
         } else
         {
-            v2 dPlayer = {};
+            v2 aOfPlayer = {};
             if (Controller->MoveUp.EndedDown)
             {
-                dPlayer.Y = 1.0f;
+                aOfPlayer.Y = 1.0f;
                 GameState->HeroFacingDirection = 0;
             }
             if (Controller->MoveDown.EndedDown)
             {
-                dPlayer.Y = -1.0f;
+                aOfPlayer.Y = -1.0f;
                 GameState->HeroFacingDirection = 1;
             }
             if (Controller->MoveLeft.EndedDown)
             {
-                dPlayer.X = -1.0f;
+                aOfPlayer.X = -1.0f;
                 GameState->HeroFacingDirection = 3;
             }
             if (Controller->MoveRight.EndedDown)
             {
-                dPlayer.X = 1.0f;
+                aOfPlayer.X = 1.0f;
                 GameState->HeroFacingDirection = 2;
             }
             if (Controller->AButton.EndedDown)
             {
-                dPlayer *= 10.0f;
+                aOfPlayer *= 50.0f;
             }
 
-            if ((dPlayer.X != 0) && (dPlayer.Y != 0))
+            if ((aOfPlayer.X != 0) && (aOfPlayer.Y != 0))
             {
-                dPlayer *= 0.70710678118f;
+                aOfPlayer *= 0.70710678118f;
             }
-            dPlayer *= 10.0f;
+            aOfPlayer *= 20.0f;
+
+            aOfPlayer += -1.5f * GameState->dPlayerP;
 
             tile_map_position NewPlayerP = GameState->PlayerP;
-            NewPlayerP.Offset += (Input->SecondsToAdvancePerFrame * dPlayer);
+            NewPlayerP.Offset += (0.5f * aOfPlayer * Square(Input->dtForFrame) +
+                                  GameState->dPlayerP * Input->dtForFrame);
+            GameState->dPlayerP = aOfPlayer * Input->dtForFrame + GameState->dPlayerP;
+
             NewPlayerP = ReCanonicalizePosition(TileMap, NewPlayerP);
 
             tile_map_position PlayerLeft = NewPlayerP;
@@ -555,9 +560,45 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             PlayerRight.Offset.X += PlayerWidth * 0.5f;
             PlayerRight = ReCanonicalizePosition(TileMap, PlayerRight);
 
-            if (IsTileMapPointEmpty(TileMap, NewPlayerP) &&
-                IsTileMapPointEmpty(TileMap, PlayerLeft) &&
-                IsTileMapPointEmpty(TileMap, PlayerRight))
+            bool32 Collided = false;
+            tile_map_position ColP = {};
+            if (!IsTileMapPointEmpty(TileMap, NewPlayerP))
+            {
+                Collided = true;
+                ColP = NewPlayerP;
+            }
+            if (!IsTileMapPointEmpty(TileMap, PlayerLeft))
+            {
+                Collided = true;
+                ColP = PlayerLeft;
+            }
+            if (!IsTileMapPointEmpty(TileMap, PlayerRight))
+            {
+                Collided = true;
+                ColP = PlayerRight;
+            }
+
+            if (Collided)
+            {
+                v2 Normal = {0,0};
+                if (ColP.AbsTileX < GameState->PlayerP.AbsTileX)
+                {
+                    Normal = v2{1, 0};
+                }
+                if (ColP.AbsTileX > GameState->PlayerP.AbsTileX)
+                {
+                    Normal = v2{-1, 0};
+                }
+                if (ColP.AbsTileY < GameState->PlayerP.AbsTileY)
+                {
+                    Normal = v2{0, 1};
+                }
+                if (ColP.AbsTileY > GameState->PlayerP.AbsTileY)
+                {
+                    Normal = v2{0, -1};
+                }
+                    GameState->dPlayerP = GameState->dPlayerP -  (DotProduct(Normal, GameState->dPlayerP) * Normal);
+            } else
             {
                 if (!AreOnSameTile(&NewPlayerP, &GameState->PlayerP))
                 {
@@ -572,6 +613,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 }
                 GameState->PlayerP = NewPlayerP;
             }
+
             GameState->CameraP.AbsTileZ = GameState->PlayerP.AbsTileZ;
             tile_map_difference Diff = Subtract(TileMap, &GameState->PlayerP, &GameState->CameraP);
             if (Diff.dXY.X > (9.0f * TileMap->TileSideInMeters))
