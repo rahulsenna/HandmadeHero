@@ -99,6 +99,13 @@ DotProduct(v2 A, v2 B)
     return(Result);
 }
 
+inline real32
+LengthSq(v2 A)
+{
+    real32 Result = DotProduct(A, A);
+    return(Result);
+}
+
 #define HANDMADEHERO_HANDMADE_MATH_H
 
 #endif //HANDMADEHERO_HANDMADE_MATH_H
