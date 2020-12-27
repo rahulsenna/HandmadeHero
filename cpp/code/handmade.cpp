@@ -690,7 +690,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 real32 Gray = 0.2f;
                 if (TileID == 2)
                 {
-                    Gray = 1.0f;
+                    Gray = 0.2f;
                 }
                 if (TileID > 2)
                 {
