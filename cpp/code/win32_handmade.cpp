@@ -896,10 +896,10 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
                         Win32ProcessKeyboardMessage(&KeyboardController->BButton, IsDown);
                     } else if (VKCode == VK_ESCAPE)
                     {
-                        OutputDebugStringA("ESCAPE\n");
+                        Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
                     } else if (VKCode == VK_SPACE)
                     {
-                        OutputDebugStringA("SPACE\n");
+                        Win32ProcessKeyboardMessage(&KeyboardController->Start, IsDown);
                     }
 #if HANDMADE_INTERNAL
                     else if (VKCode == 'G')

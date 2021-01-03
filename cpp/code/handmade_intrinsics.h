@@ -6,6 +6,27 @@
 
 #include "math.h"
 
+inline real32
+AbsoluteValue(real32 Real32)
+{
+    real32 Result = (real32) fabs(Real32);
+    return (Result);
+}
+
+inline uint32
+RotateLeft(uint32 Value, int32 Amount)
+{
+    uint32 Result = _rotl(Value, Amount);
+    return(Result);
+}
+
+inline uint32
+RotateRight(uint32 Value, int32 Amount)
+{
+    uint32 Result = _rotr(Value, Amount);
+    return(Result);
+}
+
 inline int32
 RoundReal32ToInt32(real32 Real32)
 {
@@ -54,13 +75,12 @@ struct bit_scan_result
     uint32 Index;
 };
 
-
 inline bit_scan_result
 FindLeastSignificantSetBit(uint32 Value)
 {
     bit_scan_result Result = {};
 #if COMPILER_MSVC
-    Result.Found = _BitScanForward((unsigned long *)&Result.Index, Value);
+    Result.Found = _BitScanForward((unsigned long *) &Result.Index, Value);
 #else
     for (uint32 Test = 0; Test < 32; ++Test)
     {
@@ -74,7 +94,6 @@ FindLeastSignificantSetBit(uint32 Value)
 #endif
     return (Result);
 }
-
 
 #define HANDMADEHERO_HANDMADE_INTRINSICS_H
 #endif //HANDMADEHERO_HANDMADE_INTRINSICS_H
