@@ -32,7 +32,7 @@ GameOutputSound(game_output_sound_buffer *SoundBuffer, game_state *GameState)
          ++SampleIndex)
     {
 #if 0
-                                                                                                                                int16 ToneVolume = 3000;
+        int16 ToneVolume = 3000;
         real32 SineValue = sinf(GameState->tSine);
         int16 SampleValue = (int16) (SineValue * (real32) ToneVolume);
 #else
@@ -41,7 +41,7 @@ GameOutputSound(game_output_sound_buffer *SoundBuffer, game_state *GameState)
         *SampleOut++ = SampleValue;
         *SampleOut++ = SampleValue;
 #if 0
-                                                                                                                                int WavePeriod = SoundBuffer->SamplesPerSecond / 400;
+        int WavePeriod = SoundBuffer->SamplesPerSecond / 400;
         GameState->tSine += 2.0f * Pi32 * 1.0f / (real32) WavePeriod;
         if (GameState->tSine > 2.0f * Pi32)
         {
@@ -309,22 +309,26 @@ AddEntity(game_state *GameState)
 }
 
 internal void
-MovePlayer(game_state *GameState, entity *Entity, v2 accelerationOfPlayer, real32 dt)
+MovePlayer(game_state *GameState, entity *Entity, v2 accelOfPlayer, real32 dt)
 {
     tile_map *TileMap = GameState->World->TileMap;
-    if ((accelerationOfPlayer.X != 0) && (accelerationOfPlayer.Y != 0))
+
+    real32 accelLength = LengthSq(accelOfPlayer);
+
+    if (accelLength > 1.0f)
     {
-        accelerationOfPlayer *= 0.70710678118f;
+        accelOfPlayer *= 1.0f / SquareRoot(accelLength);
     }
-    accelerationOfPlayer *= 70.0f;
-    accelerationOfPlayer += -7.0f * Entity->dP;
+
+    accelOfPlayer *= 70.0f;
+    accelOfPlayer += -7.0f * Entity->dP;
     tile_map_position OldPlayerP = Entity->P;
     tile_map_position NewPlayerP = OldPlayerP;
 
-    v2 PlayerDelta = (0.5f * accelerationOfPlayer * Square(dt) +
+    v2 PlayerDelta = (0.5f * accelOfPlayer * Square(dt) +
                       Entity->dP * dt);
     NewPlayerP.Offset += PlayerDelta;
-    Entity->dP = accelerationOfPlayer * dt + Entity->dP;
+    Entity->dP = accelOfPlayer * dt + Entity->dP;
     NewPlayerP = ReCanonicalizePosition(TileMap, NewPlayerP);
 #if 1
     tile_map_position PlayerLeft = NewPlayerP;
@@ -378,32 +382,28 @@ MovePlayer(game_state *GameState, entity *Entity, v2 accelerationOfPlayer, real3
         Entity->P = NewPlayerP;
     }
 #else
-    uint32 MinTileX = 0;
-    uint32 MinTileY = 0;
-    uint32 OnePastMaxTileX = 0;
-    uint32 OnePastMaxTileY = 0;
+    uint32 MinTileX = Minimum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX);
+    uint32 MinTileY = Minimum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY);
+    uint32 OnePastMaxTileX = Maximum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX) + 1;
+    uint32 OnePastMaxTileY = Maximum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY) + 1;
+
     uint32 AbsTileZ = Entity->P.AbsTileZ;
-    tile_map_position BestPlayerP = Entity->P;
-    real32 BestDistanceSq = LengthSq(PlayerDelta);
+    real32 tMin = 1.0f;
     for (uint32 AbsTileY = 0; AbsTileY != OnePastMaxTileY; ++AbsTileY)
     {
         for (uint32 AbsTileX = 0; AbsTileX != OnePastMaxTileX; ++AbsTileX)
         {
             tile_map_position TestTleP = CenteredTilePoint(AbsTileX, AbsTileY, AbsTileZ);
-
             uint32 TileValue = GetTileValue(TileMap, AbsTileX, AbsTileY, AbsTileZ);
-            if (IsTileValueEmpty(TileValue))
+            if (!IsTileValueEmpty(TileValue))
             {
                 v2 MinCorner = -0.5 * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
                 v2 MaxCorner = 0.5 * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
                 tile_map_difference RelNewPlayerP = Subtract(TileMap, &Entity->P, &GameState->CameraP);
-                v2 TestP = ClosestPointInRectangle(MinCorner, MaxCorner, RelNewPlayerP);
-                real32 TestDistanceSq =;
-                if (BestDistanceSq > TestDistanceSq)
-                {
-                    BestPlayerP =;
-                    BestDistanceSq =;
-                }
+                v2 Rel = RelNewPlayerP.dXY;
+
+                v2 tResult = (WallX - Rel.X) / PlayerDelta.X;;
+                TestWall(MinCorner.X, MinCorner.Y, MaxCorner.X, Rel.Y);
             }
         }
     }

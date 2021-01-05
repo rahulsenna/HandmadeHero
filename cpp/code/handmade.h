@@ -9,6 +9,9 @@
 
 #ifndef HANDMADEHERO_HANDMADE_H
 
+#define Minimum(A, B) ((A < B) ? (A) : (B))
+#define Maximum(A, B) ((A > B) ? (A) : (B))
+
 struct memory_arena
 {
     mem_index Size;
