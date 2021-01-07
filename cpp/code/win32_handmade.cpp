@@ -418,7 +418,7 @@ Win32MainWindowCallback(
 
 internal void
 Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD BytesToLock, DWORD BytesToWrite,
-                     game_output_sound_buffer *SourceBuffer)
+                     game_sound_output_buffer *SourceBuffer)
 {
     VOID *Region1;
     VOID *Region2;
@@ -1344,7 +1344,7 @@ WinMain(
                                 BytesToWrite = TargetCursor - BytesToLock;
                             }
 
-                            game_output_sound_buffer SoundBuffer = {};
+                            game_sound_output_buffer SoundBuffer = {};
                             SoundBuffer.SamplesPerSecond = SoundOutput.SamplesPerSecond;
                             SoundBuffer.SampleCount = (int) BytesToWrite / SoundOutput.BytesPerSample;
                             SoundBuffer.Samples = Samples;

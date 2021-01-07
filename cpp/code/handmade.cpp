@@ -24,7 +24,7 @@
 #include "handmade_random.h"
 
 void
-GameOutputSound(game_output_sound_buffer *SoundBuffer, game_state *GameState)
+GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameState)
 {
     int16 *SampleOut = SoundBuffer->Samples;
     for (int SampleIndex = 0;
@@ -309,6 +309,26 @@ AddEntity(game_state *GameState)
 }
 
 internal void
+WallTest(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, real32 RelY, real32 *tMin,
+         real32 MinCornerX, real32 MaxCornerX)
+{
+    real32 tEpsilon = 0.0001f;
+    if (PlayerDeltaX != 0)
+    {
+        real32 tResult = (WallX - RelX) / PlayerDeltaX;
+        real32 Y = RelY + tResult * PlayerDeltaY;
+
+        if ((tResult >= 0.0f) && (*tMin > tResult))
+        {
+            if ((Y >= MinCornerX) && (Y <= MaxCornerX))
+            {
+                *tMin = Maximum(0.0f, tResult - tEpsilon);
+            }
+        }
+    }
+}
+
+internal void
 MovePlayer(game_state *GameState, entity *Entity, v2 accelOfPlayer, real32 dt)
 {
     tile_map *TileMap = GameState->World->TileMap;
@@ -327,10 +347,10 @@ MovePlayer(game_state *GameState, entity *Entity, v2 accelOfPlayer, real32 dt)
 
     v2 PlayerDelta = (0.5f * accelOfPlayer * Square(dt) +
                       Entity->dP * dt);
-    NewPlayerP.Offset += PlayerDelta;
     Entity->dP = accelOfPlayer * dt + Entity->dP;
+    NewPlayerP.Offset += PlayerDelta;
     NewPlayerP = ReCanonicalizePosition(TileMap, NewPlayerP);
-#if 1
+#if 0
     tile_map_position PlayerLeft = NewPlayerP;
     PlayerLeft.Offset.X -= Entity->Width * 0.5f;
     PlayerLeft = ReCanonicalizePosition(TileMap, PlayerLeft);
@@ -399,14 +419,24 @@ MovePlayer(game_state *GameState, entity *Entity, v2 accelOfPlayer, real32 dt)
             {
                 v2 MinCorner = -0.5 * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
                 v2 MaxCorner = 0.5 * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
-                tile_map_difference RelNewPlayerP = Subtract(TileMap, &Entity->P, &GameState->CameraP);
-                v2 Rel = RelNewPlayerP.dXY;
+                tile_map_difference RelOldPlayerP = Subtract(TileMap, &OldPlayerP, &TestTleP);
+                v2 Rel = RelOldPlayerP.dXY;
 
-                v2 tResult = (WallX - Rel.X) / PlayerDelta.X;;
-                TestWall(MinCorner.X, MinCorner.Y, MaxCorner.X, Rel.Y);
+                WallTest(MaxCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
+                         MinCorner.Y, MaxCorner.Y);
+                WallTest(MinCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
+                         MinCorner.Y, MaxCorner.Y);
+                WallTest(MaxCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
+                         MinCorner.X, MaxCorner.X);
+                WallTest(MinCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
+                         MinCorner.X, MaxCorner.X);
             }
         }
     }
+    NewPlayerP = OldPlayerP;
+    NewPlayerP.Offset += tMin * PlayerDelta;
+    Entity->P = NewPlayerP;
+    NewPlayerP = ReCanonicalizePosition(TileMap, NewPlayerP);
 #endif
 
     if (!AreOnSameTile(&OldPlayerP, &Entity->P))
@@ -787,9 +817,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                              (ScreenCenterY + (MetersToPixel * GameState->CameraP.Offset.Y)) -
                              ((real32) RelRow) * TileSideInPixels};
                 v2 TileSide = {0.5f * TileSideInPixels, 0.5f * TileSideInPixels};
-                v2 vMin = Center - TileSide;
-
-                v2 vMax = Center + TileSide;
+                v2 vMin = Center - 0.9f*TileSide;
+                v2 vMax = Center + 0.9f*TileSide;
 
                 DrawRectangle(Buffer, vMin, vMax, Gray, Gray, Gray);
             }

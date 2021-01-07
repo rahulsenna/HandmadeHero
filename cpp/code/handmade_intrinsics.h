@@ -9,7 +9,7 @@
 inline real32
 SquareRoot(real32 Real32)
 {
-    real32 Result = sqrtf(Result);
+    real32 Result = sqrtf(Real32);
     return(Result);
 }
 
