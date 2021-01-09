@@ -1,5 +1,4 @@
-#pragma clang diagnostic push
-#pragma clang diagnostic push
+#pragma ide diagnostic ignored "bugprone-suspicious-include"
 #pragma ide diagnostic ignored "bugprone-incorrect-roundings"
 
 #pragma ide diagnostic ignored "UnusedValue"
@@ -287,8 +286,8 @@ InitializePlayer(game_state *GameState, uint32 EntityIndex)
 
     Entity->P.AbsTileX = 1;
     Entity->P.AbsTileY = 3;
-    Entity->P.Offset.X = 6.0f;
-    Entity->P.Offset.Y = 6.0f;
+    Entity->P.Offset_.X = 0.0f;
+    Entity->P.Offset_.Y = 0.0f;
     Entity->Height = 1.4f;
     Entity->Width = Entity->Height * 0.75f;
 
@@ -309,18 +308,18 @@ AddEntity(game_state *GameState)
 }
 
 internal void
-WallTest(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, real32 RelY, real32 *tMin,
-         real32 MinCornerX, real32 MaxCornerX)
+TestWall(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, real32 RelY, real32 *tMin,
+         real32 MinY, real32 MaxY)
 {
-    real32 tEpsilon = 0.0001f;
-    if (PlayerDeltaX != 0)
+    real32 tEpsilon = 0.001f;
+    if (PlayerDeltaX != 0.0f)
     {
         real32 tResult = (WallX - RelX) / PlayerDeltaX;
         real32 Y = RelY + tResult * PlayerDeltaY;
 
         if ((tResult >= 0.0f) && (*tMin > tResult))
         {
-            if ((Y >= MinCornerX) && (Y <= MaxCornerX))
+            if ((Y >= MinY) && (Y <= MaxY))
             {
                 *tMin = Maximum(0.0f, tResult - tEpsilon);
             }
@@ -342,14 +341,12 @@ MovePlayer(game_state *GameState, entity *Entity, v2 accelOfPlayer, real32 dt)
 
     accelOfPlayer *= 70.0f;
     accelOfPlayer += -7.0f * Entity->dP;
-    tile_map_position OldPlayerP = Entity->P;
-    tile_map_position NewPlayerP = OldPlayerP;
 
+    tile_map_position OldPlayerP = Entity->P;
     v2 PlayerDelta = (0.5f * accelOfPlayer * Square(dt) +
                       Entity->dP * dt);
     Entity->dP = accelOfPlayer * dt + Entity->dP;
-    NewPlayerP.Offset += PlayerDelta;
-    NewPlayerP = ReCanonicalizePosition(TileMap, NewPlayerP);
+    tile_map_position NewPlayerP = Offset(TileMap, OldPlayerP, PlayerDelta);
 #if 0
     tile_map_position PlayerLeft = NewPlayerP;
     PlayerLeft.Offset.X -= Entity->Width * 0.5f;
@@ -402,41 +399,67 @@ MovePlayer(game_state *GameState, entity *Entity, v2 accelOfPlayer, real32 dt)
         Entity->P = NewPlayerP;
     }
 #else
+
+#if 0
     uint32 MinTileX = Minimum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX);
     uint32 MinTileY = Minimum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY);
     uint32 OnePastMaxTileX = Maximum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX) + 1;
     uint32 OnePastMaxTileY = Maximum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY) + 1;
+#else
+    uint32 StartTileX = OldPlayerP.AbsTileX;
+    uint32 StartTileY = OldPlayerP.AbsTileY;
+    uint32 EndTileX = NewPlayerP.AbsTileX;
+    uint32 EndTileY = NewPlayerP.AbsTileY;
+
+    int32 DeltaX = SignOf(EndTileX - StartTileX);
+    int32 DeltaY = SignOf(EndTileY - StartTileY);
+#endif
 
     uint32 AbsTileZ = Entity->P.AbsTileZ;
     real32 tMin = 1.0f;
-    for (uint32 AbsTileY = 0; AbsTileY != OnePastMaxTileY; ++AbsTileY)
+
+    uint32 AbsTileY = StartTileY;
+    for (;;)
     {
-        for (uint32 AbsTileX = 0; AbsTileX != OnePastMaxTileX; ++AbsTileX)
+        uint32 AbsTileX = StartTileX;
+        for (;;)
         {
             tile_map_position TestTleP = CenteredTilePoint(AbsTileX, AbsTileY, AbsTileZ);
-            uint32 TileValue = GetTileValue(TileMap, AbsTileX, AbsTileY, AbsTileZ);
+            uint32 TileValue = GetTileValue(TileMap, TestTleP);
             if (!IsTileValueEmpty(TileValue))
             {
-                v2 MinCorner = -0.5 * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
-                v2 MaxCorner = 0.5 * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
+                v2 MinCorner = -0.5f * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
+                v2 MaxCorner = 0.5f * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
                 tile_map_difference RelOldPlayerP = Subtract(TileMap, &OldPlayerP, &TestTleP);
                 v2 Rel = RelOldPlayerP.dXY;
 
-                WallTest(MaxCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
+                TestWall(MaxCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
                          MinCorner.Y, MaxCorner.Y);
-                WallTest(MinCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
+                TestWall(MinCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
                          MinCorner.Y, MaxCorner.Y);
-                WallTest(MaxCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
+
+                TestWall(MaxCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
                          MinCorner.X, MaxCorner.X);
-                WallTest(MinCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
+                TestWall(MinCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
                          MinCorner.X, MaxCorner.X);
             }
+            if (AbsTileX == EndTileX)
+            {
+                break;
+            } else
+            {
+                AbsTileX += DeltaX;
+            }
+        }
+        if (AbsTileY == EndTileY)
+        {
+            break;
+        } else
+        {
+            AbsTileY += DeltaY;
         }
     }
-    NewPlayerP = OldPlayerP;
-    NewPlayerP.Offset += tMin * PlayerDelta;
-    Entity->P = NewPlayerP;
-    NewPlayerP = ReCanonicalizePosition(TileMap, NewPlayerP);
+    Entity->P = Offset(TileMap, OldPlayerP, tMin * PlayerDelta);
 #endif
 
     if (!AreOnSameTile(&OldPlayerP, &Entity->P))
@@ -587,8 +610,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         uint32 TilesPerHeight = 9;
         uint32 TilesPerWidth = 17;
 
+#if 0
+        int ScreenX = INT32_MAX / 2;
+        int ScreenY = INT32_MAX / 2;
+#else
         int ScreenX = 0;
         int ScreenY = 0;
+#endif
         uint32 RandomNumberIndex = 0;
         uint32 AbsTileZ = 0;
 
@@ -812,13 +840,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     Gray = 0.0;
                 }
 
-                v2 Center = {(ScreenCenterX - (MetersToPixel * GameState->CameraP.Offset.X)) +
+                v2 Center = {(ScreenCenterX - (MetersToPixel * GameState->CameraP.Offset_.X)) +
                              ((real32) RelColumn) * TileSideInPixels,
-                             (ScreenCenterY + (MetersToPixel * GameState->CameraP.Offset.Y)) -
+                             (ScreenCenterY + (MetersToPixel * GameState->CameraP.Offset_.Y)) -
                              ((real32) RelRow) * TileSideInPixels};
                 v2 TileSide = {0.5f * TileSideInPixels, 0.5f * TileSideInPixels};
-                v2 vMin = Center - 0.9f*TileSide;
-                v2 vMax = Center + 0.9f*TileSide;
+                v2 vMin = Center - 0.9f * TileSide;
+                v2 vMax = Center + 0.9f * TileSide;
 
                 DrawRectangle(Buffer, vMin, vMax, Gray, Gray, Gray);
             }

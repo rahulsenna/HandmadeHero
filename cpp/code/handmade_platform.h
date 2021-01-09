@@ -1,6 +1,7 @@
 //
 // Created by AgentOfChaos on 12/7/2020.
 //
+#pragma clang diagnostic ignored "-Wnull-dereference"
 #pragma ide diagnostic ignored "OCUnusedMacroInspection"
 #pragma ide diagnostic ignored "modernize-deprecated-headers"
 #pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
