@@ -55,13 +55,40 @@ struct hero_bitmaps
     loaded_bitmap HeroCape;
 };
 
+struct high_entity
+{
+    v2 P;
+    v2 dP;
+    uint32 AbsTileZ;
+    uint32 FacingDirection;
+};
+
+struct low_entity
+{
+};
+
+struct dormant_entity
+{
+    tile_map_position P;
+    real32 Height, Width;
+    int32 dAbsTileZ;
+    bool32 Collides;
+};
+
+enum entity_residence
+{
+    EntityResidence_Nonexistent,
+    EntityResidence_Dormant,
+    EntityResidence_Low,
+    EntityResidence_High,
+};
+
 struct entity
 {
-    bool32 Exists;
-    tile_map_position P;
-    v2 dP;
-    uint32 FacingDirection;
-    real32 Height, Width;
+    uint32 Residence;
+    low_entity *Low;
+    dormant_entity *Dormant;
+    high_entity *High;
 };
 
 struct game_state
@@ -73,8 +100,12 @@ struct game_state
     tile_map_position CameraP;
 
     uint32 PlayerIndexForController[ArrayCount(((game_input *) 0)->Controllers)];
-    entity Entities[256];
+
     uint32 EntityCount;
+    entity_residence EntityResidence[256];
+    high_entity HighEntities[256];
+    low_entity LowEntities[256];
+    dormant_entity DormantEntities[256];
 
     loaded_bitmap Tree;
     loaded_bitmap Backdrop;
