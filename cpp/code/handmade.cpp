@@ -112,7 +112,7 @@ DrawRectangle(game_offscreen_buffer *Buffer, v2 vMin, v2 vMax,
 
 internal void
 DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 RealX, real32 RealY,
-           int32 AlignX = 0, int32 AlignY = 0)
+           int32 AlignX = 0, int32 AlignY = 0, real32 CAlpha = 1.0f)
 {
     RealX -= (real32) AlignX;
     RealY -= (real32) AlignY;
@@ -154,6 +154,7 @@ DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 RealX, r
         for (int X = MinX; X < MaxX; ++X)
         {
             real32 A = (real32) ((*Source >> 24) & 0xFF) / 255.0f;
+            A *= CAlpha;
             real32 SR = (real32) ((*Source >> 16) & 0xFF);
             real32 SG = (real32) ((*Source >> 8) & 0xFF);
             real32 SB = (real32) ((*Source >> 0) & 0xFF);
@@ -378,10 +379,10 @@ MovePlayer(game_state *GameState, entity Entity, v2 accelOfPlayer, real32 dt)
     accelOfPlayer += -7.0f * Entity.High->dP;
 
     v2 OldPlayerP = Entity.High->P;
-    v2 PlayerDelta = (0.5f * accelOfPlayer * Square(dt) +
-                      Entity.High->dP * dt);
+    v2 PlayerDisplacement = (0.5f * accelOfPlayer * Square(dt) +
+                             Entity.High->dP * dt);
     Entity.High->dP = accelOfPlayer * dt + Entity.High->dP;
-    v2 NewPlayerP = OldPlayerP + PlayerDelta;
+    v2 NewPlayerP = OldPlayerP + PlayerDisplacement;
 
     /*uint32 MinTileX = Minimum(OldPlayerP.X, NewPlayerP.X);
     uint32 MinTileY = Minimum(OldPlayerP.Y, NewPlayerP.Y);
@@ -418,26 +419,26 @@ MovePlayer(game_state *GameState, entity Entity, v2 accelOfPlayer, real32 dt)
                     v2 MaxCorner = 0.5f * v2{DiameterW, DiameterH};
                     v2 Rel = Entity.High->P - TestEntity.High->P;
 
-                    if (TestWall(MinCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
+                    if (TestWall(MinCorner.X, PlayerDisplacement.X, PlayerDisplacement.Y, Rel.X, Rel.Y, &tMin,
                                  MinCorner.Y, MaxCorner.Y))
                     {
                         WallNormal = v2{-1, 0};
                         HitEntityIndex = EntityIndex;
                     }
-                    if (TestWall(MaxCorner.X, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, &tMin,
+                    if (TestWall(MaxCorner.X, PlayerDisplacement.X, PlayerDisplacement.Y, Rel.X, Rel.Y, &tMin,
                                  MinCorner.Y, MaxCorner.Y))
                     {
                         WallNormal = v2{1, 0};
                         HitEntityIndex = EntityIndex;
                     }
 
-                    if (TestWall(MinCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
+                    if (TestWall(MinCorner.Y, PlayerDisplacement.Y, PlayerDisplacement.X, Rel.Y, Rel.X, &tMin,
                                  MinCorner.X, MaxCorner.X))
                     {
                         WallNormal = v2{0, -1};
                         HitEntityIndex = EntityIndex;
                     }
-                    if (TestWall(MaxCorner.Y, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, &tMin,
+                    if (TestWall(MaxCorner.Y, PlayerDisplacement.Y, PlayerDisplacement.X, Rel.Y, Rel.X, &tMin,
                                  MinCorner.X, MaxCorner.X))
                     {
                         WallNormal = v2{0, 1};
@@ -447,11 +448,11 @@ MovePlayer(game_state *GameState, entity Entity, v2 accelOfPlayer, real32 dt)
             }
         }
 
-        Entity.High->P += tMin * PlayerDelta;
+        Entity.High->P += tMin * PlayerDisplacement;
         if (HitEntityIndex)
         {
             Entity.High->dP = Entity.High->dP - (DotProduct(WallNormal, Entity.High->dP) * WallNormal);
-            PlayerDelta = PlayerDelta - (DotProduct(PlayerDelta, WallNormal) * WallNormal);
+            PlayerDisplacement = PlayerDisplacement - (DotProduct(PlayerDisplacement, WallNormal) * WallNormal);
             tRemaining -= tMin * tRemaining;
 
             entity HitEntity = GetEntity(GameState, EntityResidence_Dormant, HitEntityIndex);
@@ -761,6 +762,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 {
                     accelerationOfPlayer *= 50.0f;
                 }
+
+                if (Controller->YButton.EndedDown)
+                {
+                    ControllingEntity.High->dZ = 4.0f;
+                }
             }
             MovePlayer(GameState, ControllingEntity, accelerationOfPlayer, Input->dtForFrame);
         } else
@@ -854,23 +860,38 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             dormant_entity *DormantEntity = &GameState->DormantEntities[EntityIndex];
 
             HighEntity->P += EntityOffsetForFrame;
-            
+
+            real32 dt = Input->dtForFrame;
+            real32 accelOfPlayerInZ = -9.8f;
+            real32 DisplacementInZ = (0.5f * accelOfPlayerInZ * Square(dt) + HighEntity->dZ * dt);
+            HighEntity->Z += DisplacementInZ;
+            HighEntity->dZ = accelOfPlayerInZ * dt + HighEntity->dZ;
+            if (HighEntity->Z < 0)
+            {
+                HighEntity->Z = 0;
+            }
+            real32 CAlpha = 1.0f - 0.5f * HighEntity->Z;
+            if (CAlpha < 0)
+            {
+                CAlpha = 0.0f;
+            }
+
             real32 HeroGroundPointX = ScreenCenterX + HighEntity->P.X * MetersToPixel;
             real32 HeroGroundPointY = ScreenCenterY - HighEntity->P.Y * MetersToPixel;
 
             real32 PlayerLeft = HeroGroundPointX - (0.5f * DormantEntity->Width * MetersToPixel);
             real32 PlayerTop = HeroGroundPointY - (0.5f * DormantEntity->Height * MetersToPixel);
-
+            real32 Z = -MetersToPixel * HighEntity->Z;
             hero_bitmaps *HeroBitmaps = &GameState->HeroBitmaps[HighEntity->FacingDirection];
 
-            DrawBitmap(Buffer, &HeroBitmaps->HeroTorso, HeroGroundPointX, HeroGroundPointY, HeroBitmaps->AlignX,
+            DrawBitmap(Buffer, &HeroBitmaps->HeroTorso, HeroGroundPointX, HeroGroundPointY + Z, HeroBitmaps->AlignX,
                        HeroBitmaps->AlignY);
-            DrawBitmap(Buffer, &HeroBitmaps->HeroCape, HeroGroundPointX, HeroGroundPointY, HeroBitmaps->AlignX,
+            DrawBitmap(Buffer, &HeroBitmaps->HeroCape, HeroGroundPointX, HeroGroundPointY + Z, HeroBitmaps->AlignX,
                        HeroBitmaps->AlignY);
-            DrawBitmap(Buffer, &HeroBitmaps->HeroHead, HeroGroundPointX, HeroGroundPointY, HeroBitmaps->AlignX,
+            DrawBitmap(Buffer, &HeroBitmaps->HeroHead, HeroGroundPointX, HeroGroundPointY + Z, HeroBitmaps->AlignX,
                        HeroBitmaps->AlignY);
             DrawBitmap(Buffer, &GameState->HeroShadow, HeroGroundPointX, HeroGroundPointY, HeroBitmaps->AlignX,
-                       HeroBitmaps->AlignY);
+                       HeroBitmaps->AlignY, CAlpha);
         }
     }
 }
