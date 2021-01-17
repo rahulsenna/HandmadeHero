@@ -1126,7 +1126,7 @@ WinMain(
                 uint64 LastCycleCount = __rdtsc();
                 while (GlobalRunning)
                 {
-                    NewInput->dtForFrame = TargetSecondsPerFrame;
+                    NewInput->deltatForFrame = TargetSecondsPerFrame;
 
                     FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
                     if (CompareFileTime(&NewDLLWriteTime, &Game.DLLLastWriteTime) != 0)

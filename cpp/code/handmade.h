@@ -58,23 +58,32 @@ struct hero_bitmaps
 struct high_entity
 {
     v2 P;
-    v2 dP;
+    v2 deltaP;
     uint32 AbsTileZ;
     uint32 FacingDirection;
 
     real32 Z;
-    real32 dZ;
+    real32 deltaZ;
 };
 
 struct low_entity
 {
 };
 
+enum entity_type
+{
+    EntityType_Hero,
+    EntityType_Wall,
+    EntityType_Null,
+};
+
 struct dormant_entity
 {
+    entity_type Type;
+
     tile_map_position P;
     real32 Height, Width;
-    int32 dAbsTileZ;
+    int32 deltaAbsTileZ;
     bool32 Collides;
 };
 

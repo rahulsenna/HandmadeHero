@@ -38,7 +38,7 @@ extern "C" {
 #define internal static
 #define global_variable static
 #define local_persist static
-#define Pi32 3.14159265359f
+#define PII32 3.14159265359f
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
@@ -173,7 +173,7 @@ struct game_input
     game_button_state MouseButtons[5];
     int MouseX, MouseY, MouseZ;
 
-    real32 dtForFrame;
+    real32 deltatForFrame;
     game_controller_input Controllers[5];
 };
 
