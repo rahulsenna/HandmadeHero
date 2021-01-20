@@ -32,12 +32,8 @@ PushSize_(memory_arena *Arena, mem_index Size)
 }
 
 #include "handmade_intrinsics.h"
-#include "handmade_tile.h"
+#include "handmade_world.h"
 
-struct world
-{
-    tile_map *TileMap;
-};
 
 struct loaded_bitmap
 {
@@ -79,7 +75,7 @@ struct low_entity
 {
     entity_type Type;
 
-    tile_map_position P;
+    world_position P;
     real32 Height, Width;
     int32 deltaAbsTileZ;
     bool32 Collides;
@@ -100,12 +96,13 @@ struct game_state
     world *World;
 
     uint32 CameraFollowingEntityIndex;
-    tile_map_position CameraP;
+    world_position CameraP;
 
     uint32 PlayerIndexForController[ArrayCount(((game_input *) 0)->Controllers)];
 
     uint32 LowEntityCount;
     low_entity LowEntities[4096];
+
     loaded_bitmap Tree;
 
     high_entity HighEntities_[256];
