@@ -3,49 +3,52 @@
 //
 
 #ifndef HANDMADEHERO_HANDMADE_TILE_H
-struct tile_chunk_position
-{
-    uint32 TileRelX;
-    uint32 TileRelY;
-
-    uint32 TileChunkX;
-    uint32 TileChunkY;
-    uint32 TileChunkZ;
-};
 
 struct tile_map_difference
 {
-    v2 dXY;
+    v2 deltaXY;
     real32 dZ;
+};
+
+struct tile_chunk_position
+{
+    int32 TileRelX;
+    int32 TileRelY;
+
+    int32 TileChunkX;
+    int32 TileChunkY;
+    int32 TileChunkZ;
 };
 struct tile_map_position
 {
-    uint32 AbsTileX;
-    uint32 AbsTileY;
-    uint32 AbsTileZ;
+    int32 AbsTileX;
+    int32 AbsTileY;
+    int32 AbsTileZ;
 
     v2 Offset_;
 };
 
 struct tile_chunk
 {
-    uint32 *Tiles;
+    int32 TileChunkX;
+    int32 TileChunkY;
+    int32 TileChunkZ;
+
+    int32 *Tiles;
+
+    tile_chunk *NextInHash;
 };
 
 struct tile_map
 {
-    uint32 ChunkShift;
-    uint32 ChunkMask;
+    int32 ChunkShift;
+    int32 ChunkMask;
+    int32 ChunkDim;
 
     real32 TileSideInMeters;
 
-    uint32 ChunkDim;
-
-    uint32 TileChunkCountX;
-    uint32 TileChunkCountY;
-    uint32 TileChunkCountZ;
-
-    tile_chunk *TileChunks;
+    tile_chunk TileChunkHash[4096];
 };
+
 #define HANDMADEHERO_HANDMADE_TILE_H
 #endif //HANDMADEHERO_HANDMADE_TILE_H
