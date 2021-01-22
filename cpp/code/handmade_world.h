@@ -10,21 +10,11 @@ struct world_difference
     real32 deltaZ;
 };
 
-struct tile_chunk_position
-{
-    int32 TileRelX;
-    int32 TileRelY;
-
-    int32 TileChunkX;
-    int32 TileChunkY;
-    int32 TileChunkZ;
-};
-
 struct world_position
 {
-    int32 AbsTileX;
-    int32 AbsTileY;
-    int32 AbsTileZ;
+    int32 ChunkX;
+    int32 ChunkY;
+    int32 ChunkZ;
 
     v2 Offset_;
 };
@@ -49,10 +39,9 @@ struct world_chunk
 struct world
 {
     real32 TileSideInMeters;
+    real32 ChunkSideInMeters;
 
-    int32 ChunkShift;
-    int32 ChunkMask;
-    int32 ChunkDim;
+    world_entity_block *FirstFree;
 
     world_chunk ChunkHash[4096];
 };
