@@ -513,33 +513,33 @@ MovePlayer(game_state *GameState, entity Entity, v2 accelOfPlayer, real32 deltat
                     real32 DiameterW = TestEntity.Low->Width + Entity.Low->Width;
                     real32 DiameterH = TestEntity.Low->Height + Entity.Low->Height;
 
-                    v2 MinCorner = -0.5f * v2{DiameterW, DiameterH};
-                    v2 MaxCorner = 0.5f * v2{DiameterW, DiameterH};
+                    v2 MinCorner = -0.5f * V2(DiameterW, DiameterH);
+                    v2 MaxCorner = 0.5f * V2(DiameterW, DiameterH);
                     v2 Rel = Entity.High->P - TestEntity.High->P;
 
                     if (TestWall(MinCorner.X, Playerdelta.X, Playerdelta.Y, Rel.X, Rel.Y, &tMin,
                                  MinCorner.Y, MaxCorner.Y))
                     {
-                        WallNormal = v2{-1, 0};
+                        WallNormal = V2(-1, 0);
                         HitHighEntityIndex = TestHighEntityIndex;
                     }
                     if (TestWall(MaxCorner.X, Playerdelta.X, Playerdelta.Y, Rel.X, Rel.Y, &tMin,
                                  MinCorner.Y, MaxCorner.Y))
                     {
-                        WallNormal = v2{1, 0};
+                        WallNormal = V2(1, 0);
                         HitHighEntityIndex = TestHighEntityIndex;
                     }
 
                     if (TestWall(MinCorner.Y, Playerdelta.Y, Playerdelta.X, Rel.Y, Rel.X, &tMin,
                                  MinCorner.X, MaxCorner.X))
                     {
-                        WallNormal = v2{0, -1};
+                        WallNormal = V2(0, -1);
                         HitHighEntityIndex = TestHighEntityIndex;
                     }
                     if (TestWall(MaxCorner.Y, Playerdelta.Y, Playerdelta.X, Rel.Y, Rel.X, &tMin,
                                  MinCorner.X, MaxCorner.X))
                     {
-                        WallNormal = v2{0, 1};
+                        WallNormal = V2(0, 1);
                         HitHighEntityIndex = TestHighEntityIndex;
                     }
                 }
@@ -894,7 +894,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             v2 accelOfPlayer = {};
             if (Controller->IsAnalog)
             {
-                accelOfPlayer = v2{Controller->StickAverageX, Controller->StickAverageY};
+                accelOfPlayer = V2(Controller->StickAverageX, Controller->StickAverageY);
             } else
             {
                 if (Controller->MoveUp.EndedDown)
@@ -971,46 +971,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     real32 ScreenCenterY = (real32) Buffer->Height * 0.5f;
     real32 TileSideInPixels = 60;
     real32 MetersToPixel = TileSideInPixels / World->TileSideInMeters;
-
-#if 0
-    for (int32 RelRow = -10; RelRow < 10; ++RelRow)
-    {
-        for (int32 RelColumn = -20; RelColumn < 20; ++RelColumn)
-        {
-            uint32 Column = (uint32) RelColumn + GameState->CameraP.ChunkX;
-            uint32 Row = (uint32) RelRow + GameState->CameraP.ChunkY;
-
-            uint32 TileID = GetTileValue(World, Column, Row, GameState->CameraP.ChunkZ);
-
-            if (TileID > 1)
-            {
-                real32 Gray = 0.2f;
-                if (TileID == 2)
-                {
-                    Gray = 0.2f;
-                }
-                if (TileID > 2)
-                {
-                    Gray = 0.5f;
-                }
-                if ((Row == GameState->CameraP.ChunkY) && (Column == GameState->CameraP.ChunkX))
-                {
-                    Gray = 0.0;
-                }
-
-                v2 Center = {(ScreenCenterX - (MetersToPixel * GameState->CameraP.Offset_.X)) +
-                             ((real32) RelColumn) * TileSideInPixels,
-                             (ScreenCenterY + (MetersToPixel * GameState->CameraP.Offset_.Y)) -
-                             ((real32) RelRow) * TileSideInPixels};
-                v2 TileSide = {0.5f * TileSideInPixels, 0.5f * TileSideInPixels};
-                v2 vMin = Center - 0.9f * TileSide;
-                v2 vMax = Center + 0.9f * TileSide;
-
-                DrawRectangle(Buffer, vMin, vMax, Gray, Gray, Gray);
-            }
-        }
-    }
-#endif
 
     for (uint32 HighEntityIndex = 1; HighEntityIndex < GameState->HighEntityCount; ++HighEntityIndex)
     {

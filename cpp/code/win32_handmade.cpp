@@ -1,4 +1,3 @@
-#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnull-dereference"
 
 #pragma ide diagnostic ignored "modernize-loop-convert"
@@ -1479,4 +1478,3 @@ WinMain(
     return (0);
 }
 
-#pragma clang diagnostic pop
