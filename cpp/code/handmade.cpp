@@ -70,6 +70,16 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, int YOffset)
 }
 #endif
 
+#if HANDMADE_WIN32
+#define RED_PLACE 0
+#define GREEN_PLACE 8
+#define BLUE_PLACE 16
+#else
+#define RED_PLACE 16
+#define GREEN_PLACE 8
+#define BLUE_PLACE 0
+#endif
+
 internal void
 DrawRectangle(game_offscreen_buffer *Buffer, v2 vMin, v2 vMax,
               real32 R, real32 G, real32 B)
@@ -94,9 +104,9 @@ DrawRectangle(game_offscreen_buffer *Buffer, v2 vMin, v2 vMax,
     {
         MaxY = Buffer->Height;
     }
-    uint32 Color = ((RoundReal32ToUInt32(R * 255.0f) << 16) |
-                    (RoundReal32ToUInt32(G * 255.0f) << 8) |
-                    (RoundReal32ToUInt32(B * 255.0f) << 0));
+    uint32 Color = ((RoundReal32ToUInt32(R * 255.0f) << RED_PLACE) |
+                    (RoundReal32ToUInt32(G * 255.0f) << GREEN_PLACE) |
+                    (RoundReal32ToUInt32(B * 255.0f) << BLUE_PLACE));
     uint8 *Row = ((uint8 *) Buffer->Memory +
                   MinX * Buffer->BytesPerPixel +
                   MinY * Buffer->Pitch);
@@ -156,21 +166,21 @@ DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 RealX, r
         {
             real32 A = (real32) ((*Source >> 24) & 0xFF) / 255.0f;
             A *= CAlpha;
-            real32 SR = (real32) ((*Source >> 16) & 0xFF);
-            real32 SG = (real32) ((*Source >> 8) & 0xFF);
-            real32 SB = (real32) ((*Source >> 0) & 0xFF);
+            real32 SR = (real32) ((*Source >> RED_PLACE) & 0xFF);
+            real32 SG = (real32) ((*Source >> GREEN_PLACE) & 0xFF);
+            real32 SB = (real32) ((*Source >> BLUE_PLACE) & 0xFF);
 
-            real32 DR = (real32) ((*Dest >> 16) & 0xFF);
-            real32 DG = (real32) ((*Dest >> 8) & 0xFF);
-            real32 DB = (real32) ((*Dest >> 0) & 0xFF);
+            real32 DR = (real32) ((*Dest >> RED_PLACE) & 0xFF);
+            real32 DG = (real32) ((*Dest >> GREEN_PLACE) & 0xFF);
+            real32 DB = (real32) ((*Dest >> BLUE_PLACE) & 0xFF);
 
             real32 R = (1.0f - A) * DR + A * SR;
             real32 G = (1.0f - A) * DG + A * SG;
             real32 B = (1.0f - A) * DB + A * SB;
 
-            *Dest = (((uint32) (R + 0.5f) << 16) |
-                     ((uint32) (G + 0.5f) << 8) |
-                     ((uint32) (B + 0.5f) << 0));
+            *Dest = (((uint32) (R + 0.5f) << RED_PLACE) |
+                     ((uint32) (G + 0.5f) << GREEN_PLACE) |
+                     ((uint32) (B + 0.5f) << BLUE_PLACE));
             Dest++;
             Source++;
         }
