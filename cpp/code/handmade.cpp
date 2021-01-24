@@ -974,7 +974,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #if 1
     DrawRectangle(Buffer, V2(0, 0),
                   V2((real32) Buffer->Width, (real32) Buffer->Height),
-                  0.2f, 0.2f, 0.2f);
+                  0.1f, 0.2f, 0.1f);
 #else
     DrawBitmap(Buffer, &GameState->Backdrop, 0, 0);
 #endif
