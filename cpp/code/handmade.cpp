@@ -71,13 +71,13 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, int YOffset)
 #endif
 
 #if HANDMADE_WIN32
-#define RED_PLACE 0
-#define GREEN_PLACE 8
-#define BLUE_PLACE 16
-#else
 #define RED_PLACE 16
 #define GREEN_PLACE 8
 #define BLUE_PLACE 0
+#else
+#define RED_PLACE 0
+#define GREEN_PLACE 8
+#define BLUE_PLACE 16
 #endif
 
 internal void
@@ -106,7 +106,8 @@ DrawRectangle(game_offscreen_buffer *Buffer, v2 vMin, v2 vMax,
     }
     uint32 Color = ((RoundReal32ToUInt32(R * 255.0f) << RED_PLACE) |
                     (RoundReal32ToUInt32(G * 255.0f) << GREEN_PLACE) |
-                    (RoundReal32ToUInt32(B * 255.0f) << BLUE_PLACE));
+                    (RoundReal32ToUInt32(B * 255.0f) << BLUE_PLACE) |
+                    (RoundReal32ToUInt32(255.0f) << 24));
     uint8 *Row = ((uint8 *) Buffer->Memory +
                   MinX * Buffer->BytesPerPixel +
                   MinY * Buffer->Pitch);
@@ -180,7 +181,8 @@ DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 RealX, r
 
             *Dest = (((uint32) (R + 0.5f) << RED_PLACE) |
                      ((uint32) (G + 0.5f) << GREEN_PLACE) |
-                     ((uint32) (B + 0.5f) << BLUE_PLACE));
+                     ((uint32) (B + 0.5f) << BLUE_PLACE) |
+                     ((uint32) (255.0f) << 24));
             Dest++;
             Source++;
         }
@@ -251,9 +253,9 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
         Assert(BlueScan.Found)
         Assert(AlphaScan.Found)
 
-        int32 RedShift = 16 - (int32) RedScan.Index;
-        int32 GreenShift = 8 - (int32) GreenScan.Index;
-        int32 BlueShift = 0 - (int32) BlueScan.Index;
+        int32 RedShift = RED_PLACE - (int32) RedScan.Index;
+        int32 GreenShift = GREEN_PLACE - (int32) GreenScan.Index;
+        int32 BlueShift = BLUE_PLACE - (int32) BlueScan.Index;
         int32 AlphaShift = 24 - (int32) AlphaScan.Index;
 
         uint32 *Source = Pixels;
