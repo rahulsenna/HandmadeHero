@@ -97,7 +97,7 @@ RecanonicalizeCoord(world *World, int32 *Tile, real32 *TileRel)
 
     int32 TileMovedAmt = RoundReal32ToInt32((*TileRel / World->ChunkSideInMeters));
     *Tile += TileMovedAmt;
-    *TileRel -= TileMovedAmt * World->ChunkSideInMeters;
+    *TileRel -= (real32) TileMovedAmt * World->ChunkSideInMeters;
 
     Assert(IsCanonical(World, *TileRel))
 }
@@ -158,6 +158,19 @@ ChunkPosFromTilePos(world *World, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ
     Result.ChunkX = AbsTileX / TILES_PER_CHUNK;
     Result.ChunkY = AbsTileY / TILES_PER_CHUNK;
     Result.ChunkZ = AbsTileZ / TILES_PER_CHUNK;
+
+    if (AbsTileX < 0)
+    {
+        --Result.ChunkX;
+    }
+    if (AbsTileY < 0)
+    {
+        --Result.ChunkY;
+    }
+    if (AbsTileZ < 0)
+    {
+        --Result.ChunkZ;
+    }
 
     Result.Offset_.X = (real32) (AbsTileX - (Result.ChunkX * TILES_PER_CHUNK)) * World->TileSideInMeters;
     Result.Offset_.Y = (real32) (AbsTileY - (Result.ChunkY * TILES_PER_CHUNK)) * World->TileSideInMeters;

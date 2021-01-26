@@ -34,7 +34,6 @@ PushSize_(memory_arena *Arena, mem_index Size)
 #include "handmade_intrinsics.h"
 #include "handmade_world.h"
 
-
 struct loaded_bitmap
 {
     int32 Width;
@@ -44,19 +43,33 @@ struct loaded_bitmap
 
 struct hero_bitmaps
 {
-    int32 AlignX;
-    int32 AlignY;
+    v2 Align;
     loaded_bitmap HeroHead;
     loaded_bitmap HeroTorso;
     loaded_bitmap HeroCape;
 };
 
+struct entity_visible_piece
+{
+    loaded_bitmap *Bitmap;
+    v2 Offset;
+    real32 OffsetZ;
+    real32 Alpha;
+};
+
+struct entity_visible_piece_group
+{
+    uint32 Count;
+    entity_visible_piece Pieces[8];
+};
 struct high_entity
 {
     v2 P;
     v2 deltaP;
     uint32 ChunkZ;
     uint32 FacingDirection;
+
+    real32 tBob;
 
     real32 Z;
     real32 deltaZ;
@@ -68,6 +81,8 @@ enum entity_type
 {
     EntityType_Hero,
     EntityType_Wall,
+    EntityType_Monster,
+    EntityType_Familiar,
     EntityType_Null,
 };
 

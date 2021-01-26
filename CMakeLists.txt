@@ -102,10 +102,11 @@ else ()
     target_compile_options(GameCode PUBLIC -g -o -dynamiclib)
     set_target_properties(GameCode PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/HandmadeHero.app/Contents/Resources/")
 
-#    ADD_CUSTOM_COMMAND(TARGET HandmadeHero
-#            POST_BUILD
-#            COMMAND bash "../misc/bundle.sh"
-#            )
+#[[    ADD_CUSTOM_COMMAND(TARGET HandmadeHero
+            POST_BUILD
+            COMMAND bash "../code/copyData.sh"
+            )]]
+
 #    ADD_CUSTOM_COMMAND(TARGET GameCode
 #            POST_BUILD
 #            COMMAND bash "../misc/bundleLIB.sh"
