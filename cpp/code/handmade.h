@@ -1,7 +1,3 @@
-
-#pragma clang diagnostic ignored "-Wnull-dereference"
-#pragma ide diagnostic ignored "modernize-use-auto"
-
 //
 // Created by AgentOfChaos on 11/20/2020.
 //
@@ -54,14 +50,12 @@ struct entity_visible_piece
     loaded_bitmap *Bitmap;
     v2 Offset;
     real32 OffsetZ;
-    real32 Alpha;
+    real32 EntityZC;
+
+    real32 R, G, B, A;
+    v2 Dim;
 };
 
-struct entity_visible_piece_group
-{
-    uint32 Count;
-    entity_visible_piece Pieces[8];
-};
 struct high_entity
 {
     v2 P;
@@ -76,7 +70,6 @@ struct high_entity
 
     uint32 LowEntityIndex;
 };
-
 enum entity_type
 {
     EntityType_Hero,
@@ -86,6 +79,13 @@ enum entity_type
     EntityType_Null,
 };
 
+#define HIT_POINT_SUB_COUNT 4
+
+struct hit_point
+{
+    uint8 Flags;
+    uint8 FilledAmount;
+};
 struct low_entity
 {
     entity_type Type;
@@ -96,6 +96,9 @@ struct low_entity
     bool32 Collides;
 
     uint32 HighEntityIndex;
+
+    uint32 HitPointMax;
+    hit_point HitPoint[16];
 };
 
 struct entity
@@ -116,7 +119,7 @@ struct game_state
     uint32 PlayerIndexForController[ArrayCount(((game_input *) 0)->Controllers)];
 
     uint32 LowEntityCount;
-    low_entity LowEntities[1000000];
+    low_entity LowEntities[500000];
 
     loaded_bitmap Tree;
 
@@ -126,6 +129,14 @@ struct game_state
     loaded_bitmap Backdrop;
     loaded_bitmap HeroShadow;
     hero_bitmaps HeroBitmaps[4];
+    real32 MetersToPixel;
+};
+
+struct entity_visible_piece_group
+{
+    game_state *GameState;
+    uint32 Count;
+    entity_visible_piece Pieces[16];
 };
 
 #define HANDMADEHERO_HANDMADE_H

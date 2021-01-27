@@ -1,8 +1,4 @@
 
-#pragma ide diagnostic ignored "NullDereferences"
-#pragma ide diagnostic ignored "modernize-use-auto"
-#pragma ide diagnostic ignored "modernize-loop-convert"
-#pragma ide diagnostic ignored "modernize-use-nullptr"
 //
 // Created by AgentOfChaos on 12/7/2020.
 //

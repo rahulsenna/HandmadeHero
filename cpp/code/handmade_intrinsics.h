@@ -2,7 +2,6 @@
 // Created by AgentOfChaos on 12/5/2020.
 //
 
-#pragma clang diagnostic ignored "-Wunused-macros"
 #ifndef HANDMADEHERO_HANDMADE_INTRINSICS_H
 
 #include "math.h"

@@ -1,22 +1,3 @@
-#pragma clang diagnostic ignored "-Wnull-dereference"
-
-#pragma ide diagnostic ignored "modernize-loop-convert"
-#pragma clang diagnostic ignored "-Wwritable-strings"
-#pragma ide diagnostic ignored "bugprone-suspicious-include"
-
-#pragma ide diagnostic ignored "UnusedValue"
-#pragma ide diagnostic ignored "UnusedLocalVariable"
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
-#pragma ide diagnostic ignored "OCUnusedMacroInspection"
-
-//#pragma ide diagnostic ignored "cppcoreguidelines-pro-type-member-init"
-#pragma ide diagnostic ignored "modernize-deprecated-headers"
-#pragma ide diagnostic ignored "modernize-use-auto"
-#pragma ide diagnostic ignored "modernize-use-nullptr"
-#pragma ide diagnostic ignored "hicpp-signed-bitwise"
-
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-
 #include "handmade_platform.h"
 
 #include <windows.h>

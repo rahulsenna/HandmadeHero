@@ -1,14 +1,7 @@
-#pragma ide diagnostic ignored "bugprone-integer-division"
-#pragma ide diagnostic ignored "modernize-use-nullptr"
-#pragma ide diagnostic ignored "cert-str34-c"
-#pragma ide diagnostic ignored "modernize-use-auto"
-#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
 
 #import <AppKit/AppKit.h>
-#import <QuartzCore/QuartzCore.h>
 #import <IOKit/hid/IOHIDLib.h>
 #import <AudioToolbox/AudioToolbox.h>
-#include <mach/mach_init.h>
 #include <mach/mach_time.h>
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
@@ -188,7 +181,7 @@ MacGetLastWriteTime(char *Filename)
 internal mac_replay_buffer *
 MacGetReplayBuffer(mac_state *MacState, int unsigned Index)
 {
-    Assert(Index < ArrayCount(MacState->ReplayBuffers));
+    Assert(Index < ArrayCount(MacState->ReplayBuffers))
     mac_replay_buffer *ReplayBuffer = &MacState->ReplayBuffers[Index];
     return ReplayBuffer;
 }
