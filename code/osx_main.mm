@@ -474,25 +474,21 @@ void UpdateKeyboardControllerWith(thread_context *Thread, mac_game_controller *M
     switch ([Event type])
     {
         case NSEventTypeKeyDown:
-            if (Event.keyCode == LeftArrowKeyCode &&
-                MacKeyboardController->DPadX != 1)
+            if (Event.keyCode == LeftArrowKeyCode)
             {
-                MacKeyboardController->DPadX = -1;
+                MacKeyboardController->ActionLeftState = 1;
                 break;
-            } else if (Event.keyCode == RightArrowKeyCode &&
-                       MacKeyboardController->DPadX != -1)
+            } else if (Event.keyCode == RightArrowKeyCode)
             {
-                MacKeyboardController->DPadX = 1;
+                MacKeyboardController->ActionRightState = 1;
                 break;
-            } else if (Event.keyCode == DownArrowKeyCode &&
-                       MacKeyboardController->DPadY != 1)
+            } else if (Event.keyCode == DownArrowKeyCode)
             {
-                MacKeyboardController->DPadY = -1;
+                MacKeyboardController->ActionDownState = 1;
                 break;
-            } else if (Event.keyCode == UpArrowKeyCode &&
-                       MacKeyboardController->DPadY != -1)
+            } else if (Event.keyCode == UpArrowKeyCode)
             {
-                MacKeyboardController->DPadY = 1;
+                MacKeyboardController->ActionUpState = 1;
                 break;
             } else if (Event.keyCode == AKeyCode &&
                        MacKeyboardController->DPadX != 1)
@@ -516,7 +512,7 @@ void UpdateKeyboardControllerWith(thread_context *Thread, mac_game_controller *M
                 break;
             } else if (Event.keyCode == FKeyCode)
             {
-                MacKeyboardController->ButtonYState = 1;
+                MacKeyboardController->ActionUpState = 1;
                 break;
             } else if (Event.keyCode == SpaceKeyCode)
             {
@@ -553,25 +549,21 @@ void UpdateKeyboardControllerWith(thread_context *Thread, mac_game_controller *M
             }
 
         case NSEventTypeKeyUp:
-            if (Event.keyCode == LeftArrowKeyCode &&
-                MacKeyboardController->DPadX == -1)
+            if (Event.keyCode == LeftArrowKeyCode)
             {
-                MacKeyboardController->DPadX = 0;
+                MacKeyboardController->ActionLeftState = 0;
                 break;
-            } else if (Event.keyCode == RightArrowKeyCode &&
-                       MacKeyboardController->DPadX == 1)
+            } else if (Event.keyCode == RightArrowKeyCode)
             {
-                MacKeyboardController->DPadX = 0;
+                MacKeyboardController->ActionRightState = 0;
                 break;
-            } else if (Event.keyCode == DownArrowKeyCode &&
-                       MacKeyboardController->DPadY == -1)
+            } else if (Event.keyCode == DownArrowKeyCode)
             {
-                MacKeyboardController->DPadY = 0;
+                MacKeyboardController->ActionDownState = 0;
                 break;
-            } else if (Event.keyCode == UpArrowKeyCode &&
-                       MacKeyboardController->DPadY == 1)
+            } else if (Event.keyCode == UpArrowKeyCode)
             {
-                MacKeyboardController->DPadY = 0;
+                MacKeyboardController->ActionUpState = 0;
                 break;
             } else if (Event.keyCode == AKeyCode &&
                        MacKeyboardController->DPadX != 1)
@@ -595,7 +587,7 @@ void UpdateKeyboardControllerWith(thread_context *Thread, mac_game_controller *M
                 break;
             } else if (Event.keyCode == FKeyCode)
             {
-                MacKeyboardController->ButtonYState = 0;
+                MacKeyboardController->ActionUpState = 0;
                 break;
             } else if (Event.keyCode == SpaceKeyCode)
             {
@@ -613,8 +605,7 @@ void UpdateKeyboardControllerWith(thread_context *Thread, mac_game_controller *M
             {
                 break;
             }
-        default:
-            break;
+        default:break;
     }
 }
 
@@ -641,16 +632,16 @@ void ControllerInput(void *context, IOReturn result,
 
         if (Usage == MacGameController->ButtonAUsageID)
         {
-            MacGameController->ButtonAState = ButtonState;
+            MacGameController->ActionDownState = ButtonState;
         } else if (Usage == MacGameController->ButtonBUsageID)
         {
-            MacGameController->ButtonBState = ButtonState;
+            MacGameController->ActionRightState = ButtonState;
         } else if (Usage == MacGameController->ButtonXUsageID)
         {
-            MacGameController->ButtonXState = ButtonState;
+            MacGameController->ActionLeftState = ButtonState;
         } else if (Usage == MacGameController->ButtonYUsageID)
         {
-            MacGameController->ButtonYState = ButtonState;
+            MacGameController->ActionUpState = ButtonState;
         } else if (Usage == MacGameController->ButtonLeftShoulderUsageID)
         {
             MacGameController->ButtonLeftShoulderState = ButtonState;
@@ -684,40 +675,31 @@ void ControllerInput(void *context, IOReturn result,
 
             switch (DPadState)
             {
-                case 0:
-                    DPadX = 0;
+                case 0:DPadX = 0;
                     DPadY = 1;
                     break;
-                case 1:
-                    DPadX = 1;
+                case 1:DPadX = 1;
                     DPadY = 1;
                     break;
-                case 2:
-                    DPadX = 1;
+                case 2:DPadX = 1;
                     DPadY = 0;
                     break;
-                case 3:
-                    DPadX = 1;
+                case 3:DPadX = 1;
                     DPadY = -1;
                     break;
-                case 4:
-                    DPadX = 0;
+                case 4:DPadX = 0;
                     DPadY = -1;
                     break;
-                case 5:
-                    DPadX = -1;
+                case 5:DPadX = -1;
                     DPadY = -1;
                     break;
-                case 6:
-                    DPadX = -1;
+                case 6:DPadX = -1;
                     DPadY = 0;
                     break;
-                case 7:
-                    DPadX = -1;
+                case 7:DPadX = -1;
                     DPadY = 1;
                     break;
-                default:
-                    DPadX = 0;
+                default:DPadX = 0;
                     DPadY = 0;
                     break;
             }
@@ -1169,8 +1151,7 @@ int main(int argc, const char *argv[])
 
             switch ([Event type])
             {
-                default:
-                    [NSApp sendEvent:Event];
+                default:[NSApp sendEvent:Event];
             }
         } while (Event != nil);
 
@@ -1203,21 +1184,21 @@ int main(int argc, const char *argv[])
             game_controller_input *OldController = &OldInput->Controllers[ControllerIndex];
             game_controller_input *NewController = &NewInput->Controllers[ControllerIndex];
 
-            MacProcessGameControllerButton(&(OldController->AButton),
-                                           &(NewController->AButton),
-                                           Controller.ButtonAState);
+            MacProcessGameControllerButton(&(OldController->ActionDown),
+                                           &(NewController->ActionDown),
+                                           Controller.ActionDownState);
 
-            MacProcessGameControllerButton(&(OldController->BButton),
-                                           &(NewController->BButton),
-                                           Controller.ButtonBState);
+            MacProcessGameControllerButton(&(OldController->ActionRight),
+                                           &(NewController->ActionRight),
+                                           Controller.ActionRightState);
 
-            MacProcessGameControllerButton(&(OldController->XButton),
-                                           &(NewController->XButton),
-                                           Controller.ButtonXState);
+            MacProcessGameControllerButton(&(OldController->ActionLeft),
+                                           &(NewController->ActionLeft),
+                                           Controller.ActionLeftState);
 
-            MacProcessGameControllerButton(&(OldController->YButton),
-                                           &(NewController->YButton),
-                                           Controller.ButtonYState);
+            MacProcessGameControllerButton(&(OldController->ActionUp),
+                                           &(NewController->ActionUp),
+                                           Controller.ActionUpState);
 
             MacProcessGameControllerButton(&(OldController->MoveDown),
                                            &(NewController->MoveDown),

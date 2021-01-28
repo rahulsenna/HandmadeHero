@@ -151,10 +151,10 @@ struct game_controller_input
             game_button_state MoveLeft;
             game_button_state MoveRight;
 
-            game_button_state AButton;
-            game_button_state BButton;
-            game_button_state XButton;
-            game_button_state YButton;
+            game_button_state ActionDown;
+            game_button_state ActionRight;
+            game_button_state ActionLeft;
+            game_button_state ActionUp;
 
             game_button_state LeftShoulder;
             game_button_state RightShoulder;

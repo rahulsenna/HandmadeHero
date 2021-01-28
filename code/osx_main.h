@@ -29,10 +29,10 @@ struct mac_game_controller
     int32 DPadX;
     int32 DPadY;
 
-    bool32 ButtonAState;
-    bool32 ButtonBState;
-    bool32 ButtonXState;
-    bool32 ButtonYState;
+    bool32 ActionDownState;
+    bool32 ActionRightState;
+    bool32 ActionLeftState;
+    bool32 ActionUpState;
     bool32 ButtonStart;
 
     bool32 ButtonLeft;

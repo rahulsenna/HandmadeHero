@@ -76,6 +76,7 @@ enum entity_type
     EntityType_Wall,
     EntityType_Monster,
     EntityType_Familiar,
+    EntityType_Sword,
     EntityType_Null,
 };
 
@@ -99,6 +100,9 @@ struct low_entity
 
     uint32 HitPointMax;
     hit_point HitPoint[16];
+
+    uint32 SwordLowIndex;
+    real32 DistanceRemaining;
 };
 
 struct entity
@@ -122,10 +126,11 @@ struct game_state
     low_entity LowEntities[500000];
 
     loaded_bitmap Tree;
+    loaded_bitmap Sword;
 
     high_entity HighEntities_[256];
-    uint32 HighEntityCount;
 
+    uint32 HighEntityCount;
     loaded_bitmap Backdrop;
     loaded_bitmap HeroShadow;
     hero_bitmaps HeroBitmaps[4];
