@@ -28,6 +28,7 @@ PushSize_(memory_arena *Arena, mem_index Size)
 }
 
 #include "handmade_intrinsics.h"
+#include "handmade_math.h"
 #include "handmade_world.h"
 
 struct loaded_bitmap
@@ -54,6 +55,13 @@ struct entity_visible_piece
 
     real32 R, G, B, A;
     v2 Dim;
+};
+
+struct move_spec
+{
+    bool32 UnitMaxAccelVector;
+    real32 Speed;
+    real32 Drag;
 };
 
 struct high_entity
