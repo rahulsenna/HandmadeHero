@@ -25,7 +25,8 @@ if (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|Ninja)")
 
     include(GenerateExportHeader)
     add_library(handmade SHARED cpp/code/handmade.cpp)
-    target_link_options(handmade PUBLIC /EXPORT:GameUpdateAndRender /EXPORT:GameGetSoundSamples /PDB:handmade_pdb%random%.pdb)
+    target_link_options(handmade PUBLIC /EXPORT:GameUpdateAndRender
+            /EXPORT:GameGetSoundSamples /PDB:handmade_pdb%random%.pdb)
 
 
     ADD_CUSTOM_COMMAND(TARGET handmade
