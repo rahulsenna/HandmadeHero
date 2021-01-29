@@ -408,7 +408,7 @@ InitHitPoints(low_entity *EntityLow, uint32 HitPointCount)
     Assert(HitPointCount < ArrayCount(EntityLow->HitPoint))
     EntityLow->HitPointMax = HitPointCount;
 
-    for (int HitPointIndex = 0; HitPointIndex < EntityLow->HitPointMax; ++HitPointIndex)
+    for (uint32 HitPointIndex = 0; HitPointIndex < EntityLow->HitPointMax; ++HitPointIndex)
     {
         hit_point *HitPoint = EntityLow->HitPoint + HitPointIndex;
         HitPoint->Flags = 0;

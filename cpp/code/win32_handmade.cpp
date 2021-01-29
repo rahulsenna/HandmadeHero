@@ -864,16 +864,16 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
                         Win32ProcessKeyboardMessage(&KeyboardController->RightShoulder, IsDown);
                     } else if (VKCode == VK_UP)
                     {
-                        Win32ProcessKeyboardMessage(&KeyboardController->YButton, IsDown);
+                        Win32ProcessKeyboardMessage(&KeyboardController->ActionUp, IsDown);
                     } else if (VKCode == VK_DOWN)
                     {
-                        Win32ProcessKeyboardMessage(&KeyboardController->AButton, IsDown);
+                        Win32ProcessKeyboardMessage(&KeyboardController->ActionDown, IsDown);
                     } else if (VKCode == VK_LEFT)
                     {
-                        Win32ProcessKeyboardMessage(&KeyboardController->XButton, IsDown);
+                        Win32ProcessKeyboardMessage(&KeyboardController->ActionLeft, IsDown);
                     } else if (VKCode == VK_RIGHT)
                     {
-                        Win32ProcessKeyboardMessage(&KeyboardController->BButton, IsDown);
+                        Win32ProcessKeyboardMessage(&KeyboardController->ActionRight, IsDown);
                     } else if (VKCode == VK_ESCAPE)
                     {
                         Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
@@ -1220,14 +1220,14 @@ WinMain(
                                         (NewController->StickAverageY > Threshold) ? 1 : 0,
                                         &OldController->MoveRight, 1, &NewController->MoveRight);
 
-                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->AButton,
-                                                                XINPUT_GAMEPAD_A, &NewController->AButton);
-                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->BButton,
-                                                                XINPUT_GAMEPAD_B, &NewController->BButton);
-                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->XButton,
-                                                                XINPUT_GAMEPAD_X, &NewController->XButton);
-                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->YButton,
-                                                                XINPUT_GAMEPAD_Y, &NewController->YButton);
+                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->ActionDown,
+                                                                XINPUT_GAMEPAD_A, &NewController->ActionDown);
+                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->ActionRight,
+                                                                XINPUT_GAMEPAD_B, &NewController->ActionRight);
+                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->ActionLeft,
+                                                                XINPUT_GAMEPAD_X, &NewController->ActionLeft);
+                                Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->ActionUp,
+                                                                XINPUT_GAMEPAD_Y, &NewController->ActionUp);
 
                                 Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->LeftShoulder,
                                                                 XINPUT_GAMEPAD_LEFT_SHOULDER,
