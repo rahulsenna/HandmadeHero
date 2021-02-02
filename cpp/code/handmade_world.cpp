@@ -26,8 +26,9 @@ IsValid(world_position P)
 inline bool32
 IsCanonical(world *World, real32 TileRel)
 {
-    bool32 Result = ((TileRel >= -0.5f * World->ChunkSideInMeters) &&
-                     (TileRel <= 0.5f * World->ChunkSideInMeters));
+    real32 Epsilon = 0.0001f;
+    bool32 Result = ((TileRel >= -(0.5f * World->ChunkSideInMeters + Epsilon)) &&
+                     (TileRel <= (0.5f * World->ChunkSideInMeters + Epsilon)));
     return (Result);
 }
 
@@ -183,8 +184,12 @@ ChunkPosFromTilePos(world *World, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ
         --Result.ChunkZ;
     }
 
-    Result.Offset_.X = (real32) (AbsTileX - (Result.ChunkX * TILES_PER_CHUNK)) * World->TileSideInMeters;
-    Result.Offset_.Y = (real32) (AbsTileY - (Result.ChunkY * TILES_PER_CHUNK)) * World->TileSideInMeters;
+    Result.Offset_.X = (real32) ((AbsTileX - TILES_PER_CHUNK / 2) -
+                                 (Result.ChunkX * TILES_PER_CHUNK)) * World->TileSideInMeters;
+    Result.Offset_.Y = (real32) ((AbsTileY - TILES_PER_CHUNK / 2) -
+                                 (Result.ChunkY * TILES_PER_CHUNK)) * World->TileSideInMeters;
+
+    Assert(IsCanonical(World, Result.Offset_))
     return (Result);
 }
 
@@ -198,12 +203,12 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, uint32 LowEntityIndex
 
     if (OldP && NewP && AreOnSameChunk(World, OldP, NewP))
     {
-        // NOTE(rahul): Leave entity where it is
+        // NOTE(rahul): Leave sim_entity where it is
     } else
     {
         if (OldP)
         {
-            // NOTE(rahul): Pull the entity out of it's old entity block
+            // NOTE(rahul): Pull the sim_entity out of it's old sim_entity block
             world_chunk *Chunk = GetWorldChunk(World, OldP->ChunkX, OldP->ChunkY, OldP->ChunkZ);
             Assert(Chunk)
             if (Chunk)
@@ -242,7 +247,7 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, uint32 LowEntityIndex
 
         if (NewP)
         {
-            // NOTE(rahul): Insert the entity into it's new entity block
+            // NOTE(rahul): Insert the sim_entity into it's new sim_entity block
             world_chunk *Chunk = GetWorldChunk(World, NewP->ChunkX, NewP->ChunkY, NewP->ChunkZ, Arena);
             Assert(Chunk)
             world_entity_block *Block = &Chunk->FirstBlock;
@@ -268,15 +273,31 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, uint32 LowEntityIndex
 
 internal void
 ChangeEntityLocation(memory_arena *Arena, world *World, uint32 LowEntityIndex,
-                     low_entity *LowEntity, world_position *OldP, world_position *NewP)
+                     low_entity *LowEntity, world_position NewPInit)
 {
+    world_position *OldP = 0;
+    world_position *NewP = 0;
+
+    if (!IsSet(&LowEntity->Sim, EntityFlag_NonSpatial) && IsValid(LowEntity->P))
+    {
+        OldP = &LowEntity->P;
+    }
+
+    if (IsValid(NewPInit))
+    {
+        NewP = &NewPInit;
+    }
+
     ChangeEntityLocationRaw(Arena, World, LowEntityIndex, OldP, NewP);
+
     if (NewP)
     {
         LowEntity->P = *NewP;
+        ClearFlag(&LowEntity->Sim, EntityFlag_NonSpatial);
     } else
     {
         LowEntity->P = NullPosition();
+        AddFlag(&LowEntity->Sim, EntityFlag_NonSpatial);
     }
 }
 

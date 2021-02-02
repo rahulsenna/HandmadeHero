@@ -112,6 +112,8 @@ struct game_memory
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
     debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
 };
+
+
 struct game_offscreen_buffer
 {
     void *Memory;

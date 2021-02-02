@@ -5,8 +5,8 @@
 
 #ifndef HANDMADEHERO_HANDMADE_H
 
-#define Minimum(A, B) ((A < B) ? (A) : (B))
-#define Maximum(A, B) ((A > B) ? (A) : (B))
+#define MINIMUM(A, B) ((A < B) ? (A) : (B))
+#define MAXIMUM(A, B) ((A > B) ? (A) : (B))
 
 struct memory_arena
 {
@@ -15,10 +15,18 @@ struct memory_arena
     mem_index Used;
 };
 
+inline void
+InitializeArena(memory_arena *Arena, mem_index Size, void *Base)
+{
+    Arena->Size = Size;
+    Arena->Base = (uint8 *) Base;
+    Arena->Used = 0;
+}
+
 #define PushStruct(Arena, type) (type *)PushSize_(Arena, sizeof(type))
 #define PushArray(Arena, Count, type) (type *)PushSize_(Arena, (Count * sizeof(type)))
 
-void *
+inline void *
 PushSize_(memory_arena *Arena, mem_index Size)
 {
     Assert(Arena->Used + Size <= Arena->Size)
@@ -27,9 +35,23 @@ PushSize_(memory_arena *Arena, mem_index Size)
     return (Result);
 }
 
+inline void
+ZeroSize(mem_index Size, void *Ptr)
+{
+    uint8 *Byte = (uint8 *) Ptr;
+    while (Size--)
+    {
+        *Byte++ = 0;
+    }
+}
+
+#define ZeroStruct(Instance) ZeroSize(sizeof(Instance), &(Instance))
+
 #include "handmade_intrinsics.h"
 #include "handmade_math.h"
 #include "handmade_world.h"
+#include "handmade_sim_region.h"
+#include "handmade_entity.h"
 
 struct loaded_bitmap
 {
@@ -63,61 +85,20 @@ struct move_spec
     real32 Speed;
     real32 Drag;
 };
-
-struct high_entity
-{
-    v2 P;
-    v2 deltaP;
-    uint32 ChunkZ;
-    uint32 FacingDirection;
-
-    real32 tBob;
-
-    real32 Z;
-    real32 deltaZ;
-
-    uint32 LowEntityIndex;
-};
-enum entity_type
-{
-    EntityType_Hero,
-    EntityType_Wall,
-    EntityType_Monster,
-    EntityType_Familiar,
-    EntityType_Sword,
-    EntityType_Null,
-};
-
 #define HIT_POINT_SUB_COUNT 4
 
-struct hit_point
-{
-    uint8 Flags;
-    uint8 FilledAmount;
-};
 struct low_entity
 {
-    entity_type Type;
-
+    sim_entity Sim;
     world_position P;
-    real32 Height, Width;
-    int32 deltaAbsTileZ;
-    bool32 Collides;
-
-    uint32 HighEntityIndex;
-
-    uint32 HitPointMax;
-    hit_point HitPoint[16];
-
-    uint32 SwordLowIndex;
-    real32 DistanceRemaining;
 };
 
-struct entity
+struct controlled_hero
 {
-    uint32 LowIndex;
-    low_entity *Low;
-    high_entity *High;
+    uint32 EntityIndex;
+    v2 accel;
+    v2 deltaSword;
+    real32 deltaZ;
 };
 
 struct game_state
@@ -128,17 +109,14 @@ struct game_state
     uint32 CameraFollowingEntityIndex;
     world_position CameraP;
 
-    uint32 PlayerIndexForController[ArrayCount(((game_input *) 0)->Controllers)];
+    controlled_hero ControlledHeroes[ArrayCount(((game_input *) 0)->Controllers)];
 
     uint32 LowEntityCount;
-    low_entity LowEntities[500000];
+    low_entity LowEntities[100000];
 
     loaded_bitmap Tree;
     loaded_bitmap Sword;
 
-    high_entity HighEntities_[256];
-
-    uint32 HighEntityCount;
     loaded_bitmap Backdrop;
     loaded_bitmap HeroShadow;
     hero_bitmaps HeroBitmaps[4];
@@ -151,6 +129,17 @@ struct entity_visible_piece_group
     uint32 Count;
     entity_visible_piece Pieces[16];
 };
+
+internal low_entity *
+GetLowEntity(game_state *GameState, uint32 Index)
+{
+    low_entity *Result = 0;
+    if ((Index > 0) && (Index < GameState->LowEntityCount))
+    {
+        Result = GameState->LowEntities + Index;
+    }
+    return (Result);
+}
 
 #define HANDMADEHERO_HANDMADE_H
 #endif //HANDMADEHERO_HANDMADE_H
