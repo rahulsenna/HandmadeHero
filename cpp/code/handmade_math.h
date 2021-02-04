@@ -27,9 +27,9 @@ struct v3
 
         struct
         {
-            real32 R, G, B, A;
+            real32 R, G, B;
         };
-        real32 E[2];
+        real32 E[3];
     };
 };
 
@@ -46,7 +46,7 @@ struct v4
         {
             real32 R, G, B, A;
         };
-        real32 E[2];
+        real32 E[4];
     };
 };
 
@@ -233,6 +233,15 @@ IsInRectangle(rectangle2 Rectangle, v2 Test)
                      (Test.Y >= Rectangle.Min.Y) &&
                      (Test.X < Rectangle.Max.X) &&
                      (Test.Y < Rectangle.Max.Y));
+    return (Result);
+}
+
+inline rectangle2
+AddRadiusTo(rectangle2 A, real32 RadiusW, real32 RadiusH)
+{
+    rectangle2 Result = {};
+    Result.Min = A.Min - V2(RadiusW, RadiusW);
+    Result.Max = A.Max + V2(RadiusH, RadiusH);
     return (Result);
 }
 

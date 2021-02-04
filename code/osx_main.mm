@@ -1025,8 +1025,8 @@ int main(int argc, const char *argv[])
     GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
     GameMemory.DEBUGPlatformWriteEntireFile = DEBUGPlatformWriteEntireFile;
 
-    // TODO: (ted)  Transient storage needs to be broken up into game transient and cache transient.
-    //              and only the former need be saved for state playback.
+    // TODO(ted):  Transient storage needs to be broken up into game transient and cache transient.
+    // and only the former need be saved for state playback.
     MacState.GameMemoryBlock = mmap(BaseAddress,
                                     GameMemory.PermanentStorageSize,
                                     PROT_READ | PROT_WRITE,

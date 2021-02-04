@@ -87,13 +87,13 @@ else ()
     )
 
     add_executable(HandmadeHero code/osx_main.mm)
-    target_link_libraries(HandmadeHero "-framework AppKit")
-    target_link_libraries(HandmadeHero "-framework IOKit")
-    target_link_libraries(HandmadeHero "-framework AudioToolbox")
-    target_link_libraries(HandmadeHero "-framework QuartzCore")
+    target_link_libraries(HandmadeHero
+            "-framework AppKit"
+            "-framework IOKit"
+            "-framework AudioToolbox"
+            "-framework QuartzCore")
     set_target_properties(HandmadeHero PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
     set_target_properties(HandmadeHero PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/HandmadeHero.app/")
-
 
 
     add_library(GameCode SHARED cpp/code/handmade.cpp)
@@ -103,15 +103,15 @@ else ()
     target_compile_options(GameCode PUBLIC -g -o -dynamiclib)
     set_target_properties(GameCode PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/HandmadeHero.app/Contents/Resources/")
 
-#[[    ADD_CUSTOM_COMMAND(TARGET HandmadeHero
-            POST_BUILD
-            COMMAND bash "../code/copyData.sh"
-            )]]
+    #[[    ADD_CUSTOM_COMMAND(TARGET HandmadeHero
+                POST_BUILD
+                COMMAND bash "../code/copyData.sh"
+                )]]
 
-#    ADD_CUSTOM_COMMAND(TARGET GameCode
-#            POST_BUILD
-#            COMMAND bash "../misc/bundleLIB.sh"
-#            )
+    #    ADD_CUSTOM_COMMAND(TARGET GameCode
+    #            POST_BUILD
+    #            COMMAND bash "../misc/bundleLIB.sh"
+    #            )
 
     #    set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
     #    set(CMAKE_EXE_LINKER_FLAGS "$CMAKE_EXE_LINKER_FLAGS{} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
