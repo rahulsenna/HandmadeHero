@@ -420,6 +420,82 @@ DrawHitPoints(sim_entity *Entity, entity_visible_piece_group *PieceGroup)
     }
 }
 
+internal void
+ClearCollisionRuleFor(game_state *GameState, uint32 StorageIndex)
+{
+
+    for (uint32 HashBucket = 0;
+         HashBucket < ArrayCount(GameState->CollisionRuleHash);
+         ++HashBucket)
+    {
+
+        for (pairwise_collision_rule **Rule = &GameState->CollisionRuleHash[HashBucket];
+             *Rule;
+             )
+        {
+            if (((*Rule)->StorageIndexA == StorageIndex) ||
+                ((*Rule)->StorageIndexB == StorageIndex))
+            {
+                pairwise_collision_rule *RemovedRule = *Rule;
+                *Rule = (*Rule)->NextInHash;
+
+                RemovedRule->NextInHash = GameState->FirstFreeCollisionRule;
+                GameState->FirstFreeCollisionRule = RemovedRule;
+            }else
+            {
+                Rule = &(*Rule)->NextInHash;
+            }
+        }
+    }
+}
+
+internal void
+AddCollisionRule(game_state *GameState, uint32 StorageIndexA, uint32 StorageIndexB, bool32 ShouldCollide)
+{
+    if (StorageIndexA > StorageIndexB)
+    {
+        uint32 Temp = StorageIndexA;
+        StorageIndexA = StorageIndexB;
+        StorageIndexB = Temp;
+    }
+
+    pairwise_collision_rule *Found = 0;
+    uint32 HashBucket = StorageIndexA & (ArrayCount((GameState->CollisionRuleHash) - 1));
+    for (pairwise_collision_rule *Rule = GameState->CollisionRuleHash[HashBucket];
+         Rule;
+         Rule = Rule->NextInHash)
+    {
+        if ((Rule->StorageIndexA == StorageIndexA) &&
+            (Rule->StorageIndexB == StorageIndexB))
+        {
+            Found = Rule;
+            break;
+        }
+    }
+
+    if (!Found)
+    {
+        Found = GameState->FirstFreeCollisionRule;
+
+        if (Found)
+        {
+            GameState->FirstFreeCollisionRule = Found->NextInHash;
+        } else
+        {
+            Found = PushStruct(&GameState->WorldArena, pairwise_collision_rule);
+        }
+        Found->NextInHash = GameState->CollisionRuleHash[HashBucket];
+        GameState->CollisionRuleHash[HashBucket] = Found;
+    }
+
+    if (Found)
+    {
+        Found->StorageIndexA = StorageIndexA;
+        Found->StorageIndexB = StorageIndexB;
+        Found->ShouldCollide = ShouldCollide;
+    }
+}
+
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
@@ -443,7 +519,17 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
         GameState->Sword = DEBUGLoadBMP(Thread,
                                         Memory->DEBUGPlatformReadEntireFile,
-                                        "test2/rock03.bmp");
+                                        "new/sword.bmp");
+
+        GameState->Familiar = DEBUGLoadBMP(Thread,
+                                           Memory->DEBUGPlatformReadEntireFile,
+                                           "new/familiar.bmp");
+        GameState->Monster = DEBUGLoadBMP(Thread,
+                                          Memory->DEBUGPlatformReadEntireFile,
+                                          "new/monster.bmp");
+        GameState->MonsterDead = DEBUGLoadBMP(Thread,
+                                          Memory->DEBUGPlatformReadEntireFile,
+                                          "new/monster_dead.bmp");
         hero_bitmaps *Bitmap;
         Bitmap = GameState->HeroBitmaps;
 
@@ -806,8 +892,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                 if (Sword && IsSet(Sword, EntityFlag_NonSpatial))
                                 {
                                     Sword->DistanceLimit = 5.0f;
-                                    MakeEntitySpatial(Sword, Entity->P,
+                                    MakeEntitySpatial(Sword,
+                                                      Entity->P,
                                                       Entity->deltaP + 5.0f * ConHero->deltaSword);
+                                    AddCollisionRule(GameState,
+                                                     Sword->StorageIndex,
+                                                     Entity->StorageIndex,
+                                                     false);
                                 }
                             }
                         }
@@ -837,8 +928,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     MoveSpec.Drag = 0.0f;
 
                     v2 OldP = Entity->P;
-                    if (Entity->DistanceLimit ==  0.0f)
+                    if (Entity->DistanceLimit == 0.0f)
                     {
+                        ClearCollisionRuleFor(GameState, Entity->StorageIndex);
                         MakeEntityNonSpatial(Entity);
                     }
 
@@ -886,7 +978,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     }
 
                     real32 SinBob = Sin(4.0f * Entity->tBob);
-                    PushBitmap(&PieceGroup, &HeroBitmaps->HeroHead, V2(0, 0),
+                    PushBitmap(&PieceGroup, &GameState->Familiar, V2(0, 0),
                                0.25f * SinBob, HeroBitmaps->Align);
 
                     PushBitmap(&PieceGroup, &GameState->HeroShadow, V2(0, 0), 0,
@@ -895,8 +987,17 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     break;
                 case EntityType_Monster:
                 {
-                    PushBitmap(&PieceGroup, &HeroBitmaps->HeroCape, V2(0, 0), 0,
-                               HeroBitmaps->Align);
+
+                    if (Entity->HitPointMax < 1)
+                    {
+                        PushBitmap(&PieceGroup, &GameState->MonsterDead, V2(0, 0), 0,
+                                   HeroBitmaps->Align);
+                    }else
+                    {
+                        PushBitmap(&PieceGroup, &GameState->Monster, V2(0, 0), 0,
+                                   HeroBitmaps->Align);
+                    }
+
                     PushBitmap(&PieceGroup, &GameState->HeroShadow, V2(0, 0), 0,
                                HeroBitmaps->Align, ShadowAlpha, 0.0f);
 
@@ -912,7 +1013,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
             if (!IsSet(Entity, EntityFlag_NonSpatial))
             {
-                MoveEntity(SimRegion, Entity, accelOfEntity, &MoveSpec, Input->deltatForFrame);
+                MoveEntity(GameState, SimRegion, Entity, accelOfEntity, &MoveSpec, Input->deltatForFrame);
             }
 
             real32 EntityGroundPointX = ScreenCenterX + Entity->P.X * GameState->MetersToPixel;

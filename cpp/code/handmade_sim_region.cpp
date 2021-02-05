@@ -269,19 +269,76 @@ TestWall(real32 WallX, real32 PlayerdeltaX, real32 PlayerdeltaY,
     return (Hit);
 }
 
-internal void
+
+
+internal bool32
+ShouldCollide(game_state *GameState, sim_entity *A, sim_entity *B)
+{
+    bool32 Result = false;
+
+    if (A->StorageIndex > B->StorageIndex)
+    {
+        sim_entity *Temp = A;
+        A = B;
+        B = Temp;
+    }
+
+    if (!IsSet(A, EntityFlag_NonSpatial) &&
+        !IsSet(B, EntityFlag_NonSpatial))
+    {
+        Result = true;
+    }
+
+    uint32 HashBucket = A->StorageIndex & (ArrayCount((GameState->CollisionRuleHash) - 1));
+    for (pairwise_collision_rule *Rule = GameState->CollisionRuleHash[HashBucket];
+         Rule;
+         Rule = Rule->NextInHash)
+    {
+        if ((Rule->StorageIndexA == A->StorageIndex) &&
+            (Rule->StorageIndexB == B->StorageIndex))
+        {
+            Result = Rule->ShouldCollide;
+            break;
+        }
+    }
+
+    return (Result);
+}
+
+internal bool32
 HandleCollision(sim_entity *A, sim_entity *B)
 {
+    bool32 StopsOnCollision = false;
+
+    if (A->Type == EntityType_Sword)
+    {
+        StopsOnCollision = false;
+    } else
+    {
+        StopsOnCollision = true;
+    }
+
+    if (A->Type > B->Type)
+    {
+        sim_entity *Temp = A;
+        A = B;
+        B = Temp;
+    }
+
     if ((B->Type == EntityType_Sword) &&
         (A->Type == EntityType_Monster))
     {
-        --A->HitPointMax;
-        MakeEntityNonSpatial(B);
+        if (A->HitPointMax > 0)
+        {
+            --A->HitPointMax;
+        }
     }
+    return (StopsOnCollision);
 }
 
 internal void
-MoveEntity(sim_region *SimRegion, sim_entity *Entity, v2 accelOfEntity, move_spec *MoveSpec, real32 deltat)
+MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v2 accelOfEntity, move_spec *MoveSpec,
+           real32 deltat)
 {
     Assert(!IsSet(Entity, EntityFlag_NonSpatial))
 
@@ -302,7 +359,7 @@ MoveEntity(sim_region *SimRegion, sim_entity *Entity, v2 accelOfEntity, move_spe
 
     v2 OldPlayerP = Entity->P;
     v2 EntityDelta = (0.5f * accelOfEntity * Square(deltat) +
-                     Entity->deltaP * deltat);
+                      Entity->deltaP * deltat);
     Entity->deltaP = accelOfEntity * deltat + Entity->deltaP;
     v2 NewPlayerP = OldPlayerP + EntityDelta;
 
@@ -339,8 +396,6 @@ MoveEntity(sim_region *SimRegion, sim_entity *Entity, v2 accelOfEntity, move_spe
 
             v2 DesiredPosition = Entity->P + EntityDelta;
 
-            bool32 StopsOnCollision = IsSet(Entity, EntityFlag_Collides);
-
             if (!IsSet(Entity, EntityFlag_NonSpatial))
             {
                 for (uint32 TestHighEntityIndex = 0;
@@ -350,43 +405,39 @@ MoveEntity(sim_region *SimRegion, sim_entity *Entity, v2 accelOfEntity, move_spe
 
                     sim_entity *TestEntity = SimRegion->Entities + TestHighEntityIndex;
 
-                    if (Entity != TestEntity)
+                    if (ShouldCollide(GameState, Entity, TestEntity))
                     {
-                        if (IsSet(TestEntity, EntityFlag_Collides) &&
-                            !IsSet(TestEntity, EntityFlag_NonSpatial))
+                        real32 DiameterW = TestEntity->Width + Entity->Width;
+                        real32 DiameterH = TestEntity->Height + Entity->Height;
+
+                        v2 MinCorner = -0.5f * V2(DiameterW, DiameterH);
+                        v2 MaxCorner = 0.5f * V2(DiameterW, DiameterH);
+                        v2 Rel = Entity->P - TestEntity->P;
+
+                        if (TestWall(MinCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMin,
+                                     MinCorner.Y, MaxCorner.Y))
                         {
-                            real32 DiameterW = TestEntity->Width + Entity->Width;
-                            real32 DiameterH = TestEntity->Height + Entity->Height;
+                            WallNormal = V2(-1, 0);
+                            HitEntity = TestEntity;
+                        }
+                        if (TestWall(MaxCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMin,
+                                     MinCorner.Y, MaxCorner.Y))
+                        {
+                            WallNormal = V2(1, 0);
+                            HitEntity = TestEntity;
+                        }
 
-                            v2 MinCorner = -0.5f * V2(DiameterW, DiameterH);
-                            v2 MaxCorner = 0.5f * V2(DiameterW, DiameterH);
-                            v2 Rel = Entity->P - TestEntity->P;
-
-                            if (TestWall(MinCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMin,
-                                         MinCorner.Y, MaxCorner.Y))
-                            {
-                                WallNormal = V2(-1, 0);
-                                HitEntity = TestEntity;
-                            }
-                            if (TestWall(MaxCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMin,
-                                         MinCorner.Y, MaxCorner.Y))
-                            {
-                                WallNormal = V2(1, 0);
-                                HitEntity = TestEntity;
-                            }
-
-                            if (TestWall(MinCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMin,
-                                         MinCorner.X, MaxCorner.X))
-                            {
-                                WallNormal = V2(0, -1);
-                                HitEntity = TestEntity;
-                            }
-                            if (TestWall(MaxCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMin,
-                                         MinCorner.X, MaxCorner.X))
-                            {
-                                WallNormal = V2(0, 1);
-                                HitEntity = TestEntity;
-                            }
+                        if (TestWall(MinCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMin,
+                                     MinCorner.X, MaxCorner.X))
+                        {
+                            WallNormal = V2(0, -1);
+                            HitEntity = TestEntity;
+                        }
+                        if (TestWall(MaxCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMin,
+                                     MinCorner.X, MaxCorner.X))
+                        {
+                            WallNormal = V2(0, 1);
+                            HitEntity = TestEntity;
                         }
                     }
                 }
@@ -399,21 +450,16 @@ MoveEntity(sim_region *SimRegion, sim_entity *Entity, v2 accelOfEntity, move_spe
             {
                 EntityDelta = DesiredPosition - Entity->P;
 
+                bool32 StopsOnCollision = HandleCollision(Entity, HitEntity);
                 if (StopsOnCollision)
                 {
                     Entity->deltaP = Entity->deltaP - (DotProduct(WallNormal, Entity->deltaP) * WallNormal);
                     EntityDelta = EntityDelta - (DotProduct(EntityDelta, WallNormal) * WallNormal);
+                } else
+                {
+                    AddCollisionRule(GameState, Entity->StorageIndex, HitEntity->StorageIndex, false);
                 }
 
-                sim_entity *A = Entity;
-                sim_entity *B = HitEntity;
-                if (A->Type > B->Type)
-                {
-                    sim_entity *Temp = A;
-                    A = B;
-                    B = Temp;
-                }
-                HandleCollision(A, B);
 
 //                Entity->High->ChunkZ += HitLow->deltaAbsTileZ;
             } else
