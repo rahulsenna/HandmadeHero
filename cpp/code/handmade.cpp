@@ -701,6 +701,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     ConHero->accel.X = 1.0f;
                 }
             }
+
             if (Controller->ActionDown.EndedDown)
             {
                 ConHero->accel *= 50.0f;
@@ -739,7 +740,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                                                          (real32) ChunkSpanY));
 
     memory_arena SimArena;
-    InitializeArena(&SimArena, Memory->TransientStorageSize, Memory->TransientStorage);
+    InitializeArena(&SimArena, (mem_index) Memory->TransientStorageSize, Memory->TransientStorage);
     sim_region *SimRegion = BeginSim(GameState, &SimArena,
                                      GameState->World, GameState->CameraP, CameraBounds);
 
@@ -804,8 +805,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                 sim_entity *Sword = Entity->Sword.Ptr;
                                 if (Sword && IsSet(Sword, EntityFlag_NonSpatial))
                                 {
-                                    Sword->DistanceRemaining = 5.0f;
-                                    MakeEntitySpatial(Sword, Entity->P, 5.0f * ConHero->deltaSword);
+                                    Sword->DistanceLimit = 5.0f;
+                                    MakeEntitySpatial(Sword, Entity->P,
+                                                      Entity->deltaP + 5.0f * ConHero->deltaSword);
                                 }
                             }
                         }
@@ -835,10 +837,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     MoveSpec.Drag = 0.0f;
 
                     v2 OldP = Entity->P;
-                    real32 DistanceTraveled = Length(OldP - Entity->P);
-
-                    Entity->DistanceRemaining -= DistanceTraveled;
-                    if (Entity->DistanceRemaining < 0.0f)
+                    if (Entity->DistanceLimit ==  0.0f)
                     {
                         MakeEntityNonSpatial(Entity);
                     }

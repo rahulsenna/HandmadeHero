@@ -51,6 +51,8 @@ struct sim_entity
     real32 Z;
     real32 deltaZ;
 
+    real32 DistanceLimit;
+
     uint32 ChunkZ;
 
     real32 Height, Width;
@@ -66,7 +68,6 @@ struct sim_entity
     uint32 LowEntityIndex;
 
     uint32 SwordLowIndex;
-    real32 DistanceRemaining;
     entity_reference Sword;
 };
 
