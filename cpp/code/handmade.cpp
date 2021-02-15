@@ -918,7 +918,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     break;
                 case EntityType_Wall:
                 {
-                    PushBitmap(&PieceGroup, &GameState->Tree, V2(0, 0), 0, V2(40, 80));
+                    PushBitmap(&PieceGroup, &GameState->Tree,
+                               V2(0, 0), 0, V2(40, 80));
                 }
                     break;
 
@@ -936,7 +937,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                     PushBitmap(&PieceGroup, &GameState->HeroShadow, V2(0, 0), 0,
                                HeroBitmaps->Align, ShadowAlpha, 0.0f);
-                    PushBitmap(&PieceGroup, &GameState->Sword, V2(0, 0), 0, V2(29, 10));
+                    PushBitmap(&PieceGroup, &GameState->Sword,
+                               V2(0, 0), 0, V2(29, 10));
                 }
                     break;
                 case EntityType_Familiar:
@@ -1027,7 +1029,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 entity_visible_piece *Piece = PieceGroup.Pieces + PieceIndex;
 
                 v2 Center = {EntityGroundPointX + Piece->Offset.X,
-                             EntityGroundPointY + Piece->Offset.Y + Piece->OffsetZ + EntityZ * Piece->EntityZC};
+                             EntityGroundPointY + Piece->Offset.Y + Piece->OffsetZ + EntityZ *
+                             Piece->EntityZC};
 
                 if (Piece->Bitmap)
                 {
