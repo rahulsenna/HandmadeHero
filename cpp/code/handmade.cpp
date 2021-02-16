@@ -431,7 +431,7 @@ ClearCollisionRuleFor(game_state *GameState, uint32 StorageIndex)
 
         for (pairwise_collision_rule **Rule = &GameState->CollisionRuleHash[HashBucket];
              *Rule;
-             )
+                )
         {
             if (((*Rule)->StorageIndexA == StorageIndex) ||
                 ((*Rule)->StorageIndexB == StorageIndex))
@@ -441,7 +441,7 @@ ClearCollisionRuleFor(game_state *GameState, uint32 StorageIndex)
 
                 RemovedRule->NextInHash = GameState->FirstFreeCollisionRule;
                 GameState->FirstFreeCollisionRule = RemovedRule;
-            }else
+            } else
             {
                 Rule = &(*Rule)->NextInHash;
             }
@@ -528,8 +528,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                           Memory->DEBUGPlatformReadEntireFile,
                                           "new/monster.bmp");
         GameState->MonsterDead = DEBUGLoadBMP(Thread,
-                                          Memory->DEBUGPlatformReadEntireFile,
-                                          "new/monster_dead.bmp");
+                                              Memory->DEBUGPlatformReadEntireFile,
+                                              "new/monster_dead.bmp");
         hero_bitmaps *Bitmap;
         Bitmap = GameState->HeroBitmaps;
 
@@ -820,10 +820,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     uint32 ChunkSpanX = 17 * 3;
     uint32 ChunkSpanY = 9 * 3;
-
-    rectangle2 CameraBounds = RectCenterDim(V2(0, 0),
-                                            World->TileSideInMeters * V2((real32) ChunkSpanX,
-                                                                         (real32) ChunkSpanY));
+    uint32 ChunkSpanZ = 1;
+    rectangle3 CameraBounds = RectCenterDim(V3(0, 0, 0),
+                                            World->TileSideInMeters * V3((real32) ChunkSpanX,
+                                                                         (real32) ChunkSpanY,
+                                                                         (real32) ChunkSpanZ));
 
     memory_arena SimArena;
     InitializeArena(&SimArena, (mem_index) Memory->TransientStorageSize, Memory->TransientStorage);
@@ -854,14 +855,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             PieceGroup.Count = 0;
 
             real32 deltat = Input->deltatForFrame;
-            real32 ShadowAlpha = 1.0f - 0.5f * Entity->Z;
+            real32 ShadowAlpha = 1.0f - 0.5f * Entity->P.Z;
             if (ShadowAlpha < 0)
             {
                 ShadowAlpha = 0.0f;
             }
 
             move_spec MoveSpec = DefaultMoveSpec();
-            v2 accelOfEntity = {};
+            v3 accelOfEntity = {};
 
             hero_bitmaps *HeroBitmaps = &GameState->HeroBitmaps[Entity->FacingDirection];
             switch (Entity->Type)
@@ -878,13 +879,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                         {
                             if (ConHero->deltaZ != 0.0f)
                             {
-                                Entity->deltaZ = ConHero->deltaZ;
+                                Entity->deltaP.Z = ConHero->deltaZ;
                             }
 
                             MoveSpec.UnitMaxAccelVector = true;
                             MoveSpec.Speed = 70.0f;
                             MoveSpec.Drag = 7.0f;
-                            accelOfEntity = ConHero->accel;
+                            accelOfEntity = V3(ConHero->accel, 0);
 
                             if ((ConHero->deltaSword.X != 0.0f) || (ConHero->deltaSword.Y != 0.0f))
                             {
@@ -894,7 +895,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                     Sword->DistanceLimit = 5.0f;
                                     MakeEntitySpatial(Sword,
                                                       Entity->P,
-                                                      Entity->deltaP + 5.0f * ConHero->deltaSword);
+                                                      Entity->deltaP + 5.0f * V3(ConHero->deltaSword, 0));
                                     AddCollisionRule(GameState,
                                                      Sword->StorageIndex,
                                                      Entity->StorageIndex,
@@ -928,7 +929,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     MoveSpec.Speed = 0.0f;
                     MoveSpec.Drag = 0.0f;
 
-                    v2 OldP = Entity->P;
                     if (Entity->DistanceLimit == 0.0f)
                     {
                         ClearCollisionRuleFor(GameState, Entity->StorageIndex);
@@ -994,7 +994,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     {
                         PushBitmap(&PieceGroup, &GameState->MonsterDead, V2(0, 0), 0,
                                    HeroBitmaps->Align);
-                    }else
+                    } else
                     {
                         PushBitmap(&PieceGroup, &GameState->Monster, V2(0, 0), 0,
                                    HeroBitmaps->Align);
@@ -1020,7 +1020,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
             real32 EntityGroundPointX = ScreenCenterX + Entity->P.X * GameState->MetersToPixel;
             real32 EntityGroundPointY = ScreenCenterY - Entity->P.Y * GameState->MetersToPixel;
-            real32 EntityZ = -GameState->MetersToPixel * Entity->Z;
+            real32 EntityZ = -GameState->MetersToPixel * Entity->P.Z;
 
             for (uint32 PieceIndex = 0;
                  PieceIndex < PieceGroup.Count;
@@ -1030,7 +1030,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                 v2 Center = {EntityGroundPointX + Piece->Offset.X,
                              EntityGroundPointY + Piece->Offset.Y + Piece->OffsetZ + EntityZ *
-                             Piece->EntityZC};
+                                                                                     Piece->EntityZC};
 
                 if (Piece->Bitmap)
                 {

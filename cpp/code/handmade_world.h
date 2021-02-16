@@ -4,19 +4,13 @@
 
 #ifndef HANDMADEHERO_HANDMADE_TILE_H
 
-struct world_difference
-{
-    v2 deltaXY;
-    real32 deltaZ;
-};
-
 struct world_position
 {
     int32 ChunkX;
     int32 ChunkY;
     int32 ChunkZ;
 
-    v2 Offset_;
+    v3 Offset_;
 };
 
 struct world_entity_block
@@ -39,7 +33,8 @@ struct world_chunk
 struct world
 {
     real32 TileSideInMeters;
-    real32 ChunkSideInMeters;
+    real32 TileDepthInMeters;
+    v3 ChunkDimInMeters;
 
     world_entity_block *FirstFree;
 
