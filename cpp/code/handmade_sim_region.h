@@ -39,7 +39,6 @@ enum sim_entity_flags
 struct sim_entity
 {
     uint32 StorageIndex;
-
     bool32 Updatable;
 
     entity_type Type;
@@ -50,7 +49,7 @@ struct sim_entity
 
     real32 DistanceLimit;
 
-    real32 Height, Width;
+    v3 Dim;
     int32 deltaAbsTileZ;
 
     uint32 HitPointMax;
@@ -84,6 +83,9 @@ struct sim_region
     sim_entity *Entities;
 
     sim_entity_hash Hash[4096];
+
+    real32 MaxEntityRadius;
+    real32 MaxEntityVelocity;
 };
 
 #define HANDMADEHERO_HANDMADE_SIM_REGION_H

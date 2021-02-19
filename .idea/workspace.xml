@@ -17,14 +17,11 @@
   <component name="ChangeListManager">
     <list default="true" id="91a7b23e-8585-47af-bb8a-2e776c093d77" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_entity.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_entity.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_math.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_math.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +68,7 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.standard" value="" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="editing.templates" />
+    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
   </component>
   <component name="RunManager" selected="CMake Application.HandmadeHero">
     <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
@@ -84,14 +81,14 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+    <configuration name="handmade" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="HandmadeHero" TARGET_NAME="handmade" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="handmade" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="HandmadeHero" TARGET_NAME="handmade" CONFIG_NAME="Debug">
+    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <list>
@@ -211,7 +208,16 @@
       <workItem from="1613450577141" duration="86000" />
       <workItem from="1613450922839" duration="97000" />
       <workItem from="1613451033294" duration="217000" />
-      <workItem from="1613451263787" duration="12018000" />
+      <workItem from="1613451263787" duration="12170000" />
+      <workItem from="1613636480023" duration="1864000" />
+      <workItem from="1613660746422" duration="593000" />
+      <workItem from="1613670433754" duration="57000" />
+      <workItem from="1613670573257" duration="15000" />
+      <workItem from="1613714864902" duration="1420000" />
+      <workItem from="1613724579946" duration="637000" />
+      <workItem from="1613732714487" duration="80000" />
+      <workItem from="1613732805387" duration="49000" />
+      <workItem from="1613732866187" duration="6593000" />
     </task>
     <task id="LOCAL-00001" summary="Minor Changes">
       <created>1611916265816</created>
@@ -269,7 +275,14 @@
       <option name="project" value="LOCAL" />
       <updated>1613389524363</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="End of Day 71">
+      <created>1613466302428</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1613466302428</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -281,7 +294,8 @@
     <MESSAGE value="End of Day 67" />
     <MESSAGE value="End of Day 69" />
     <MESSAGE value="End of Day 70" />
-    <option name="LAST_COMMIT_MESSAGE" value="End of Day 70" />
+    <MESSAGE value="End of Day 71" />
+    <option name="LAST_COMMIT_MESSAGE" value="End of Day 71" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

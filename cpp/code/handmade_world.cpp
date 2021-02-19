@@ -26,7 +26,7 @@ IsValid(world_position P)
 inline bool32
 IsCanonical(real32 ChunkDim, real32 TileRel)
 {
-    real32 Epsilon = 0.0001f;
+    real32 Epsilon = 0.01f;
     bool32 Result = ((TileRel >= -(0.5f * ChunkDim + Epsilon)) &&
                      (TileRel <= (0.5f * ChunkDim + Epsilon)));
     return (Result);
@@ -138,8 +138,8 @@ ChunkPosFromTilePos(world *World, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ
 {
     world_position BasePos = {};
 
-    v3 Offset = Hadamard(World->ChunkDimInMeters,
-                         V3((real32) AbsTileX, (real32) AbsTileY, (real32) AbsTileZ));
+    v3 Offset = World->TileSideInMeters *
+                V3((real32) AbsTileX, (real32) AbsTileY, (real32) AbsTileZ);
 
     world_position Result = MapIntoChunkSpace(World, BasePos, Offset);
 
