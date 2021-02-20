@@ -305,6 +305,19 @@ AddWall(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 }
 
 internal add_low_entity_result
+AddStair(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
+{
+    world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
+    add_low_entity_result Entity = AddLowEntity(GameState, EntityType_Stairwell, P);
+
+    Entity.Low->Sim.Dim.Y = GameState->World->TileSideInMeters;
+    Entity.Low->Sim.Dim.X = Entity.Low->Sim.Dim.Y;
+    Entity.Low->Sim.Dim.Z = GameState->World->TileDepthInMeters;
+
+    return (Entity);
+}
+
+internal add_low_entity_result
 AddMonster(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 {
     world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
@@ -530,6 +543,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->MonsterDead = DEBUGLoadBMP(Thread,
                                               Memory->DEBUGPlatformReadEntireFile,
                                               "new/monster_dead.bmp");
+
+        GameState->Stairwell = DEBUGLoadBMP(Thread,
+                                            Memory->DEBUGPlatformReadEntireFile,
+                                            "test2/rock02.bmp");
+
         hero_bitmaps *Bitmap;
         Bitmap = GameState->HeroBitmaps;
 
@@ -618,16 +636,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             Assert(RandomNumberIndex < ArrayCount(RandomNumberTable))
             uint32 RandomChoice;
 
-//            if (DoorDown || DoorUp)
+            if (DoorDown || DoorUp)
             {
                 RandomChoice = RandomNumberTable[RandomNumberIndex++] % 2;
-            }
-#if 0
-            else
+            } else
             {
                 RandomChoice = RandomNumberTable[RandomNumberIndex++] % 3;
             }
-#endif
+
             bool32 ZDoorCreated = false;
             if (RandomChoice == 2)
             {
@@ -654,40 +670,34 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     uint32 AbsTileX = ScreenX * TilesPerWidth + TileX;
                     uint32 AbsTileY = ScreenY * TilesPerHeight + TileY;
 
-                    uint32 TileValue = 1;
+                    bool32 ShouldBeDoor = false;
 
                     if ((TileX == 0) && (!DoorLeft || (TileY != (TilesPerHeight / 2))))
                     {
-                        TileValue = 2;
+                        ShouldBeDoor = true;
                     }
                     if ((TileX == (TilesPerWidth - 1)) && (!DoorRight || (TileY != (TilesPerHeight / 2))))
                     {
-                        TileValue = 2;
+                        ShouldBeDoor = true;
                     }
                     if ((TileY == 0) && (!DoorBottom || (TileX != (TilesPerWidth / 2))))
                     {
-                        TileValue = 2;
+                        ShouldBeDoor = true;
                     }
                     if ((TileY == (TilesPerHeight - 1)) && (!DoorTop || (TileX != (TilesPerWidth / 2))))
                     {
-                        TileValue = 2;
+                        ShouldBeDoor = true;
                     }
 
-                    if ((TileX == 10) && (TileY == 6))
-                    {
-                        if (DoorUp)
-                        {
-                            TileValue = 3;
-                        }
-                        if (DoorDown)
-                        {
-                            TileValue = 4;
-                        }
-                    }
-
-                    if (TileValue == 2)
+                    if (ShouldBeDoor)
                     {
                         AddWall(GameState, AbsTileX, AbsTileY, AbsTileZ);
+                    } else if (ZDoorCreated)
+                    {
+                        if ((TileX == 10) && (TileY == 6))
+                        {
+                            AddStair(GameState, AbsTileX, AbsTileY, DoorDown ? AbsTileZ - 1 : AbsTileZ);
+                        }
                     }
                 }
             }
@@ -738,7 +748,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
         GameState->CameraP = NewCameraP;
 
-        AddMonster(GameState, CameraTileX + 2, CameraTileY + 2, CameraTileZ);
+        AddMonster(GameState, CameraTileX - 3, CameraTileY + 2, CameraTileZ);
         AddFamiliar(GameState, CameraTileX - 2, CameraTileY + 2, CameraTileZ);
 
         Memory->IsInitialized = true;
@@ -924,6 +934,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 }
                     break;
 
+                case EntityType_Stairwell:
+                {
+                    PushBitmap(&PieceGroup, &GameState->Stairwell,
+                               V2(0, 0), 0, V2(37, 37));
+                }
+                    break;
                 case EntityType_Sword:
                 {
                     MoveSpec.Speed = 0.0f;

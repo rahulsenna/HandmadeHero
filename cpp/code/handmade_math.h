@@ -473,6 +473,18 @@ AddRadiusTo(rectangle3 A, v3 Radius)
     return (Result);
 }
 
+inline bool32
+RectangleIntersect(rectangle3 A, rectangle3 B)
+{
+    bool32 Result = !((B.Max.X < A.Min.X) ||
+                      (B.Min.X > A.Max.X) ||
+                      (B.Max.Y < A.Min.Y) ||
+                      (B.Min.Y > A.Max.Y) ||
+                      (B.Max.Z < A.Min.Z) ||
+                      (B.Min.Z > A.Max.Z));
+    return (Result);
+}
+
 #define HANDMADEHERO_HANDMADE_MATH_H
 
 #endif //HANDMADEHERO_HANDMADE_MATH_H

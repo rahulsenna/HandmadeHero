@@ -101,6 +101,12 @@ struct controlled_hero
     real32 deltaZ;
 };
 
+enum pairwise_collision_rule_flag
+{
+    PairCollisionFlag_ShouldCollide = 0x1,
+    PairCollisionFlag_Temporary = 0x2,
+};
+
 struct pairwise_collision_rule
 {
     bool32 ShouldCollide;
@@ -128,6 +134,8 @@ struct game_state
     loaded_bitmap Familiar;
     loaded_bitmap Monster;
     loaded_bitmap MonsterDead;
+
+    loaded_bitmap Stairwell;
 
     loaded_bitmap Backdrop;
     loaded_bitmap HeroShadow;
