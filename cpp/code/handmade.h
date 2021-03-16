@@ -101,15 +101,9 @@ struct controlled_hero
     real32 deltaZ;
 };
 
-enum pairwise_collision_rule_flag
-{
-    PairCollisionFlag_ShouldCollide = 0x1,
-    PairCollisionFlag_Temporary = 0x2,
-};
-
 struct pairwise_collision_rule
 {
-    bool32 ShouldCollide;
+    bool32 CanCollide;
     uint32 StorageIndexA;
     uint32 StorageIndexB;
 

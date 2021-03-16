@@ -14,13 +14,13 @@ IsSet(sim_entity *Entity, uint32 Flag)
 }
 
 inline void
-AddFlag(sim_entity *Entity, uint32 Flag)
+AddFlags(sim_entity *Entity, uint32 Flag)
 {
     Entity->Flags |= Flag;
 }
 
 inline void
-ClearFlag(sim_entity *Entity, uint32 Flag)
+ClearFlags(sim_entity *Entity, uint32 Flag)
 {
     Entity->Flags &= ~Flag;
 }
@@ -28,14 +28,14 @@ ClearFlag(sim_entity *Entity, uint32 Flag)
 inline void
 MakeEntityNonSpatial(sim_entity *Entity)
 {
-    AddFlag(Entity, EntityFlag_NonSpatial);
+    AddFlags(Entity, EntityFlag_NonSpatial);
     Entity->P = InvalidP;
 }
 
 inline void
 MakeEntitySpatial(sim_entity *Entity, v3 P, v3 deltaP)
 {
-    ClearFlag(Entity, EntityFlag_NonSpatial);
+    ClearFlags(Entity, EntityFlag_NonSpatial);
     Entity->P = P;
     Entity->deltaP = deltaP;
 }
