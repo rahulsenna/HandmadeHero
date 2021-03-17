@@ -472,8 +472,7 @@ MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v3 
 
                     sim_entity *TestEntity = SimRegion->Entities + TestHighEntityIndex;
 
-                    if (CanCollide(GameState, Entity, TestEntity) &&
-                        TestEntity->P.Z == Entity->P.Z)
+                    if (CanCollide(GameState, Entity, TestEntity))
                     {
                         v3 MinkowskiDiameter = {TestEntity->Dim.X + Entity->Dim.X,
                                                 TestEntity->Dim.Y + Entity->Dim.Y,
