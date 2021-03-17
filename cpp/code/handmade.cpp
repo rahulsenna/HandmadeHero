@@ -312,9 +312,10 @@ AddStair(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
                                               0.5f * GameState->World->TileDepthInMeters));
     add_low_entity_result Entity = AddLowEntity(GameState, EntityType_Stairwell, P);
 
-    Entity.Low->Sim.Dim.Y = GameState->World->TileSideInMeters;
-    Entity.Low->Sim.Dim.X = Entity.Low->Sim.Dim.Y;
-    Entity.Low->Sim.Dim.Z = GameState->World->TileDepthInMeters * 1.2f;
+    Entity.Low->Sim.Dim.X = GameState->World->TileSideInMeters;
+    Entity.Low->Sim.Dim.Y = 2.0f * GameState->World->TileSideInMeters;
+    Entity.Low->Sim.Dim.Z = GameState->World->TileDepthInMeters;
+    AddFlags(&Entity.Low->Sim, EntityFlag_Collides);
 
     return (Entity);
 }
@@ -353,7 +354,7 @@ AddFamiliar(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTile
 
     Entity.Low->Sim.Dim.Y = 0.5f;
     Entity.Low->Sim.Dim.X = 1.0f;
-    AddFlags(&Entity.Low->Sim, EntityFlag_Collides | EntityFlag_Movable);
+    AddFlags(&Entity.Low->Sim, EntityFlag_Collides);
 
     return (Entity);
 }
@@ -697,7 +698,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                         AddWall(GameState, AbsTileX, AbsTileY, AbsTileZ);
                     } else if (ZDoorCreated)
                     {
-                        if ((TileX == 10) && (TileY == 6))
+                        if ((TileX == 10) && (TileY == 5))
                         {
                             AddStair(GameState, AbsTileX, AbsTileY, DoorDown ? AbsTileZ - 1 : AbsTileZ);
                         }
@@ -1039,8 +1040,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 MoveEntity(GameState, SimRegion, Entity, accelOfEntity, &MoveSpec, Input->deltatForFrame);
             }
 
-            real32 EntityGroundPointX = ScreenCenterX + Entity->P.X * GameState->MetersToPixel;
-            real32 EntityGroundPointY = ScreenCenterY - Entity->P.Y * GameState->MetersToPixel;
+            real32 ZFudge = (1.0f + 0.1f * Entity->P.Z);
+
+            real32 EntityGroundPointX = ScreenCenterX + Entity->P.X * ZFudge * GameState->MetersToPixel;
+            real32 EntityGroundPointY = ScreenCenterY - Entity->P.Y * ZFudge * GameState->MetersToPixel;
             real32 EntityZ = -GameState->MetersToPixel * Entity->P.Z;
 
             for (uint32 PieceIndex = 0;
