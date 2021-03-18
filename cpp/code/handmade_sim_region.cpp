@@ -482,45 +482,48 @@ MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v3 
                         v3 MaxCorner = 0.5f * MinkowskiDiameter;
                         v3 Rel = Entity->P - TestEntity->P;
 
-                        real32 tMinTest = tMin;
-                        v3 TestWallNormal = {};
-                        bool32 HitThis = false;
+                        if (Rel.Z >= MinCorner.Z && Rel.Z <= MaxCorner.Z)
+                        {
+                            real32 tMinTest = tMin;
+                            v3 TestWallNormal = {};
+                            bool32 HitThis = false;
 
-                        if (TestWall(MinCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMinTest,
-                                     MinCorner.Y, MaxCorner.Y))
-                        {
-                            TestWallNormal = V3(-1, 0, 0);
-                            HitThis = true;
-                        }
-                        if (TestWall(MaxCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMinTest,
-                                     MinCorner.Y, MaxCorner.Y))
-                        {
-                            TestWallNormal = V3(1, 0, 0);
-                            HitThis = true;
-                        }
-
-                        if (TestWall(MinCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMinTest,
-                                     MinCorner.X, MaxCorner.X))
-                        {
-                            TestWallNormal = V3(0, -1, 0);
-                            HitThis = true;
-                        }
-                        if (TestWall(MaxCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMinTest,
-                                     MinCorner.X, MaxCorner.X))
-                        {
-                            TestWallNormal = V3(0, 1, 0);
-                            HitThis = true;
-                        }
-
-                        if (HitThis)
-                        {
-                            v3 TestP = Entity->P + tMinTest * EntityDelta;
-
-                            if (SpeculativeCollide(Entity, TestEntity))
+                            if (TestWall(MinCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMinTest,
+                                         MinCorner.Y, MaxCorner.Y))
                             {
-                                tMin = tMinTest;
-                                WallNormal = TestWallNormal;
-                                HitEntity = TestEntity;
+                                TestWallNormal = V3(-1, 0, 0);
+                                HitThis = true;
+                            }
+                            if (TestWall(MaxCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, &tMinTest,
+                                         MinCorner.Y, MaxCorner.Y))
+                            {
+                                TestWallNormal = V3(1, 0, 0);
+                                HitThis = true;
+                            }
+
+                            if (TestWall(MinCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMinTest,
+                                         MinCorner.X, MaxCorner.X))
+                            {
+                                TestWallNormal = V3(0, -1, 0);
+                                HitThis = true;
+                            }
+                            if (TestWall(MaxCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, &tMinTest,
+                                         MinCorner.X, MaxCorner.X))
+                            {
+                                TestWallNormal = V3(0, 1, 0);
+                                HitThis = true;
+                            }
+
+                            if (HitThis)
+                            {
+                                v3 TestP = Entity->P + tMinTest * EntityDelta;
+
+                                if (SpeculativeCollide(Entity, TestEntity))
+                                {
+                                    tMin = tMinTest;
+                                    WallNormal = TestWallNormal;
+                                    HitEntity = TestEntity;
+                                }
                             }
                         }
                     }
