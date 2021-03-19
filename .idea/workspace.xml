@@ -18,9 +18,9 @@
     <list default="true" id="91a7b23e-8585-47af-bb8a-2e776c093d77" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_math.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_math.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_entity.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_entity.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,11 +83,6 @@
     <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.postfix.templates" />
   </component>
   <component name="RunManager" selected="CMake Application.HandmadeHero">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="HandmadeHero" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$/data" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="HandmadeHero" RUN_TARGET_NAME="HandmadeHero" EXPLICIT_BUILD_TARGET_NAME="all">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -256,7 +251,8 @@
       <workItem from="1615984851147" duration="947000" />
       <workItem from="1615987284768" duration="4680000" />
       <workItem from="1616004837687" duration="2512000" />
-      <workItem from="1616048681519" duration="6551000" />
+      <workItem from="1616048681519" duration="6571000" />
+      <workItem from="1616136690158" duration="9398000" />
     </task>
     <task id="LOCAL-00001" summary="Minor Changes">
       <created>1611916265816</created>
@@ -356,7 +352,14 @@
       <option name="project" value="LOCAL" />
       <updated>1616007359796</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="End of Day 76">
+      <created>1616070303354</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1616070303354</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -373,7 +376,8 @@
     <MESSAGE value="End of Day 73" />
     <MESSAGE value="End of Day 74" />
     <MESSAGE value="End of Day 75" />
-    <option name="LAST_COMMIT_MESSAGE" value="End of Day 75" />
+    <MESSAGE value="End of Day 76" />
+    <option name="LAST_COMMIT_MESSAGE" value="End of Day 76" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

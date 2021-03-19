@@ -66,6 +66,8 @@ struct sim_entity
 
     uint32 SwordLowIndex;
     entity_reference Sword;
+
+    real32 WalkableHeight;
 };
 
 struct sim_entity_hash

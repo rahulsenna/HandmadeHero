@@ -320,10 +320,11 @@ AddStair(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 {
     v3 Dim = {GameState->World->TileSideInMeters,
               2.0f * GameState->World->TileSideInMeters,
-              GameState->World->TileDepthInMeters};
+              1.1f * GameState->World->TileDepthInMeters};
     world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
     add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Stairwell, P, Dim);
     AddFlags(&Entity.Low->Sim, EntityFlag_Collides);
+    Entity.Low->Sim.WalkableHeight = GameState->World->TileDepthInMeters;
 
     return (Entity);
 }
@@ -331,7 +332,7 @@ AddStair(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 internal add_low_entity_result
 AddMonster(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 {
-    v3 Dim = {1.0f,0.5f,0.5f};
+    v3 Dim = {1.0f, 0.5f, 0.5f};
 
     world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
     add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Monster, P, Dim);
@@ -358,7 +359,7 @@ AddSword(game_state *GameState)
 internal add_low_entity_result
 AddFamiliar(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 {
-    v3 Dim = {1.0f,0.5f,0.5f};
+    v3 Dim = {1.0f, 0.5f, 0.5f};
     world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
     add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Familiar, P, Dim);
 
@@ -370,7 +371,7 @@ AddFamiliar(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTile
 internal add_low_entity_result
 AddPlayer(game_state *GameState)
 {
-    v3 Dim = {1.0f,0.5f,1.2f};
+    v3 Dim = {1.0f, 0.5f, 1.2f};
 
     world_position P = GameState->CameraP;
     add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Hero, P, Dim);
@@ -396,7 +397,7 @@ PushPiece(entity_visible_piece_group *Group, loaded_bitmap *Bitmap, v2 Offset, r
     entity_visible_piece *Piece = Group->Pieces + Group->Count++;
     Piece->Bitmap = Bitmap;
     Piece->Offset = Group->GameState->MetersToPixel * V2(Offset.X, -Offset.Y) - Align;
-    Piece->OffsetZ = Group->GameState->MetersToPixel * OffsetZ;
+    Piece->OffsetZ = OffsetZ;
     Piece->EntityZC = EntityZC;
     Piece->R = Color.R;
     Piece->G = Color.G;
@@ -878,7 +879,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             PieceGroup.Count = 0;
 
             real32 deltat = Input->deltatForFrame;
-            real32 ShadowAlpha = 1.0f - 0.5f * Entity->P.Z;
+            real32 ShadowAlpha = 1.0f - 0.5f * (Entity->P.Z - 0.5f * Entity->Dim.Z);
             if (ShadowAlpha < 0)
             {
                 ShadowAlpha = 0.0f;
@@ -950,6 +951,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 case EntityType_Stairwell:
                 {
                     PushRect(&PieceGroup, V2(0, 0), 0,
+                             Entity->Dim.XY, V4(1, 0.5f, 0, 1), 0.0f);
+                    PushRect(&PieceGroup, V2(0, 0), Entity->Dim.Z,
                              Entity->Dim.XY, V4(1, 1, 0, 1), 0.0f);
                 }
                     break;
@@ -1048,21 +1051,22 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 MoveEntity(GameState, SimRegion, Entity, accelOfEntity, &MoveSpec, Input->deltatForFrame);
             }
 
-            real32 ZFudge = (1.0f + 0.1f * Entity->P.Z);
-
-            real32 EntityGroundPointX = ScreenCenterX + Entity->P.X * ZFudge * GameState->MetersToPixel;
-            real32 EntityGroundPointY = ScreenCenterY - Entity->P.Y * ZFudge * GameState->MetersToPixel;
-            real32 EntityZ = -GameState->MetersToPixel * Entity->P.Z;
-
             for (uint32 PieceIndex = 0;
                  PieceIndex < PieceGroup.Count;
                  ++PieceIndex)
             {
                 entity_visible_piece *Piece = PieceGroup.Pieces + PieceIndex;
 
+                v3 EntityBaseP = GetEntityGroundPoint(Entity);
+                real32 ZFudge = (1.0f + 0.1f * (EntityBaseP.Z + Piece->OffsetZ));
+
+                real32 EntityGroundPointX = ScreenCenterX + EntityBaseP.X * ZFudge * GameState->MetersToPixel;
+                real32 EntityGroundPointY = ScreenCenterY - EntityBaseP.Y * ZFudge * GameState->MetersToPixel;
+                real32 EntityZ = -GameState->MetersToPixel * EntityBaseP.Z;
+
                 v2 Center = {EntityGroundPointX + Piece->Offset.X,
-                             EntityGroundPointY + Piece->Offset.Y + Piece->OffsetZ + EntityZ *
-                                                                                     Piece->EntityZC};
+                             EntityGroundPointY + Piece->Offset.Y +
+                             EntityZ * Piece->EntityZC};
 
                 if (Piece->Bitmap)
                 {
