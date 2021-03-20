@@ -428,7 +428,7 @@ MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v3 
 
     accelOfEntity *= MoveSpec->Speed;
     v3 Drag = -MoveSpec->Drag * Entity->deltaP;
-    Drag.Z = 0.0f;
+    Drag.Z = 0.00f;
     accelOfEntity += Drag;
     if (!IsSet(Entity, EntityFlag_ZSupported))
     {
