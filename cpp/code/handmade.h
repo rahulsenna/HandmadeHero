@@ -138,6 +138,15 @@ struct game_state
     real32 MetersToPixel;
     pairwise_collision_rule *CollisionRuleHash[256];
     pairwise_collision_rule *FirstFreeCollisionRule;
+
+
+    sim_entity_collision_volume_group *NullCollision;
+    sim_entity_collision_volume_group *SwordCollision;
+    sim_entity_collision_volume_group *StairCollision;
+    sim_entity_collision_volume_group *PlayerCollision;
+    sim_entity_collision_volume_group *MonsterCollision;
+    sim_entity_collision_volume_group *WallCollision;
+    sim_entity_collision_volume_group *FamiliarCollision;
 };
 
 struct entity_visible_piece_group

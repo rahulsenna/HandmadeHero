@@ -39,6 +39,18 @@ enum sim_entity_flags
     EntityFlag_Simming = (1 << 30),
 };
 
+struct sim_entity_collision_volume
+{
+    v3 OffsetP;
+    v3 Dim;
+};
+
+struct sim_entity_collision_volume_group
+{
+    sim_entity_collision_volume TotalVolume;
+    uint32 VolumeCount;
+    sim_entity_collision_volume *Volumes;
+};
 struct sim_entity
 {
     uint32 StorageIndex;
@@ -52,7 +64,7 @@ struct sim_entity
 
     real32 DistanceLimit;
 
-    v3 Dim;
+    sim_entity_collision_volume_group *Collision;
     int32 deltaAbsTileZ;
 
     uint32 HitPointMax;
@@ -67,6 +79,7 @@ struct sim_entity
     uint32 SwordLowIndex;
     entity_reference Sword;
 
+    v2 WalkableDim;
     real32 WalkableHeight;
 };
 
