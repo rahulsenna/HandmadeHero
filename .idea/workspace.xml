@@ -19,8 +19,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_entity.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_entity.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_math.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_math.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.h" afterDir="false" />
     </list>
@@ -251,7 +249,10 @@
       <workItem from="1616048681519" duration="6571000" />
       <workItem from="1616136690158" duration="9562000" />
       <workItem from="1616224107809" duration="835000" />
-      <workItem from="1616243212784" duration="12845000" />
+      <workItem from="1616243212784" duration="12944000" />
+      <workItem from="1616310340974" duration="594000" />
+      <workItem from="1616336738683" duration="593000" />
+      <workItem from="1616395495235" duration="6981000" />
     </task>
     <task id="LOCAL-00001" summary="Minor Changes">
       <created>1611916265816</created>
@@ -372,7 +373,28 @@
       <option name="project" value="LOCAL" />
       <updated>1616224342670</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="End of Day 77">
+      <created>1616269239665</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1616269239665</updated>
+    </task>
+    <task id="LOCAL-00019" summary="End of Day 78">
+      <created>1616269308807</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1616269308807</updated>
+    </task>
+    <task id="LOCAL-00020" summary="End of Day 78">
+      <created>1616269329676</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1616269329676</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -401,7 +423,8 @@
     <MESSAGE value="End of Day 75" />
     <MESSAGE value="End of Day 76" />
     <MESSAGE value="End of Day 77" />
-    <option name="LAST_COMMIT_MESSAGE" value="End of Day 77" />
+    <MESSAGE value="End of Day 78" />
+    <option name="LAST_COMMIT_MESSAGE" value="End of Day 78" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

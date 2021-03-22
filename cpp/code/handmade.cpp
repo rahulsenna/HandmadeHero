@@ -314,6 +314,17 @@ AddWall(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 }
 
 internal add_low_entity_result
+AddStandardRoom(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
+{
+    world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
+    add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Space, P,
+                                                     GameState->StandardRoomCollision);
+    AddFlags(&Entity.Low->Sim, EntityFlag_Traversable);
+
+    return (Entity);
+}
+
+internal add_low_entity_result
 AddStair(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 {
     world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
@@ -403,6 +414,18 @@ PushRect(entity_visible_piece_group *Group, v2 Offset, real32 OffsetZ, v2 Dim,
          v4 Color, real32 EntityZC = 1.0f)
 {
     PushPiece(Group, 0, Offset, OffsetZ, Dim, V2(0, 0), Color, EntityZC);
+}
+
+inline void
+PushRectOutline(entity_visible_piece_group *Group, v2 Offset, real32 OffsetZ, v2 Dim,
+                v4 Color, real32 EntityZC = 1.0f)
+{
+    real32 Thickness = 0.1f;
+    PushPiece(Group, 0, Offset + V2(0, 0.5f * Dim.Y), OffsetZ, V2(Dim.X, Thickness), V2(0, 0), Color, EntityZC);
+    PushPiece(Group, 0, Offset - V2(0, 0.5f * Dim.Y), OffsetZ, V2(Dim.X, Thickness), V2(0, 0), Color, EntityZC);
+
+    PushPiece(Group, 0, Offset + V2(0.5f * Dim.X, 0), OffsetZ, V2(Thickness, Dim.Y), V2(0, 0), Color, EntityZC);
+    PushPiece(Group, 0, Offset - V2(0.5f * Dim.X, 0), OffsetZ, V2(Thickness, Dim.Y), V2(0, 0), Color, EntityZC);
 }
 
 inline void
@@ -566,7 +589,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
         AddLowEntity(GameState, EntityType_Null, NullPosition());
 
-        GameState->SwordCollision = MakeNullCollision(GameState);
+        GameState->NullCollision = MakeNullCollision(GameState);
         GameState->SwordCollision = MakeSimpleGroundedCollision(GameState, 1.0f, 0.5f, 0.1f);
         GameState->StairCollision = MakeSimpleGroundedCollision(GameState, GameState->World->TileSideInMeters,
                                                                 2.0f * GameState->World->TileSideInMeters,
@@ -577,6 +600,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->WallCollision = MakeSimpleGroundedCollision(GameState, GameState->World->TileSideInMeters,
                                                                GameState->World->TileSideInMeters,
                                                                GameState->World->TileDepthInMeters);
+
+        GameState->StandardRoomCollision =
+                MakeSimpleGroundedCollision(GameState,
+                                            TilesPerWidth * GameState->World->TileSideInMeters,
+                                            TilesPerHeight * GameState->World->TileSideInMeters,
+                                            0.9f * GameState->World->TileDepthInMeters);
 
         GameState->Backdrop = DEBUGLoadBMP(Thread,
                                            Memory->DEBUGPlatformReadEntireFile,
@@ -708,6 +737,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             {
                 DoorTop = true;
             }
+
+            AddStandardRoom(GameState,
+                            (ScreenX * TilesPerWidth + TilesPerWidth / 2),
+                            (ScreenY * TilesPerHeight + TilesPerHeight / 2),
+                            (AbsTileZ));
 
             for (uint32 TileY = 0; TileY < TilesPerHeight; ++TileY)
             {
@@ -972,14 +1006,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                HeroBitmaps->Align, ShadowAlpha, 0.0f);
 
                     DrawHitPoints(Entity, &PieceGroup);
-                }
                     break;
+                }
                 case EntityType_Wall:
                 {
                     PushBitmap(&PieceGroup, &GameState->Tree,
                                V2(0, 0), 0, V2(40, 80));
-                }
                     break;
+                }
 
                 case EntityType_Stairwell:
                 {
@@ -987,8 +1021,22 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                              Entity->WalkableDim, V4(1, 0.5f, 0, 1), 0.0f);
                     PushRect(&PieceGroup, V2(0, 0), Entity->WalkableHeight,
                              Entity->WalkableDim, V4(1, 1, 0, 1), 0.0f);
-                }
                     break;
+                }
+
+                case EntityType_Space:
+                {
+                    for (uint32 VolumeIndex = 0;
+                         VolumeIndex < Entity->Collision->VolumeCount;
+                         ++VolumeIndex)
+                    {
+                        sim_entity_collision_volume *Volume = Entity->Collision->Volumes + VolumeIndex;
+                        PushRectOutline(&PieceGroup, Volume->OffsetP.XY, 0,
+                                        Volume->Dim.XY, V4(0, 0.5f, 1.0f, 1), 0.0f);
+                    }
+                    break;
+                }
+
                 case EntityType_Sword:
                 {
                     MoveSpec.Speed = 0.0f;
@@ -1004,8 +1052,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                HeroBitmaps->Align, ShadowAlpha, 0.0f);
                     PushBitmap(&PieceGroup, &GameState->Sword,
                                V2(0, 0), 0, V2(29, 10));
-                }
                     break;
+                }
+
                 case EntityType_Familiar:
                 {
                     sim_entity *ClosestHero = 0;
@@ -1050,8 +1099,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                     PushBitmap(&PieceGroup, &GameState->HeroShadow, V2(0, 0), 0,
                                HeroBitmaps->Align, (0.5f * ShadowAlpha) + 0.2f * SinBob, 0.0F);
-                }
                     break;
+                }
+
                 case EntityType_Monster:
                 {
 
@@ -1069,13 +1119,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                HeroBitmaps->Align, ShadowAlpha, 0.0f);
 
                     DrawHitPoints(Entity, &PieceGroup);
-                }
                     break;
+                }
+
                 default:
                 {
                     InvalidCodePath
-                }
                     break;
+                }
             }
 
             if (!IsSet(Entity, EntityFlag_NonSpatial) &&
