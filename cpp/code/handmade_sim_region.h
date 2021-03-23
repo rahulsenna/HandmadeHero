@@ -43,6 +43,19 @@ enum sim_entity_flags
     EntityFlag_Simming = (1 << 30),
 };
 
+
+struct test_wall
+{
+    real32 X;
+    real32 DeltaX;
+    real32 DeltaY;
+    real32 RelX;
+    real32 RelY;
+    real32 MinY;
+    real32 MaxY;
+    v3 Normal;
+};
+
 struct sim_entity_collision_volume
 {
     v3 OffsetP;
