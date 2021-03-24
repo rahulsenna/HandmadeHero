@@ -4,6 +4,9 @@
 
 #ifndef HANDMADEHERO_HANDMADE_RANDOM_H
 
+#define MaxRandomNumber  0x3b925b3d
+#define MinRandomNumber  0x0002ddb6
+
 global_variable uint32
 RandomNumberTable[] =
 {

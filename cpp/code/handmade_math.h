@@ -371,6 +371,20 @@ Clamp01(real32 Value)
 //
 
 inline v2
+V2i(int32 X, int32 Y)
+{
+    v2 Result = {(real32) X, (real32) Y};
+    return(Result);
+}
+
+inline v2
+V2i(uint32 X, uint32 Y)
+{
+    v2 Result = {(real32) X, (real32) Y};
+    return(Result);
+}
+
+inline v2
 GetMinCorner(rectangle2 Rect)
 {
     v2 Result = Rect.Min;

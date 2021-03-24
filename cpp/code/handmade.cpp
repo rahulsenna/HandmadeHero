@@ -306,7 +306,8 @@ internal add_low_entity_result
 AddWall(game_state *GameState, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ)
 {
     world_position P = ChunkPosFromTilePos(GameState->World, AbsTileX, AbsTileY, AbsTileZ);
-    add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Wall, P, GameState->WallCollision);
+    add_low_entity_result Entity =
+    AddGroundedEntity(GameState, EntityType_Wall, P, GameState->WallCollision);
 
     AddFlags(&Entity.Low->Sim, EntityFlag_Collides);
 
@@ -377,7 +378,8 @@ internal add_low_entity_result
 AddPlayer(game_state *GameState)
 {
     world_position P = GameState->CameraP;
-    add_low_entity_result Entity = AddGroundedEntity(GameState, EntityType_Hero, P, GameState->PlayerCollision);
+    add_low_entity_result Entity =
+    AddGroundedEntity(GameState, EntityType_Hero, P, GameState->PlayerCollision);
 
     AddFlags(&Entity.Low->Sim, EntityFlag_Collides | EntityFlag_Movable);
     InitHitPoints(Entity.Low, 3);
@@ -421,11 +423,15 @@ PushRectOutline(entity_visible_piece_group *Group, v2 Offset, real32 OffsetZ, v2
                 v4 Color, real32 EntityZC = 1.0f)
 {
     real32 Thickness = 0.1f;
-    PushPiece(Group, 0, Offset + V2(0, 0.5f * Dim.Y), OffsetZ, V2(Dim.X, Thickness), V2(0, 0), Color, EntityZC);
-    PushPiece(Group, 0, Offset - V2(0, 0.5f * Dim.Y), OffsetZ, V2(Dim.X, Thickness), V2(0, 0), Color, EntityZC);
+    PushPiece(Group, 0, Offset + V2(0, 0.5f * Dim.Y), OffsetZ, V2(Dim.X, Thickness),
+              V2(0, 0), Color, EntityZC);
+    PushPiece(Group, 0, Offset - V2(0, 0.5f * Dim.Y), OffsetZ, V2(Dim.X, Thickness),
+              V2(0, 0), Color, EntityZC);
 
-    PushPiece(Group, 0, Offset + V2(0.5f * Dim.X, 0), OffsetZ, V2(Thickness, Dim.Y), V2(0, 0), Color, EntityZC);
-    PushPiece(Group, 0, Offset - V2(0.5f * Dim.X, 0), OffsetZ, V2(Thickness, Dim.Y), V2(0, 0), Color, EntityZC);
+    PushPiece(Group, 0, Offset + V2(0.5f * Dim.X, 0), OffsetZ, V2(Thickness, Dim.Y),
+              V2(0, 0), Color, EntityZC);
+    PushPiece(Group, 0, Offset - V2(0.5f * Dim.X, 0), OffsetZ, V2(Thickness, Dim.Y),
+              V2(0, 0), Color, EntityZC);
 }
 
 inline void
@@ -472,7 +478,7 @@ ClearCollisionRuleFor(game_state *GameState, uint32 StorageIndex)
 
         for (pairwise_collision_rule **Rule = &GameState->CollisionRuleHash[HashBucket];
              *Rule;
-                )
+        )
         {
             if (((*Rule)->StorageIndexA == StorageIndex) ||
                 ((*Rule)->StorageIndexB == StorageIndex))
@@ -565,6 +571,41 @@ MakeNullCollision(game_state *GameState)
     return (Group);
 }
 
+internal void
+DrawTestGround(game_state *GameState, game_offscreen_buffer *Buffer)
+{
+    uint32 RandomNumberIndex = 0;
+
+    v2 Center = 0.5f * V2i(Buffer->Width, Buffer->Height);
+    for (uint32 GrassIndex = 0; GrassIndex < 100; ++GrassIndex)
+    {
+        Assert(RandomNumberIndex < ArrayCount(RandomNumberTable))
+
+        loaded_bitmap *Stamp;
+        if (RandomNumberTable[RandomNumberIndex++] % 2)
+        {
+            Stamp = GameState->Grass + (RandomNumberTable[RandomNumberIndex++] %
+                                        ArrayCount(GameState->Grass));
+        } else if (RandomNumberTable[RandomNumberIndex++] % 3)
+        {
+            Stamp = GameState->Tuft + (RandomNumberTable[RandomNumberIndex++] %
+                                        ArrayCount(GameState->Tuft));
+        } else
+        {
+            Stamp = GameState->Ground + (RandomNumberTable[RandomNumberIndex++] %
+                                         ArrayCount(GameState->Ground));
+        }
+        real32 Radius = 5.0f;
+        v2 BitmapCenter = 0.5f * V2i(GameState->Grass[0].Width, GameState->Grass[0].Height);
+        v2 Offset = {
+        2.0f * (real32) RandomNumberTable[RandomNumberIndex++] / (real32) MaxRandomNumber - 1,
+        2.0f * (real32) RandomNumberTable[RandomNumberIndex++] / (real32) MaxRandomNumber - 1};
+
+        v2 P = Center + GameState->MetersToPixel * Radius * Offset - BitmapCenter;
+        DrawBitmap(Buffer, Stamp, P.X, P.Y);
+    }
+}
+
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
@@ -602,10 +643,41 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                                                GameState->World->TileDepthInMeters);
 
         GameState->StandardRoomCollision =
-                MakeSimpleGroundedCollision(GameState,
-                                            TilesPerWidth * GameState->World->TileSideInMeters,
-                                            TilesPerHeight * GameState->World->TileSideInMeters,
-                                            0.9f * GameState->World->TileDepthInMeters);
+        MakeSimpleGroundedCollision(GameState,
+                                    TilesPerWidth * GameState->World->TileSideInMeters,
+                                    TilesPerHeight * GameState->World->TileSideInMeters,
+                                    0.9f * GameState->World->TileDepthInMeters);
+
+        GameState->Grass[0] = DEBUGLoadBMP(Thread,
+                                           Memory->DEBUGPlatformReadEntireFile,
+                                           "test2/grass00.bmp");
+
+        GameState->Grass[1] = DEBUGLoadBMP(Thread,
+                                           Memory->DEBUGPlatformReadEntireFile,
+                                           "test2/grass01.bmp");
+
+        GameState->Ground[0] = DEBUGLoadBMP(Thread,
+                                            Memory->DEBUGPlatformReadEntireFile,
+                                            "test2/ground00.bmp");
+        GameState->Ground[1] = DEBUGLoadBMP(Thread,
+                                            Memory->DEBUGPlatformReadEntireFile,
+                                            "test2/ground01.bmp");
+        GameState->Ground[2] = DEBUGLoadBMP(Thread,
+                                            Memory->DEBUGPlatformReadEntireFile,
+                                            "test2/ground02.bmp");
+        GameState->Ground[3] = DEBUGLoadBMP(Thread,
+                                            Memory->DEBUGPlatformReadEntireFile,
+                                            "test2/ground03.bmp");
+
+        GameState->Tuft[0] = DEBUGLoadBMP(Thread,
+                                          Memory->DEBUGPlatformReadEntireFile,
+                                          "test2/tuft00.bmp");
+        GameState->Tuft[1] = DEBUGLoadBMP(Thread,
+                                          Memory->DEBUGPlatformReadEntireFile,
+                                          "test2/tuft01.bmp");
+        GameState->Tuft[2] = DEBUGLoadBMP(Thread,
+                                          Memory->DEBUGPlatformReadEntireFile,
+                                          "test2/tuft02.bmp");
 
         GameState->Backdrop = DEBUGLoadBMP(Thread,
                                            Memory->DEBUGPlatformReadEntireFile,
@@ -928,10 +1000,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #if 1
     DrawRectangle(Buffer, V2(0, 0),
                   V2((real32) Buffer->Width, (real32) Buffer->Height),
-                  0.1f, 0.2f, 0.1f);
+                  0.1f, 0.1f, 0.1f);
 #else
     DrawBitmap(Buffer, &GameState->Backdrop, 0, 0);
 #endif
+
+    DrawTestGround(GameState, Buffer);
 
     real32 ScreenCenterX = (real32) Buffer->Width * 0.5f;
     real32 ScreenCenterY = (real32) Buffer->Height * 0.5f;
