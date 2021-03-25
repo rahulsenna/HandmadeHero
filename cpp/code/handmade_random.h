@@ -524,5 +524,66 @@ RandomNumberTable[] =
 0x1b401817, 0x21d86bd6, 0x17647f64, 0x011fddc9, 0x3384f47b, 0x1f166937, 0x032cf418, 0x0c313d16
 };
 
+struct random_series
+{
+    uint32 Index;
+};
+
+inline random_series
+Seed(uint32 Value)
+{
+    random_series Series;
+    Series.Index = (Value % ArrayCount(RandomNumberTable));
+    return (Series);
+}
+
+inline uint32
+NextRandomInt32(random_series *Series)
+{
+    uint32 Result = RandomNumberTable[Series->Index++];
+    if (Series->Index >= ArrayCount(RandomNumberTable))
+    {
+        Series->Index = 0;
+    }
+    return (Result);
+}
+
+inline uint32
+RandomChoice(random_series *Series, uint32 Count)
+{
+    uint32 Result = (NextRandomInt32(Series) % Count);
+    return (Result);
+}
+
+inline real32
+RandomUnilateral(random_series *Series)
+{
+    real32 Divisor = 1.0f / (real32) MaxRandomNumber;
+    real32 Result = Divisor * (real32) NextRandomInt32(Series);
+    return (Result);
+}
+
+inline real32
+RandomBilateral(random_series *Series)
+{
+
+    real32 Result = 2.0f * RandomUnilateral(Series) - 1.0f;
+    return (Result);
+}
+
+inline real32
+RandomBetween(random_series *Series, real32 Min, real32 Max)
+{
+    real32 Result = Lerp(Min, RandomUnilateral(Series), Max);
+    return (Result);
+}
+
+inline int32
+RandomBetween(random_series *Series, int32 Min, int32 Max)
+{
+    int32 Result = Min + NextRandomInt32(Series) % (Max - Min);
+    return (Result);
+}
+
 #define HANDMADEHERO_HANDMADE_RANDOM_H
 #endif //HANDMADEHERO_HANDMADE_RANDOM_H

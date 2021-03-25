@@ -1253,7 +1253,6 @@ WinMain(
                         Buffer.Width = GlobalBackBuffer.Width;
                         Buffer.Pitch = GlobalBackBuffer.Pitch;
                         Buffer.Memory = GlobalBackBuffer.Memory;
-                        Buffer.BytesPerPixel = GlobalBackBuffer.BytesPerPixel;
 
                         if (Win32State.InputRecordingIndex)
                         {

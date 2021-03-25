@@ -113,26 +113,25 @@ struct game_memory
     debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
 };
 
-
+#define BYTES_PER_PIXEL 4
 struct game_offscreen_buffer
 {
     void *Memory;
-    int Width;
-    int Height;
-    int Pitch;
-    int BytesPerPixel;
+    int32 Width;
+    int32 Height;
+    int32 Pitch;
 };
 
 struct game_sound_output_buffer
 {
     int16 *Samples;
-    int SamplesPerSecond;
-    int SampleCount;
+    int32 SamplesPerSecond;
+    int32 SampleCount;
 };
 
 struct game_button_state
 {
-    int HalfTransitionCount;
+    int32 HalfTransitionCount;
     bool32 EndedDown;
 };
 

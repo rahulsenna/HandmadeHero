@@ -55,9 +55,10 @@ ZeroSize(mem_index Size, void *Ptr)
 
 struct loaded_bitmap
 {
+    void *Memory;
     int32 Width;
     int32 Height;
-    uint32 *Pixels;
+    int32 Pitch;
 };
 
 struct hero_bitmaps
@@ -151,6 +152,8 @@ struct game_state
     sim_entity_collision_volume_group *WallCollision;
     sim_entity_collision_volume_group *FamiliarCollision;
     sim_entity_collision_volume_group *StandardRoomCollision;
+
+    loaded_bitmap GroundBuffer;
 };
 
 struct entity_visible_piece_group
