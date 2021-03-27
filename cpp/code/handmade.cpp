@@ -151,23 +151,25 @@ DrawBitmap(loaded_bitmap *DrawBuffer, loaded_bitmap *Bitmap, real32 RealX, real3
         uint32 *Source = (uint32 *) SourceRow;
         for (int X = MinX; X < MaxX; ++X)
         {
-            real32 SA = (real32) ((*Source >> 24) & 0xFF) / 255.0f;
-            SA *= CAlpha;
-            real32 SR = (real32) ((*Source >> RED_PLACE) & 0xFF);
-            real32 SG = (real32) ((*Source >> GREEN_PLACE) & 0xFF);
-            real32 SB = (real32) ((*Source >> BLUE_PLACE) & 0xFF);
+            real32 SA = (real32) ((*Source >> 24) & 0xFF);
+            real32 SR = (real32) ((*Source >> RED_PLACE) & 0xFF) * CAlpha;
+            real32 SG = (real32) ((*Source >> GREEN_PLACE) & 0xFF) * CAlpha;
+            real32 SB = (real32) ((*Source >> BLUE_PLACE) & 0xFF) * CAlpha;
+            real32 RSA = (SA / 255.0f) * CAlpha;
 
             real32 DA = (real32) ((*Dest >> 24) & 0xFF);
             real32 DR = (real32) ((*Dest >> RED_PLACE) & 0xFF);
             real32 DG = (real32) ((*Dest >> GREEN_PLACE) & 0xFF);
             real32 DB = (real32) ((*Dest >> BLUE_PLACE) & 0xFF);
+            real32 RDA = (DA / 255.0f);
 
-            real32 A = MAXIMUM(DA, 255.0f * SA);
-            real32 R = (1.0f - SA) * DR + SA * SR;
-            real32 G = (1.0f - SA) * DG + SA * SG;
-            real32 B = (1.0f - SA) * DB + SA * SB;
+            real32 InvRSA = (1.0f - RSA);
+            real32 A = 255.0f * (RSA + RDA - RSA * RDA);
+            real32 R = InvRSA * DR + SR;
+            real32 G = InvRSA * DG + SG;
+            real32 B = InvRSA * DB + SB;
 
-            *Dest = (((uint32) (A + 0.5f) << 24)  |
+            *Dest = (((uint32) (A + 0.5f) << 24) |
                      ((uint32) (R + 0.5f) << RED_PLACE) |
                      ((uint32) (G + 0.5f) << GREEN_PLACE) |
                      ((uint32) (B + 0.5f) << BLUE_PLACE));
@@ -233,10 +235,10 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
         Assert(BlueScan.Found)
         Assert(AlphaScan.Found)
 
-        int32 RedShift = RED_PLACE - (int32) RedScan.Index;
-        int32 GreenShift = GREEN_PLACE - (int32) GreenScan.Index;
-        int32 BlueShift = BLUE_PLACE - (int32) BlueScan.Index;
-        int32 AlphaShift = 24 - (int32) AlphaScan.Index;
+        int32 RedShift = (int32) RedScan.Index;
+        int32 GreenShift = (int32) GreenScan.Index;
+        int32 BlueShift = (int32) BlueScan.Index;
+        int32 AlphaShift = (int32) AlphaScan.Index;
 
         uint32 *Source = Pixels;
         for (uint32 Y = 0; Y < Header->Height; ++Y)
@@ -244,10 +246,21 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
             for (uint32 X = 0; X < Header->Width; ++X)
             {
                 uint32 C = *Source;
-                *Source = (RotateLeft(C & Header->RedMask, RedShift)) |
-                          (RotateLeft(C & Header->GreenMask, GreenShift)) |
-                          (RotateLeft(C & Header->BlueMask, BlueShift)) |
-                          (RotateLeft(C & Header->AlphaMask, AlphaShift));
+
+                real32 R = (real32) ((C & Header->RedMask) >> RedShift);
+                real32 G = (real32) ((C & Header->GreenMask) >> GreenShift);
+                real32 B = (real32) ((C & Header->BlueMask) >> BlueShift);
+                real32 A = (real32) ((C & Header->AlphaMask) >> AlphaShift);
+                real32 AN = (A / 255.0f);
+
+                R = R * AN;
+                G = G * AN;
+                B = B * AN;
+
+                *Source = (((uint32) (A + 0.5f) << 24) |
+                           ((uint32) (R + 0.5f) << RED_PLACE) |
+                           ((uint32) (G + 0.5f) << GREEN_PLACE) |
+                           ((uint32) (B + 0.5f) << BLUE_PLACE));
                 ++Source;
             }
         }
@@ -1017,7 +1030,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     DrawRectangle(DrawBuffer, V2(0, 0),
                   V2((real32) DrawBuffer->Width, (real32) DrawBuffer->Height),
-                  0.1f, 0.1f, 0.1f);
+                  0.5f, 0.5f, 0.5f);
     DrawBitmap(DrawBuffer, &GameState->GroundBuffer, 0, 0);
 
     real32 ScreenCenterX = (real32) DrawBuffer->Width * 0.5f;
