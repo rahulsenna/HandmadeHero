@@ -175,6 +175,45 @@ DrawBitmap(loaded_bitmap *DrawBuffer, loaded_bitmap *Bitmap, real32 RealX, real3
                      ((uint32) (B + 0.5f) << BLUE_PLACE));
             Dest++;
             Source++;
+
+/*
+
+Photoshop-style blend equations with destination alpha
+
+The photoshop blend formulas are available in many places on the web, but
+they all assume an opaque output target. Sometimes the output target is not
+opaque (for example, with layer folders in Photoshop and the blend mode
+not set to "normal").
+
+The following formulas appear to be the ones used by Adobe Flash Player;
+they might differ from Photoshop blend modes, and they do not include all of
+the Photoshop blend modes (these formulas were developed for and verified in
+Iggy, software I wrote for RAD Game Tools which "plays" Adobe Flash files).
+
+                   out color                                                    out alpha
+                   --------------                                               -----------
+layer/over:    (   sc+(1-sa)*dc                                              ,  sa+da-sa*da   )
+multiply:      (   sc*dc                                                     ,  sa+da-sa*da   )
+screen:        (   sa*da - (da-dc)*(sa-sc)                                     ,  sa+da-sa*da   )
+lighten:       (   max(sa*dc,sc*da)                                          ,  sa+da-sa*da   )
+darken:        (   min(sa*dc,sc*da)                                          ,  sa+da-sa*da   )
+add:           (   min(dc+sc,1)                                              ,  min(sa+da,1)  )
+subtract:      (   max(dc-sc,0)                                              ,  min(sa+da,1)  )
+difference:    (   abs(sa*dc-sc*da)                                          ,  sa+da-sa*da   )
+invert:        (   sa*(da-dc)                                                 ,  sa+da-sa*da   )
+overlay:       (   dc < da/2.0 ? (2.0*sc*dc) : (sa*da - 2.0*(da-dc)*(sa-sc))   ,  sa+da-sa*da   )
+hardlight:     (   sc < sa/2.0 ? (2.0*sc*dc) : (sa*da - 2.0*(da-dc)*(sa-sc))   ,  sa+da-sa*da   )
+
+  sc = source color, sa = source alpha, dc = dest color, da = dest alpha
+
+The inputs in the above equations must be premultiplied. If inputs are
+non-premultiplied, replace "sc" with "sc*sa". (Outputs are always
+premultiplied, hence destination is always premultiplied.)
+
+-- Sean Barrett, 2012/09/19
+
+
+*/
         }
         DestRow += DrawBuffer->Pitch;
         SourceRow += Bitmap->Pitch;
