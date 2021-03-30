@@ -117,21 +117,21 @@ struct game_memory
 struct game_offscreen_buffer
 {
     void *Memory;
-    int32 Width;
-    int32 Height;
-    int32 Pitch;
+    int Width;
+    int Height;
+    int Pitch;
 };
 
 struct game_sound_output_buffer
 {
     int16 *Samples;
-    int32 SamplesPerSecond;
-    int32 SampleCount;
+    int SamplesPerSecond;
+    int SampleCount;
 };
 
 struct game_button_state
 {
-    int32 HalfTransitionCount;
+    int HalfTransitionCount;
     bool32 EndedDown;
 };
 
