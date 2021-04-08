@@ -6,7 +6,7 @@
 
 #define WORLD_CHUNK_SAFE_MARGIN (INT32_MAX/64)
 #define WORLD_CHUNK_UNINITIALIZED INT32_MAX
-#define TILES_PER_CHUNK 16
+#define TILES_PER_CHUNK 8
 
 inline world_position
 NullPosition()
@@ -91,13 +91,10 @@ GetWorldChunk(world *World, int32 ChunkX, int32 ChunkY, int32 ChunkZ,
 }
 
 internal void
-InitializeWorld(world *World, real32 TileSideInMeters, real32 TileDepthInMeters)
+InitializeWorld(world *World,v3 ChunkDimInMeters)
 {
-    World->TileSideInMeters = TileSideInMeters;
-    World->ChunkDimInMeters = {(real32) TILES_PER_CHUNK * TileSideInMeters,
-                               (real32) TILES_PER_CHUNK * TileSideInMeters,
-                               TileDepthInMeters};
-    World->TileDepthInMeters = TileDepthInMeters;
+
+    World->ChunkDimInMeters = ChunkDimInMeters;
     World->FirstFree = 0;
 
     for (uint32 ChunkIndex = 0;
@@ -133,19 +130,7 @@ MapIntoChunkSpace(world *World, world_position BasePos, v3 Offset)
     return (Result);
 }
 
-inline world_position
-ChunkPosFromTilePos(world *World, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ,
-                    v3 AdditionalOffset = V3(0, 0, 0))
-{
-    world_position BasePos = {};
 
-    v3 TileDim = V3(World->TileSideInMeters, World->TileSideInMeters, World->TileDepthInMeters);
-    v3 Offset = Hadamard(TileDim, V3((real32) AbsTileX, (real32) AbsTileY, (real32) AbsTileZ));
-    world_position Result = MapIntoChunkSpace(World, BasePos, Offset + AdditionalOffset);
-
-    Assert(IsCanonical(World, Result.Offset_))
-    return (Result);
-}
 
 inline v3
 Subtract(world *World, world_position *A, world_position *B)
@@ -182,6 +167,14 @@ CenteredChunkPoint(int32 ChunkX, int32 ChunkY, int32 ChunkZ)
     return (Result);
 }
 
+inline world_position
+CenteredChunkPoint(world_chunk *Chunk)
+{
+    world_position Result = CenteredChunkPoint(Chunk->ChunkX, Chunk->ChunkY, Chunk->ChunkZ);
+
+    return(Result);
+}
+
 inline void
 ChangeEntityLocationRaw(memory_arena *Arena, world *World, uint32 LowEntityIndex,
                         world_position *OldP, world_position *NewP)
@@ -214,7 +207,7 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, uint32 LowEntityIndex
                         if (Block->LowEntityIndex[Index] == LowEntityIndex)
                         {
                             Block->LowEntityIndex[Index] =
-                                    FirstBlock->LowEntityIndex[--FirstBlock->EntityCount];
+                            FirstBlock->LowEntityIndex[--FirstBlock->EntityCount];
 
                             if (FirstBlock->EntityCount == 0)
                             {

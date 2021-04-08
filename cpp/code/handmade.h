@@ -159,6 +159,8 @@ struct game_state
     memory_arena WorldArena;
     world *World;
 
+    real32 TypicalFloorHeight;
+
     uint32 CameraFollowingEntityIndex;
     world_position CameraP;
 
@@ -183,7 +185,10 @@ struct game_state
     loaded_bitmap HeroShadow;
 
     hero_bitmaps HeroBitmaps[4];
+
     real32 MetersToPixel;
+    real32 PixelsToMeters;
+
     pairwise_collision_rule *CollisionRuleHash[256];
     pairwise_collision_rule *FirstFreeCollisionRule;
 

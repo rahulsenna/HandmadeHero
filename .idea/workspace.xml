@@ -19,6 +19,9 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_math.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_math.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,14 +89,14 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+    <configuration name="handmade" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="HandmadeHero" TARGET_NAME="handmade" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="handmade" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="HandmadeHero" TARGET_NAME="handmade" CONFIG_NAME="Debug">
+    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <list>
@@ -274,7 +277,10 @@
       <workItem from="1617203655634" duration="249000" />
       <workItem from="1617350580538" duration="116000" />
       <workItem from="1617689169883" duration="6849000" />
-      <workItem from="1617722613608" duration="5533000" />
+      <workItem from="1617722613608" duration="5566000" />
+      <workItem from="1617774382185" duration="1175000" />
+      <workItem from="1617859624490" duration="904000" />
+      <workItem from="1617876967637" duration="10886000" />
     </task>
     <task id="LOCAL-00001" summary="Minor Changes">
       <created>1611916265816</created>
@@ -465,7 +471,14 @@
       <option name="project" value="LOCAL" />
       <updated>1617096185122</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="End of Day 85">
+      <created>1617731390172</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1617731390172</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -501,7 +514,8 @@
     <MESSAGE value="End of Day 82" />
     <MESSAGE value="End of Day 83 - Pre Multiplied Alpha" />
     <MESSAGE value="End of Day 84" />
-    <option name="LAST_COMMIT_MESSAGE" value="End of Day 84" />
+    <MESSAGE value="End of Day 85" />
+    <option name="LAST_COMMIT_MESSAGE" value="End of Day 85" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
