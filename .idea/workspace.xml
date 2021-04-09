@@ -18,10 +18,8 @@
     <list default="true" id="91a7b23e-8585-47af-bb8a-2e776c093d77" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_math.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_math.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_world.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_world.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_platform.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_platform.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/win32_handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/win32_handmade.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,11 +90,6 @@
     <configuration name="handmade" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="HandmadeHero" TARGET_NAME="handmade" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <list>
@@ -280,7 +273,9 @@
       <workItem from="1617722613608" duration="5566000" />
       <workItem from="1617774382185" duration="1175000" />
       <workItem from="1617859624490" duration="904000" />
-      <workItem from="1617876967637" duration="10886000" />
+      <workItem from="1617876967637" duration="11094000" />
+      <workItem from="1617946523564" duration="2898000" />
+      <workItem from="1617964172414" duration="1815000" />
     </task>
     <task id="LOCAL-00001" summary="Minor Changes">
       <created>1611916265816</created>
@@ -478,7 +473,14 @@
       <option name="project" value="LOCAL" />
       <updated>1617731390172</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="End of Day 86">
+      <created>1617891713691</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1617891713691</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -515,7 +517,8 @@
     <MESSAGE value="End of Day 83 - Pre Multiplied Alpha" />
     <MESSAGE value="End of Day 84" />
     <MESSAGE value="End of Day 85" />
-    <option name="LAST_COMMIT_MESSAGE" value="End of Day 85" />
+    <MESSAGE value="End of Day 86" />
+    <option name="LAST_COMMIT_MESSAGE" value="End of Day 86" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

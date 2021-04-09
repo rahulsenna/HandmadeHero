@@ -671,31 +671,72 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
     Buffer.Memory = GroundBuffer->Memory;
 
     GroundBuffer->P = *ChunkP;
-
-    random_series Series = Seed(139 * ChunkP->ChunkX + 425 * ChunkP->ChunkY + 513 * ChunkP->ChunkZ);
-
     real32 Width = (real32) Buffer.Width;
     real32 Height = (real32) Buffer.Height;
 
-    for (uint32 GrassIndex = 0; GrassIndex < 100; ++GrassIndex)
+    for (int32 ChunkOffsetY = -1;
+         ChunkOffsetY <= 1;
+         ++ChunkOffsetY)
     {
+        for (int32 ChunkOffsetX = -1;
+             ChunkOffsetX <= 1;
+             ++ChunkOffsetX)
+        {
+            int32 ChunkX = ChunkP->ChunkX + ChunkOffsetX;
+            int32 ChunkY = ChunkP->ChunkY + ChunkOffsetY;
+            int32 ChunkZ = ChunkP->ChunkZ;
 
-        loaded_bitmap *Stamp;
-        if (RandomChoice(&Series, 2))
-        {
-            Stamp = GameState->Grass + (RandomChoice(&Series, ArrayCount(GameState->Grass)));
-        } else if (RandomChoice(&Series, 3))
-        {
-            Stamp = GameState->Tuft + (RandomChoice(&Series, ArrayCount(GameState->Tuft)));
-        } else
-        {
-            Stamp = GameState->Ground + (RandomChoice(&Series, ArrayCount(GameState->Ground)));
+            random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
+
+            v2 Center = V2(ChunkOffsetX * Width, -ChunkOffsetY * Height);
+
+            for (uint32 GrassIndex = 0; GrassIndex < 100; ++GrassIndex)
+            {
+                loaded_bitmap *Stamp;
+                if (RandomChoice(&Series, 2))
+                {
+                    Stamp = GameState->Grass + (RandomChoice(&Series, ArrayCount(GameState->Grass)));
+                } else
+                {
+                    Stamp = GameState->Ground + (RandomChoice(&Series, ArrayCount(GameState->Ground)));
+                }
+
+                v2 BitmapCenter = 0.5f * V2i(GameState->Grass[0].Width, GameState->Grass[0].Height);
+                v2 Offset = {Width * RandomUnilateral(&Series), Height * RandomUnilateral(&Series)};
+                v2 P = Center + Offset - BitmapCenter;
+                DrawBitmap(&Buffer, Stamp, P.X, P.Y);
+            }
         }
+    }
 
-        v2 BitmapCenter = 0.5f * V2i(GameState->Grass[0].Width, GameState->Grass[0].Height);
-        v2 Offset = {Width * RandomUnilateral(&Series), Height * RandomUnilateral(&Series)};
-        v2 P = Offset - BitmapCenter;
-        DrawBitmap(&Buffer, Stamp, P.X, P.Y);
+    for (int32 ChunkOffsetY = -1;
+         ChunkOffsetY <= 1;
+         ++ChunkOffsetY)
+    {
+        for (int32 ChunkOffsetX = -1;
+             ChunkOffsetX <= 1;
+             ++ChunkOffsetX)
+        {
+            int32 ChunkX = ChunkP->ChunkX + ChunkOffsetX;
+            int32 ChunkY = ChunkP->ChunkY + ChunkOffsetY;
+            int32 ChunkZ = ChunkP->ChunkZ;
+
+            random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
+
+            v2 Center = V2(ChunkOffsetX * Width, -ChunkOffsetY * Height);
+
+            for (uint32 GrassIndex = 0; GrassIndex < 20; ++GrassIndex)
+            {
+                loaded_bitmap *Stamp;
+
+                Stamp = GameState->Tuft + (RandomChoice(&Series, ArrayCount(GameState->Tuft)));
+
+                v2 BitmapCenter = 0.5f * V2i(GameState->Grass[0].Width, GameState->Grass[0].Height);
+                v2 Offset = {Width * RandomUnilateral(&Series), Height * RandomUnilateral(&Series)};
+                v2 P = Center + Offset - BitmapCenter;
+                DrawBitmap(&Buffer, Stamp, P.X, P.Y);
+            }
+        }
     }
 }
 
@@ -1055,7 +1096,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                         (mem_index) Memory->TransientStorageSize - sizeof(transient_state),
                         (uint8 *) Memory->TransientStorage + sizeof(transient_state));
 
-        TranState->GroundBufferCount = 128;
+        TranState->GroundBufferCount = 32;// 128;
         TranState->GroundBuffers = PushArray(&TranState->TranArena,
                                              TranState->GroundBufferCount, ground_buffer);
 
@@ -1074,6 +1115,18 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
 
         TranState->IsInitialized = true;
+    }
+
+    if (Input->ExecutableReloaded)
+    {
+        for (uint32 GroundBufferIndex = 0;
+             GroundBufferIndex < TranState->GroundBufferCount;
+             ++GroundBufferIndex)
+        {
+            ground_buffer *GroundBuffer = TranState->GroundBuffers + GroundBufferIndex;
+
+            GroundBuffer->P = NullPosition();
+        }
     }
 
     world *World = GameState->World;
@@ -1199,8 +1252,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                              ScreenP + 0.5 * ScreenDim,
                                              V3(1.0f, 1.0f, 0.0f));
 
-                        bool32 Found = false;
-                        ground_buffer *EmptyBuffer = 0;
+                        real32 FurthestBufferLengthSq = 0.0f;
+                        ground_buffer *FurthestBuffer = 0;
                         for (uint32 GroundBufferIndex = 0;
                              GroundBufferIndex < TranState->GroundBufferCount;
                              ++GroundBufferIndex)
@@ -1209,16 +1262,26 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                             if (AreOnSameChunk(World, &GroundBuffer->P, &ChunkCenterP))
                             {
-                                Found = true;
+                                FurthestBuffer = 0;
                                 break;
-                            } else if (!IsValid(GroundBuffer->P))
+                            } else if (IsValid(GroundBuffer->P))
                             {
-                                EmptyBuffer = GroundBuffer;
+                                v3 BufferRelP = Subtract(World, &GroundBuffer->P, &GameState->CameraP);
+                                real32 BufferLengthSq = LengthSq(BufferRelP.XY);
+                                if (FurthestBufferLengthSq < BufferLengthSq)
+                                {
+                                    FurthestBufferLengthSq = BufferLengthSq;
+                                    FurthestBuffer = GroundBuffer;
+                                }
+                            } else
+                            {
+                                FurthestBufferLengthSq = Real32Maximum;
+                                FurthestBuffer = GroundBuffer;
                             }
                         }
-                        if (!Found && EmptyBuffer)
+                        if (FurthestBuffer)
                         {
-                            FillGroundChunk(TranState, GameState, EmptyBuffer, &ChunkCenterP);
+                            FillGroundChunk(TranState, GameState, FurthestBuffer, &ChunkCenterP);
                         }
                     }
                 }

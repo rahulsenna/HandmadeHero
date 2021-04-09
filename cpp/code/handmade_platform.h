@@ -7,6 +7,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <float.h>
+
 
 #ifndef COMPILER_MSVC
 #define COMPILER_MSVC 0
@@ -47,6 +49,8 @@ typedef int32_t bool32;
 
 typedef float real32;
 typedef double real64;
+
+#define Real32Maximum FLT_MAX
 
 typedef size_t mem_index;
 
@@ -170,6 +174,8 @@ struct game_input
 {
     game_button_state MouseButtons[5];
     int MouseX, MouseY, MouseZ;
+
+    bool32 ExecutableReloaded;
 
     real32 deltatForFrame;
     game_controller_input Controllers[5];
