@@ -394,7 +394,7 @@ HandleOverlap(game_state *GameState, sim_entity *Mover, sim_entity *Region, real
 }
 
 internal bool32
-SpeculativeCollide(sim_entity *Mover, sim_entity *Region)
+SpeculativeCollide(sim_entity *Mover, sim_entity *Region, v3 TestP)
 {
     bool32 Result = true;
 
@@ -406,7 +406,7 @@ SpeculativeCollide(sim_entity *Mover, sim_entity *Region)
                  ((Bary.Y > 0.1f) && (Bary.Y < 0.9f));
 #endif
 
-        v3 MoverGroundPoint = GetEntityGroundPoint(Mover);
+        v3 MoverGroundPoint = GetEntityGroundPoint(Mover, TestP);
         real32 Ground = GetStairGround(Region, MoverGroundPoint);
         Result = (AbsoluteValue(MoverGroundPoint.Z - Ground) > StepHeight);
     }
@@ -423,7 +423,7 @@ EntitiesOverlap(sim_entity *Entity, sim_entity *TestEntity, v3 Epsilon = V3(0, 0
          ++VolumeIndex)
     {
         sim_entity_collision_volume *Volume =
-                Entity->Collision->Volumes + VolumeIndex;
+        Entity->Collision->Volumes + VolumeIndex;
 
         for (uint32 TestVolumeIndex = 0;
              !Result && (TestVolumeIndex < TestEntity->Collision->VolumeCount);
@@ -524,7 +524,7 @@ MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v3 
                                  ++TestVolumeIndex)
                             {
                                 sim_entity_collision_volume *TestVolume =
-                                        TestEntity->Collision->Volumes + TestVolumeIndex;
+                                TestEntity->Collision->Volumes + TestVolumeIndex;
 
                                 v3 MinkowskiDiameter = {TestVolume->Dim.X + Volume->Dim.X,
                                                         TestVolume->Dim.Y + Volume->Dim.Y,
@@ -537,14 +537,14 @@ MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v3 
                                 if (Rel.Z >= MinCorner.Z && Rel.Z <= MaxCorner.Z)
                                 {
                                     test_wall Walls[] = {
-                                            {MinCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, MinCorner.Y,
-                                                    MaxCorner.Y, V3(-1, 0, 0)},
-                                            {MaxCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, MinCorner.Y,
-                                                    MaxCorner.Y, V3(1, 0, 0)},
-                                            {MinCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, MinCorner.X,
-                                                    MaxCorner.X, V3(0, -1, 0)},
-                                            {MaxCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, MinCorner.X,
-                                                    MaxCorner.X, V3(0, 1, 0)}};
+                                    {MinCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, MinCorner.Y,
+                                    MaxCorner.Y, V3(-1, 0, 0)},
+                                    {MaxCorner.X, EntityDelta.X, EntityDelta.Y, Rel.X, Rel.Y, MinCorner.Y,
+                                    MaxCorner.Y, V3(1, 0, 0)},
+                                    {MinCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, MinCorner.X,
+                                    MaxCorner.X, V3(0, -1, 0)},
+                                    {MaxCorner.Y, EntityDelta.Y, EntityDelta.X, Rel.Y, Rel.X, MinCorner.X,
+                                    MaxCorner.X, V3(0, 1, 0)}};
 
                                     if (IsSet(TestEntity, EntityFlag_Traversable))
                                     {
@@ -613,7 +613,8 @@ MoveEntity(game_state *GameState, sim_region *SimRegion, sim_entity *Entity, v3 
 
                                         if (HitThis)
                                         {
-                                            if (SpeculativeCollide(Entity, TestEntity))
+                                            v3 TestP = Entity->P + tMinTest * EntityDelta;
+                                            if (SpeculativeCollide(Entity, TestEntity, TestP))
                                             {
                                                 tMin = tMinTest;
                                                 WallNormalMin = TestWallNormal;

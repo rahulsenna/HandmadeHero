@@ -16,10 +16,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="91a7b23e-8585-47af-bb8a-2e776c093d77" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/cpp/code/handmade_render_group.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cpp/code/handmade_render_group.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cpp/code/handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_platform.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_platform.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpp/code/win32_handmade.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/win32_handmade.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_entity.h" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_entity.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cpp/code/handmade_sim_region.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -275,7 +278,9 @@
       <workItem from="1617859624490" duration="904000" />
       <workItem from="1617876967637" duration="11094000" />
       <workItem from="1617946523564" duration="2898000" />
-      <workItem from="1617964172414" duration="1815000" />
+      <workItem from="1617964172414" duration="2025000" />
+      <workItem from="1618032802961" duration="11256000" />
+      <workItem from="1618061020574" duration="712000" />
     </task>
     <task id="LOCAL-00001" summary="Minor Changes">
       <created>1611916265816</created>
@@ -480,7 +485,14 @@
       <option name="project" value="LOCAL" />
       <updated>1617891713691</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="End of Day 87">
+      <created>1617967913038</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1617967913038</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -518,7 +530,8 @@
     <MESSAGE value="End of Day 84" />
     <MESSAGE value="End of Day 85" />
     <MESSAGE value="End of Day 86" />
-    <option name="LAST_COMMIT_MESSAGE" value="End of Day 86" />
+    <MESSAGE value="End of Day 87" />
+    <option name="LAST_COMMIT_MESSAGE" value="End of Day 87" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
