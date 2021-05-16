@@ -9,7 +9,6 @@ extern "C" {
 #include <stdint.h>
 #include <float.h>
 
-
 #ifndef COMPILER_MSVC
 #define COMPILER_MSVC 0
 #endif
@@ -32,22 +31,25 @@ extern "C" {
 #include <intrin.h>
 #endif
 
+#define WIDTH 960
+#define HEIGHT 540
+
 #define internal static
 #define global_variable static
 #define local_persist static
 #define PII32 3.14159265359f
-typedef uint8_t uint8;
+typedef uint8_t  uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
-typedef int8_t int8;
+typedef int8_t  int8;
 typedef int16_t int16;
 typedef int32_t int32;
 typedef int64_t int64;
 typedef int32_t bool32;
 
-typedef float real32;
+typedef float  real32;
 typedef double real64;
 
 #define Real32Maximum FLT_MAX
@@ -62,13 +64,14 @@ typedef size_t mem_index;
 #define Assert(Expression)
 #endif
 
-#define InvalidCodePath Assert(!"InvalidCodePath");
+#define InvalidCodePath    Assert(!"InvalidCodePath");
+#define InvalidDefaultCase default: {InvalidCodePath} break
 
 #define ArrayCount(Array) (sizeof(Array)/sizeof((Array)[0]))
-#define Kilobytes(Value) ((Value) * 1024)
-#define Megabytes(Value) (Kilobytes(Value) * 1024)
-#define Gigabytes(Value) (Megabytes(Value) * 1024)
-#define Terabytes(Value) (Gigabytes(Value) * 1024)
+#define Kilobytes(Value)  ((Value) * 1024)
+#define Megabytes(Value)  (Kilobytes(Value) * 1024)
+#define Gigabytes(Value)  (Megabytes(Value) * 1024)
+#define Terabytes(Value)  (Gigabytes(Value) * 1024)
 
 inline uint32 SafeTruncateUInt64(uint64 Value)
 {
@@ -79,7 +82,7 @@ inline uint32 SafeTruncateUInt64(uint64 Value)
 
 struct debug_read_file_result
 {
-    void *Contents;
+    void   *Contents;
     uint32 ContentsSize;
 };
 
@@ -107,35 +110,35 @@ struct game_memory
 {
     bool32 IsInitialized;
     uint64 PermanentStorageSize;
-    void *PermanentStorage;
+    void   *PermanentStorage;
 
     uint64 TransientStorageSize;
-    void *TransientStorage;
+    void   *TransientStorage;
 
-    debug_platform_read_entire_file *DEBUGPlatformReadEntireFile;
+    debug_platform_read_entire_file  *DEBUGPlatformReadEntireFile;
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
-    debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
+    debug_platform_free_file_memory  *DEBUGPlatformFreeFileMemory;
 };
 
 #define BYTES_PER_PIXEL 4
 struct game_offscreen_buffer
 {
     void *Memory;
-    int Width;
-    int Height;
-    int Pitch;
+    int  Width;
+    int  Height;
+    int  Pitch;
 };
 
 struct game_sound_output_buffer
 {
     int16 *Samples;
-    int SamplesPerSecond;
-    int SampleCount;
+    int   SamplesPerSecond;
+    int   SampleCount;
 };
 
 struct game_button_state
 {
-    int HalfTransitionCount;
+    int    HalfTransitionCount;
     bool32 EndedDown;
 };
 
@@ -173,11 +176,11 @@ struct game_controller_input
 struct game_input
 {
     game_button_state MouseButtons[5];
-    int MouseX, MouseY, MouseZ;
+    int               MouseX, MouseY, MouseZ;
 
     bool32 ExecutableReloaded;
 
-    real32 deltatForFrame;
+    real32                deltatForFrame;
     game_controller_input Controllers[5];
 };
 

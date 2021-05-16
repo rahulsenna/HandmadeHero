@@ -25,23 +25,25 @@ if (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|Ninja)")
 
     include(GenerateExportHeader)
     add_library(handmade SHARED cpp/code/handmade.cpp)
-    target_link_options(handmade PUBLIC /EXPORT:GameUpdateAndRender
-            /EXPORT:GameGetSoundSamples /PDB:handmade_pdb%random%.pdb)
+    target_link_options(handmade PUBLIC
+                        /EXPORT:GameUpdateAndRender
+                        /EXPORT:GameGetSoundSamples
+                        /PDB:handmade_pdb%random%.pdb)
 
 
     ADD_CUSTOM_COMMAND(TARGET handmade
-            PRE_BUILD
-            COMMAND cmd /c echo Build Lock > lock.tmp
-            )
+                       PRE_BUILD
+                       COMMAND cmd /c echo Build Lock > lock.tmp
+                       )
     ADD_CUSTOM_COMMAND(TARGET handmade
-            POST_BUILD
-            COMMAND cmd /c del lock.tmp
-            )
+                       POST_BUILD
+                       COMMAND cmd /c del lock.tmp
+                       )
 
     ADD_CUSTOM_COMMAND(TARGET handmade
-            PRE_BUILD
-            COMMAND cmd /c del handmade_pdb*
-            )
+                       PRE_BUILD
+                       COMMAND cmd /c del handmade_pdb*
+                       )
 
 else ()
     add_definitions(-DHANDMADE_WIN32=0)
@@ -88,10 +90,10 @@ else ()
 
     add_executable(HandmadeHero code/osx_main.mm)
     target_link_libraries(HandmadeHero
-            "-framework AppKit"
-            "-framework IOKit"
-            "-framework AudioToolbox"
-            "-framework QuartzCore")
+                          "-framework AppKit"
+                          "-framework IOKit"
+                          "-framework AudioToolbox"
+                          "-framework QuartzCore")
     set_target_properties(HandmadeHero PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
     set_target_properties(HandmadeHero PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/HandmadeHero.app/")
 

@@ -11,24 +11,18 @@
 struct memory_arena
 {
     mem_index Size;
-    uint8 *Base;
+    uint8     *Base;
     mem_index Used;
 
     int32 TempCount;
 };
 
-struct temporary_memory
-{
-    memory_arena *Arena;
-    mem_index Used;
-};
-
 inline void
 InitializeArena(memory_arena *Arena, mem_index Size, void *Base)
 {
-    Arena->Size = Size;
-    Arena->Base = (uint8 *) Base;
-    Arena->Used = 0;
+    Arena->Size      = Size;
+    Arena->Base      = (uint8 *) Base;
+    Arena->Used      = 0;
     Arena->TempCount = 0;
 }
 
@@ -45,12 +39,18 @@ PushSize_(memory_arena *Arena, mem_index Size)
     return (Result);
 }
 
+struct temporary_memory
+{
+    memory_arena *Arena;
+    mem_index    Used;
+};
+
 inline temporary_memory
 BeginTempMemory(memory_arena *Arena)
 {
     temporary_memory Result;
     Result.Arena = Arena;
-    Result.Used = Arena->Used;
+    Result.Used  = Arena->Used;
 
     ++Result.Arena->TempCount;
 
@@ -93,7 +93,7 @@ ZeroSize(mem_index Size, void *Ptr)
 
 struct loaded_bitmap
 {
-    void *Memory;
+    void  *Memory;
     int32 Width;
     int32 Height;
     int32 Pitch;
@@ -101,13 +101,11 @@ struct loaded_bitmap
 
 struct hero_bitmaps
 {
-    v2 Align;
+    v2            Align;
     loaded_bitmap HeroHead;
     loaded_bitmap HeroTorso;
     loaded_bitmap HeroCape;
 };
-
-
 
 struct move_spec
 {
@@ -119,16 +117,16 @@ struct move_spec
 
 struct low_entity
 {
-    sim_entity Sim;
+    sim_entity     Sim;
     world_position P;
 };
 
 struct controlled_hero
 {
     uint32 EntityIndex;
-    v2 accel;
-    v2 deltaSword;
-    real32 deltaZ;
+    v2     accel;
+    v2     dSword;
+    real32 dZ;
 };
 
 struct pairwise_collision_rule
@@ -143,22 +141,22 @@ struct pairwise_collision_rule
 struct ground_buffer
 {
     world_position P;
-    loaded_bitmap Bitmap;
+    loaded_bitmap  Bitmap;
 };
 
 struct game_state
 {
     memory_arena WorldArena;
-    world *World;
+    world        *World;
 
     real32 TypicalFloorHeight;
 
-    uint32 CameraFollowingEntityIndex;
+    uint32         CameraFollowingEntityIndex;
     world_position CameraP;
 
     controlled_hero ControlledHeroes[ArrayCount(((game_input *) 0)->Controllers)];
 
-    uint32 LowEntityCount;
+    uint32     LowEntityCount;
     low_entity LowEntities[100000];
 
     loaded_bitmap Grass[2];
@@ -196,10 +194,10 @@ struct game_state
 
 struct transient_state
 {
-    memory_arena TranArena;
-    uint32 GroundBufferCount;
+    memory_arena  TranArena;
+    uint32        GroundBufferCount;
     ground_buffer *GroundBuffers;
-    bool32 IsInitialized;
+    bool32        IsInitialized;
 };
 
 internal low_entity *
