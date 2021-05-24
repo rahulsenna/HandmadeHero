@@ -37,20 +37,20 @@ extern "C" {
 #define internal static
 #define global_variable static
 #define local_persist static
-#define PII32 3.14159265359f
-typedef uint8_t  uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
+#define Pi32 3.14159265359f
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
-typedef int8_t  int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef int32_t bool32;
+typedef int8_t  s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
+typedef int32_t b32;
 
-typedef float  real32;
-typedef double real64;
+typedef float  r32;
+typedef double r64;
 
 #define Real32Maximum FLT_MAX
 
@@ -73,17 +73,17 @@ typedef size_t mem_index;
 #define Gigabytes(Value)  (Megabytes(Value) * 1024)
 #define Terabytes(Value)  (Gigabytes(Value) * 1024)
 
-inline uint32 SafeTruncateUInt64(uint64 Value)
+inline u32 SafeTruncateUInt64(u64 Value)
 {
     Assert(Value <= 0xFFFFFFFF)
-    uint32 Result = (uint32) Value;
+    u32 Result = (u32) Value;
     return (Result);
 }
 
 struct debug_read_file_result
 {
-    void   *Contents;
-    uint32 ContentsSize;
+    void *Contents;
+    u32  ContentsSize;
 };
 
 struct thread_context
@@ -95,7 +95,7 @@ struct thread_context
 #define DEBUG_PLATFORM_READ_ENTIRE_FILE(FunctionName) \
 debug_read_file_result FunctionName(thread_context *Thread, char *Filename)
 #define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(FunctionName) \
-bool32 FunctionName(thread_context *Thread, char *Filename, uint32 FileSize, void *Memory)
+b32 FunctionName(thread_context *Thread, char *Filename, u32 FileSize, void *Memory)
 #define DEBUG_PLATFORM_FREE_FILE_MEMORY(FunctionName) void FunctionName(thread_context *Thread, void *Memory)
 
 typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);
@@ -108,12 +108,12 @@ typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
 
 struct game_memory
 {
-    bool32 IsInitialized;
-    uint64 PermanentStorageSize;
-    void   *PermanentStorage;
+    b32  IsInitialized;
+    u64  PermanentStorageSize;
+    void *PermanentStorage;
 
-    uint64 TransientStorageSize;
-    void   *TransientStorage;
+    u64  TransientStorageSize;
+    void *TransientStorage;
 
     debug_platform_read_entire_file  *DEBUGPlatformReadEntireFile;
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
@@ -131,23 +131,23 @@ struct game_offscreen_buffer
 
 struct game_sound_output_buffer
 {
-    int16 *Samples;
-    int   SamplesPerSecond;
-    int   SampleCount;
+    s16 *Samples;
+    int SamplesPerSecond;
+    int SampleCount;
 };
 
 struct game_button_state
 {
-    int    HalfTransitionCount;
-    bool32 EndedDown;
+    int HalfTransitionCount;
+    b32 EndedDown;
 };
 
 struct game_controller_input
 {
-    bool32 IsConnected;
-    bool32 IsAnalog;
-    real32 StickAverageX;
-    real32 StickAverageY;
+    b32 IsConnected;
+    b32 IsAnalog;
+    r32 StickAverageX;
+    r32 StickAverageY;
 
     union
     {
@@ -178,9 +178,9 @@ struct game_input
     game_button_state MouseButtons[5];
     int               MouseX, MouseY, MouseZ;
 
-    bool32 ExecutableReloaded;
+    b32 ExecutableReloaded;
 
-    real32                deltatForFrame;
+    r32                   deltatForFrame;
     game_controller_input Controllers[5];
 };
 

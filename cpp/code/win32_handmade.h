@@ -23,8 +23,8 @@ struct win32_window_dimension
 struct win32_sound_output
 {
     int SamplesPerSecond = 48000;
-    int BytesPerSample = sizeof(int16) * 2;
-    uint32 RunningSampleIndex = 0;
+    int   BytesPerSample      = sizeof(s16) * 2;
+    u32   RunningSampleIndex  = 0;
     DWORD SecondaryBufferSize = (DWORD) (BytesPerSample * SamplesPerSecond);
     DWORD SafetyBytes = 0;
 };
@@ -47,7 +47,7 @@ struct win32_game_code
     FILETIME DLLLastWriteTime;
     game_update_and_render *UpdateAndRender;
     game_get_sound_samples *GetSoundSamples;
-    bool32 IsValid;
+    b32                    IsValid;
 };
 
 struct win32_replay_buffer
@@ -60,7 +60,7 @@ struct win32_replay_buffer
 
 struct win32_state
 {
-    uint64 TotalSize;
+    u64  TotalSize;
     void *GameMemoryBlock;
     win32_replay_buffer ReplayBuffers[4];
 

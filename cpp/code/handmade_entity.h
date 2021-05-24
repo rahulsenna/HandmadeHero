@@ -6,21 +6,21 @@
 
 #define InvalidP V3(100000.0f, 100000.0f, 100000.0f)
 
-inline bool32
-IsSet(sim_entity *Entity, uint32 Flag)
+inline b32
+IsSet(sim_entity *Entity, u32 Flag)
 {
-    bool32 Result = Entity->Flags & Flag;
+    b32 Result = Entity->Flags & Flag;
     return (Result);
 }
 
 inline void
-AddFlags(sim_entity *Entity, uint32 Flag)
+AddFlags(sim_entity *Entity, u32 Flag)
 {
     Entity->Flags |= Flag;
 }
 
 inline void
-ClearFlags(sim_entity *Entity, uint32 Flag)
+ClearFlags(sim_entity *Entity, u32 Flag)
 {
     Entity->Flags &= ~Flag;
 }
@@ -54,14 +54,14 @@ GetEntityGroundPoint(sim_entity *Entity)
     return (Result);
 }
 
-inline real32
+inline r32
 GetStairGround(sim_entity *Entity, v3 AtGroundPoint)
 {
     Assert(Entity->Type == EntityType_Stairwell)
 
-    rectangle2 RegionRect = RectCenterDim(Entity->P.XY, Entity->WalkableDim);
-    v2 Bary = Clamp01(GetBarycentric(RegionRect, AtGroundPoint.XY));
-    real32 Ground = Entity->P.Z + Bary.Y * Entity->WalkableHeight;
+    rectangle2 RegionRect = RectCenterDim(Entity->P.xy, Entity->WalkableDim);
+    v2         Bary       = Clamp01(GetBarycentric(RegionRect, AtGroundPoint.xy));
+    r32        Ground     = Entity->P.z + Bary.y * Entity->WalkableHeight;
 
     return (Ground);
 }

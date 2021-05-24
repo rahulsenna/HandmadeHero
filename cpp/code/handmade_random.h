@@ -7,7 +7,7 @@
 #define MaxRandomNumber  0x3b925b3d
 #define MinRandomNumber  0x0002ddb6
 
-global_variable uint32
+global_variable u32
 RandomNumberTable[] =
 {
 0x0784d954, 0x10fb21e2, 0x15dfe20b, 0x02c24249, 0x291332c5, 0x239711d0, 0x23cccf6a, 0x25c7194b,
@@ -526,21 +526,21 @@ RandomNumberTable[] =
 
 struct random_series
 {
-    uint32 Index;
+    u32 Index;
 };
 
 inline random_series
-Seed(uint32 Value)
+Seed(u32 Value)
 {
     random_series Series;
     Series.Index = (Value % ArrayCount(RandomNumberTable));
     return (Series);
 }
 
-inline uint32
+inline u32
 NextRandomInt32(random_series *Series)
 {
-    uint32 Result = RandomNumberTable[Series->Index++];
+    u32 Result = RandomNumberTable[Series->Index++];
     if (Series->Index >= ArrayCount(RandomNumberTable))
     {
         Series->Index = 0;
@@ -548,40 +548,40 @@ NextRandomInt32(random_series *Series)
     return (Result);
 }
 
-inline uint32
-RandomChoice(random_series *Series, uint32 Count)
+inline u32
+RandomChoice(random_series *Series, u32 Count)
 {
-    uint32 Result = (NextRandomInt32(Series) % Count);
+    u32 Result = (NextRandomInt32(Series) % Count);
     return (Result);
 }
 
-inline real32
+inline r32
 RandomUnilateral(random_series *Series)
 {
-    real32 Divisor = 1.0f / (real32) MaxRandomNumber;
-    real32 Result = Divisor * (real32) NextRandomInt32(Series);
+    r32 Divisor = 1.0f / (r32) MaxRandomNumber;
+    r32 Result  = Divisor * (r32) NextRandomInt32(Series);
     return (Result);
 }
 
-inline real32
+inline r32
 RandomBilateral(random_series *Series)
 {
 
-    real32 Result = 2.0f * RandomUnilateral(Series) - 1.0f;
+    r32 Result = 2.0f * RandomUnilateral(Series) - 1.0f;
     return (Result);
 }
 
-inline real32
-RandomBetween(random_series *Series, real32 Min, real32 Max)
+inline r32
+RandomBetween(random_series *Series, r32 Min, r32 Max)
 {
-    real32 Result = Lerp(Min, RandomUnilateral(Series), Max);
+    r32 Result = Lerp(Min, RandomUnilateral(Series), Max);
     return (Result);
 }
 
-inline int32
-RandomBetween(random_series *Series, int32 Min, int32 Max)
+inline s32
+RandomBetween(random_series *Series, s32 Min, s32 Max)
 {
-    int32 Result = Min + NextRandomInt32(Series) % (Max - Min);
+    s32 Result = Min + NextRandomInt32(Series) % (Max - Min);
     return (Result);
 }
 

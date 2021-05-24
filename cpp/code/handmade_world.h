@@ -6,25 +6,25 @@
 
 struct world_position
 {
-    int32 ChunkX;
-    int32 ChunkY;
-    int32 ChunkZ;
+    s32 ChunkX;
+    s32 ChunkY;
+    s32 ChunkZ;
 
     v3 Offset_;
 };
 
 struct world_entity_block
 {
-    uint32 EntityCount;
-    uint32 LowEntityIndex[16];
+    u32                EntityCount;
+    u32                LowEntityIndex[16];
     world_entity_block *Next;
 };
 
 struct world_chunk
 {
-    int32 ChunkX;
-    int32 ChunkY;
-    int32 ChunkZ;
+    s32 ChunkX;
+    s32 ChunkY;
+    s32 ChunkZ;
 
     world_entity_block FirstBlock;
     world_chunk *NextInHash;
@@ -32,8 +32,8 @@ struct world_chunk
 
 struct world
 {
-//    real32 TileSideInMeters;
-//    real32 TileDepthInMeters;
+//    r32 TileSideInMeters;
+//    r32 TileDepthInMeters;
     v3 ChunkDimInMeters;
 
     world_entity_block *FirstFree;

@@ -6,8 +6,8 @@
 
 struct hit_point
 {
-    uint8 Flags;
-    uint8 FilledAmount;
+    u8 Flags;
+    u8 FilledAmount;
 };
 
 enum entity_type
@@ -29,7 +29,7 @@ struct sim_entity;
 union entity_reference
 {
     sim_entity *Ptr;
-    uint32 Index;
+    u32        Index;
 };
 
 enum sim_entity_flags
@@ -46,14 +46,14 @@ enum sim_entity_flags
 
 struct test_wall
 {
-    real32 X;
-    real32 DeltaX;
-    real32 DeltaY;
-    real32 RelX;
-    real32 RelY;
-    real32 MinY;
-    real32 MaxY;
-    v3 Normal;
+    r32 X;
+    r32 DeltaX;
+    r32 DeltaY;
+    r32 RelX;
+    r32 RelY;
+    r32 MinY;
+    r32 MaxY;
+    v3  Normal;
 };
 
 struct sim_entity_collision_volume
@@ -65,45 +65,45 @@ struct sim_entity_collision_volume
 struct sim_entity_collision_volume_group
 {
     sim_entity_collision_volume TotalVolume;
-    uint32 VolumeCount;
+    u32                         VolumeCount;
     sim_entity_collision_volume *Volumes;
 };
 struct sim_entity
 {
-    uint32 StorageIndex;
-    bool32 Updatable;
+    u32 StorageIndex;
+    b32 Updatable;
 
     entity_type Type;
-    uint32 Flags;
+    u32         Flags;
 
     v3 P;
     v3 deltaP;
 
-    real32 DistanceLimit;
+    r32 DistanceLimit;
 
     sim_entity_collision_volume_group *Collision;
-    int32 deltaAbsTileZ;
+    s32                               deltaAbsTileZ;
 
-    uint32 HitPointMax;
+    u32       HitPointMax;
     hit_point HitPoint[16];
 
-    real32 tBob;
+    r32 tBob;
 
-    uint32 FacingDirection;
+    u32 FacingDirection;
 
-    uint32 LowEntityIndex;
+    u32 LowEntityIndex;
 
-    uint32 SwordLowIndex;
+    u32              SwordLowIndex;
     entity_reference Sword;
 
-    v2 WalkableDim;
-    real32 WalkableHeight;
+    v2  WalkableDim;
+    r32 WalkableHeight;
 };
 
 struct sim_entity_hash
 {
     sim_entity *Ptr;
-    uint32 Index;
+    u32        Index;
 };
 
 struct sim_region
@@ -113,14 +113,14 @@ struct sim_region
     rectangle3 Bounds;
     rectangle3 UpdatableBounds;
 
-    uint32 MaxEntityCount;
-    uint32 EntityCount;
+    u32        MaxEntityCount;
+    u32        EntityCount;
     sim_entity *Entities;
 
     sim_entity_hash Hash[4096];
 
-    real32 MaxEntityRadius;
-    real32 MaxEntityVelocity;
+    r32 MaxEntityRadius;
+    r32 MaxEntityVelocity;
 };
 
 #define HANDMADEHERO_HANDMADE_SIM_REGION_H

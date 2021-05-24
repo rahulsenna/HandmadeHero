@@ -11,17 +11,17 @@
 struct memory_arena
 {
     mem_index Size;
-    uint8     *Base;
+    u8        *Base;
     mem_index Used;
 
-    int32 TempCount;
+    s32 TempCount;
 };
 
 inline void
 InitializeArena(memory_arena *Arena, mem_index Size, void *Base)
 {
     Arena->Size      = Size;
-    Arena->Base      = (uint8 *) Base;
+    Arena->Base      = (u8 *) Base;
     Arena->Used      = 0;
     Arena->TempCount = 0;
 }
@@ -76,7 +76,7 @@ CheckArena(memory_arena *Arena)
 inline void
 ZeroSize(mem_index Size, void *Ptr)
 {
-    uint8 *Byte = (uint8 *) Ptr;
+    u8 *Byte = (u8 *) Ptr;
     while (Size--)
     {
         *Byte++ = 0;
@@ -93,10 +93,10 @@ ZeroSize(mem_index Size, void *Ptr)
 
 struct loaded_bitmap
 {
-    void  *Memory;
-    int32 Width;
-    int32 Height;
-    int32 Pitch;
+    void *Memory;
+    s32  Width;
+    s32  Height;
+    s32  Pitch;
 };
 
 struct hero_bitmaps
@@ -109,9 +109,9 @@ struct hero_bitmaps
 
 struct move_spec
 {
-    bool32 UnitMaxAccelVector;
-    real32 Speed;
-    real32 Drag;
+    b32 UnitMaxAccelVector;
+    r32 Speed;
+    r32 Drag;
 };
 #define HIT_POINT_SUB_COUNT 4
 
@@ -123,17 +123,17 @@ struct low_entity
 
 struct controlled_hero
 {
-    uint32 EntityIndex;
-    v2     accel;
-    v2     dSword;
-    real32 dZ;
+    u32 EntityIndex;
+    v2  accel;
+    v2  dSword;
+    r32 dZ;
 };
 
 struct pairwise_collision_rule
 {
-    bool32 CanCollide;
-    uint32 StorageIndexA;
-    uint32 StorageIndexB;
+    b32 CanCollide;
+    u32 StorageIndexA;
+    u32    StorageIndexB;
 
     pairwise_collision_rule *NextInHash;
 };
@@ -149,14 +149,14 @@ struct game_state
     memory_arena WorldArena;
     world        *World;
 
-    real32 TypicalFloorHeight;
+    r32 TypicalFloorHeight;
 
-    uint32         CameraFollowingEntityIndex;
+    u32            CameraFollowingEntityIndex;
     world_position CameraP;
 
     controlled_hero ControlledHeroes[ArrayCount(((game_input *) 0)->Controllers)];
 
-    uint32     LowEntityCount;
+    u32        LowEntityCount;
     low_entity LowEntities[100000];
 
     loaded_bitmap Grass[2];
@@ -176,8 +176,8 @@ struct game_state
 
     hero_bitmaps HeroBitmaps[4];
 
-    real32 MetersToPixel;
-    real32 PixelsToMeters;
+    r32 MetersToPixel;
+    r32 PixelsToMeters;
 
     pairwise_collision_rule *CollisionRuleHash[256];
     pairwise_collision_rule *FirstFreeCollisionRule;
@@ -190,18 +190,20 @@ struct game_state
     sim_entity_collision_volume_group *WallCollision;
     sim_entity_collision_volume_group *FamiliarCollision;
     sim_entity_collision_volume_group *StandardRoomCollision;
+
+    r32 Time;
 };
 
 struct transient_state
 {
     memory_arena  TranArena;
-    uint32        GroundBufferCount;
+    u32           GroundBufferCount;
     ground_buffer *GroundBuffers;
-    bool32        IsInitialized;
+    b32           IsInitialized;
 };
 
 internal low_entity *
-GetLowEntity(game_state *GameState, uint32 Index)
+GetLowEntity(game_state *GameState, u32 Index)
 {
     low_entity *Result = 0;
     if ((Index > 0) && (Index < GameState->LowEntityCount))
@@ -212,10 +214,10 @@ GetLowEntity(game_state *GameState, uint32 Index)
 }
 
 internal void
-AddCollisionRule(game_state *GameState, uint32 StorageIndexA, uint32 StorageIndexB, bool32 ShouldCollide);
+AddCollisionRule(game_state *GameState, u32 StorageIndexA, u32 StorageIndexB, b32 ShouldCollide);
 
 internal void
-ClearCollisionRuleFor(game_state *GameState, uint32 StorageIndex);
+ClearCollisionRuleFor(game_state *GameState, u32 StorageIndex);
 
 #define HANDMADEHERO_HANDMADE_H
 #endif //HANDMADEHERO_HANDMADE_H

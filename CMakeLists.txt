@@ -18,9 +18,9 @@ if (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|Ninja)")
     )
     add_link_options(/MAP /incremental:no)
 
-    add_executable(HandmadeHero WIN32 cpp/code/win32_handmade.cpp)
-    target_link_libraries(HandmadeHero winmm.lib)
-    target_link_options(HandmadeHero PUBLIC /opt:ref /INCREMENTAL:NO)
+    add_executable(${CMAKE_PROJECT_NAME} WIN32 cpp/code/win32_handmade.cpp)
+    target_link_libraries(${CMAKE_PROJECT_NAME} winmm.lib)
+    target_link_options(${CMAKE_PROJECT_NAME} PUBLIC /opt:ref /INCREMENTAL:NO)
 
 
     include(GenerateExportHeader)
@@ -31,19 +31,13 @@ if (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|Ninja)")
                         /PDB:handmade_pdb%random%.pdb)
 
 
-    ADD_CUSTOM_COMMAND(TARGET handmade
-                       PRE_BUILD
-                       COMMAND cmd /c echo Build Lock > lock.tmp
-                       )
-    ADD_CUSTOM_COMMAND(TARGET handmade
-                       POST_BUILD
-                       COMMAND cmd /c del lock.tmp
-                       )
+    ADD_CUSTOM_COMMAND(TARGET handmade PRE_BUILD
+                       COMMAND cmd /c echo Build Lock > lock.tmp)
+    ADD_CUSTOM_COMMAND(TARGET handmade POST_BUILD
+                       COMMAND cmd /c del lock.tmp)
 
-    ADD_CUSTOM_COMMAND(TARGET handmade
-                       PRE_BUILD
-                       COMMAND cmd /c del handmade_pdb*
-                       )
+    ADD_CUSTOM_COMMAND(TARGET handmade PRE_BUILD
+                       COMMAND cmd /c del handmade_pdb*)
 
 else ()
     add_definitions(-DHANDMADE_WIN32=0)
@@ -88,14 +82,14 @@ else ()
             -Dsize_t=__darwin_size_t
     )
 
-    add_executable(HandmadeHero code/osx_main.mm)
-    target_link_libraries(HandmadeHero
+    add_executable(${CMAKE_PROJECT_NAME} code/osx_main.mm)
+    target_link_libraries(${CMAKE_PROJECT_NAME}
                           "-framework AppKit"
                           "-framework IOKit"
                           "-framework AudioToolbox"
                           "-framework QuartzCore")
-    set_target_properties(HandmadeHero PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
-    set_target_properties(HandmadeHero PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/HandmadeHero.app/")
+    set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
+    set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.app/")
 
 
     add_library(GameCode SHARED cpp/code/handmade.cpp)
@@ -103,9 +97,9 @@ else ()
     set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
 
     target_compile_options(GameCode PUBLIC -g -o -dynamiclib)
-    set_target_properties(GameCode PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/HandmadeHero.app/Contents/Resources/")
+    set_target_properties(GameCode PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.app/Contents/Resources/")
 
-    #[[    ADD_CUSTOM_COMMAND(TARGET HandmadeHero
+    #[[    ADD_CUSTOM_COMMAND(TARGET ${CMAKE_BINARY_DIR}
                 POST_BUILD
                 COMMAND bash "../code/copyData.sh"
                 )]]
