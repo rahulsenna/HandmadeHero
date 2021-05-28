@@ -89,12 +89,20 @@ struct v4
     };
 };
 
+
+
 inline v2 V2(r32 X, r32 Y)
 {
     v2 Result = {};
     Result.x = X;
     Result.y = Y;
     return (Result);
+}
+
+inline v2 Perp(v2 A)
+{
+    v2 Result = V2(-A.y, A.x);
+    return(Result);
 }
 
 inline v3 V3(r32 X, r32 Y, r32 Z)
