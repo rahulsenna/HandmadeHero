@@ -64,6 +64,7 @@ struct render_entry_coordinate_system
 
     v2 Points[16];
 
+    loaded_bitmap *Texture;
 };
 
 struct render_group

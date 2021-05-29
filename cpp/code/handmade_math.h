@@ -31,8 +31,7 @@ SafeRatio1(r32 Numerator, r32 Divisor)
     return (Result);
 }
 
-struct v2
-{
+struct v2 {
     union
     {
         struct
@@ -43,8 +42,7 @@ struct v2
     };
 };
 
-struct v3
-{
+struct v3 {
     union
     {
         struct
@@ -72,8 +70,7 @@ struct v3
     };
 };
 
-struct v4
-{
+struct v4 {
     union
     {
         struct
@@ -89,28 +86,26 @@ struct v4
     };
 };
 
-
-
 inline v2 V2(r32 X, r32 Y)
 {
     v2 Result = {};
-    Result.x = X;
-    Result.y = Y;
+    Result.x  = X;
+    Result.y  = Y;
     return (Result);
 }
 
 inline v2 Perp(v2 A)
 {
     v2 Result = V2(-A.y, A.x);
-    return(Result);
+    return (Result);
 }
 
 inline v3 V3(r32 X, r32 Y, r32 Z)
 {
     v3 Result = {};
-    Result.x = X;
-    Result.y = Y;
-    Result.z = Z;
+    Result.x  = X;
+    Result.y  = Y;
+    Result.z  = Z;
 
     return (Result);
 }
@@ -118,9 +113,9 @@ inline v3 V3(r32 X, r32 Y, r32 Z)
 inline v3 V3(v2 XY, r32 Z)
 {
     v3 Result = {};
-    Result.x = XY.x;
-    Result.y = XY.y;
-    Result.z = Z;
+    Result.x  = XY.x;
+    Result.y  = XY.y;
+    Result.z  = Z;
 
     return (Result);
 }
@@ -128,26 +123,23 @@ inline v3 V3(v2 XY, r32 Z)
 inline v4 V4(r32 R, r32 G, r32 B, r32 A)
 {
     v4 Result = {};
-    Result.x = R;
-    Result.y = G;
-    Result.z = B;
-    Result.w = A;
+    Result.x  = R;
+    Result.y  = G;
+    Result.z  = B;
+    Result.w  = A;
 
     return (Result);
 }
 
-struct rectangle2
-{
+struct rectangle2 {
     v2 Min;
     v2 Max;
 };
 
-struct rectangle3
-{
+struct rectangle3 {
     v3 Min;
     v3 Max;
 };
-
 
 //
 // NOTE(rahul): V2 Operations
@@ -157,8 +149,8 @@ inline v2
 operator+(v2 A, v2 B)
 {
     v2 Result = {};
-    Result.x = A.x + B.x;
-    Result.y = A.y + B.y;
+    Result.x  = A.x + B.x;
+    Result.y  = A.y + B.y;
     return (Result);
 }
 
@@ -166,8 +158,8 @@ inline v2
 operator*(r32 A, v2 B)
 {
     v2 Result = {};
-    Result.x = A * B.x;
-    Result.y = A * B.y;
+    Result.x  = A * B.x;
+    Result.y  = A * B.y;
     return (Result);
 }
 
@@ -182,8 +174,8 @@ inline v2
 operator-(v2 A)
 {
     v2 Result = {};
-    Result.x = -A.x;
-    Result.y = -A.y;
+    Result.x  = -A.x;
+    Result.y  = -A.y;
     return (Result);
 }
 
@@ -191,8 +183,8 @@ inline v2
 operator-(v2 A, v2 B)
 {
     v2 Result = {};
-    Result.x = A.x - B.x;
-    Result.y = A.y - B.y;
+    Result.x  = A.x - B.x;
+    Result.y  = A.y - B.y;
     return (Result);
 }
 
@@ -238,7 +230,6 @@ Length(v2 A)
     return (Result);
 }
 
-
 //
 // Note(rahul): V3 Operations
 //
@@ -247,9 +238,9 @@ inline v3
 operator+(v3 A, v3 B)
 {
     v3 Result = {};
-    Result.x = A.x + B.x;
-    Result.y = A.y + B.y;
-    Result.z = A.z + B.z;
+    Result.x  = A.x + B.x;
+    Result.y  = A.y + B.y;
+    Result.z  = A.z + B.z;
     return (Result);
 }
 
@@ -257,9 +248,9 @@ inline v3
 operator*(r32 A, v3 B)
 {
     v3 Result = {};
-    Result.x = A * B.x;
-    Result.y = A * B.y;
-    Result.z = A * B.z;
+    Result.x  = A * B.x;
+    Result.y  = A * B.y;
+    Result.z  = A * B.z;
 
     return (Result);
 }
@@ -275,9 +266,9 @@ inline v3
 operator-(v3 A)
 {
     v3 Result = {};
-    Result.x = -A.x;
-    Result.y = -A.y;
-    Result.z = -A.z;
+    Result.x  = -A.x;
+    Result.y  = -A.y;
+    Result.z  = -A.z;
     return (Result);
 }
 
@@ -285,9 +276,9 @@ inline v3
 operator-(v3 A, v3 B)
 {
     v3 Result = {};
-    Result.x = A.x - B.x;
-    Result.y = A.y - B.y;
-    Result.z = A.z - B.z;
+    Result.x  = A.x - B.x;
+    Result.y  = A.y - B.y;
+    Result.z  = A.z - B.z;
     return (Result);
 }
 
@@ -332,7 +323,6 @@ Length(v3 A)
     r32 Result = SquareRoot(LengthSq(A));
     return (Result);
 }
-
 
 //
 // NOTE(rahul): Scalar operations
@@ -382,14 +372,14 @@ inline v2
 V2i(s32 X, s32 Y)
 {
     v2 Result = {(r32) X, (r32) Y};
-    return(Result);
+    return (Result);
 }
 
 inline v2
 V2i(u32 X, u32 Y)
 {
     v2 Result = {(r32) X, (r32) Y};
-    return(Result);
+    return (Result);
 }
 
 inline v2
@@ -417,8 +407,8 @@ inline rectangle2
 RectMinMax(v2 Min, v2 Max)
 {
     rectangle2 Result = {};
-    Result.Min = Min;
-    Result.Max = Max;
+    Result.Min        = Min;
+    Result.Max        = Max;
     return (Result);
 }
 
@@ -426,8 +416,8 @@ inline rectangle2
 RectMinDim(v2 Min, v2 Dim)
 {
     rectangle2 Result = {};
-    Result.Min = Min;
-    Result.Max = Min + Dim;
+    Result.Min        = Min;
+    Result.Max        = Min + Dim;
     return (Result);
 }
 
@@ -435,8 +425,8 @@ inline rectangle2
 RectCenterHalfDim(v2 Center, v2 HalfDim)
 {
     rectangle2 Result = {};
-    Result.Min = Center - HalfDim;
-    Result.Max = Center + HalfDim;
+    Result.Min        = Center - HalfDim;
+    Result.Max        = Center + HalfDim;
     return (Result);
 }
 
@@ -462,8 +452,8 @@ inline rectangle2
 AddRadiusTo(rectangle2 A, v2 Radius)
 {
     rectangle2 Result = {};
-    Result.Min = A.Min - Radius;
-    Result.Max = A.Max + Radius;
+    Result.Min        = A.Min - Radius;
+    Result.Max        = A.Max + Radius;
     return (Result);
 }
 
@@ -528,8 +518,8 @@ inline rectangle3
 RectMinMax(v3 Min, v3 Max)
 {
     rectangle3 Result = {};
-    Result.Min = Min;
-    Result.Max = Max;
+    Result.Min        = Min;
+    Result.Max        = Max;
     return (Result);
 }
 
@@ -537,8 +527,8 @@ inline rectangle3
 RectMinDim(v3 Min, v3 Dim)
 {
     rectangle3 Result = {};
-    Result.Min = Min;
-    Result.Max = Min + Dim;
+    Result.Min        = Min;
+    Result.Max        = Min + Dim;
     return (Result);
 }
 
@@ -546,8 +536,8 @@ inline rectangle3
 RectCenterHalfDim(v3 Center, v3 HalfDim)
 {
     rectangle3 Result = {};
-    Result.Min = Center - HalfDim;
-    Result.Max = Center + HalfDim;
+    Result.Min        = Center - HalfDim;
+    Result.Max        = Center + HalfDim;
     return (Result);
 }
 
@@ -576,8 +566,8 @@ inline rectangle3
 AddRadiusTo(rectangle3 A, v3 Radius)
 {
     rectangle3 Result = {};
-    Result.Min = A.Min - Radius;
-    Result.Max = A.Max + Radius;
+    Result.Min        = A.Min - Radius;
+    Result.Max        = A.Max + Radius;
     return (Result);
 }
 
@@ -589,7 +579,6 @@ Offset(rectangle3 A, v3 Offset)
     Result.Max = A.Max + Offset;
     return (Result);
 }
-
 
 inline b32
 RectangleIntersect(rectangle3 A, rectangle3 B)
@@ -615,6 +604,88 @@ GetBarycentric(rectangle3 A, v3 P)
     return (Result);
 }
 
+inline v4
+operator+(v4 A, v4 B)
+{
+    v4 Result = {};
+    Result.x  = A.x + B.x;
+    Result.y  = A.y + B.y;
+    Result.z  = A.z + B.z;
+    Result.w  = A.w + B.w;
+    return (Result);
+}
+
+inline v4
+operator*(r32 A, v4 B)
+{
+    v4 Result = {};
+    Result.x  = A * B.x;
+    Result.y  = A * B.y;
+    Result.z  = A * B.z;
+    Result.w  = A * B.w;
+
+    return (Result);
+}
+
+inline v4
+operator*(v4 B, r32 A)
+{
+    v4 Result = A * B;
+    return (Result);
+}
+
+inline v4
+operator-(v4 A)
+{
+    v4 Result = {};
+    Result.x  = -A.x;
+    Result.y  = -A.y;
+    Result.z  = -A.z;
+    Result.w  = -A.w;
+
+    return (Result);
+}
+
+inline v4
+operator-(v4 A, v4 B)
+{
+    v4 Result = {};
+    Result.x  = A.x - B.x;
+    Result.y  = A.y - B.y;
+    Result.z  = A.z - B.z;
+    Result.w  = A.w - B.w;
+
+    return (Result);
+}
+
+inline v4 &
+operator*=(v4 &B, r32 A)
+{
+    B = A * B;
+    return (B);
+}
+
+inline v4 &
+operator+=(v4 &B, v4 A)
+{
+    B = A + B;
+    return (B);
+}
+
+inline v4
+Hadamard(v4 A, v4 B)
+{
+    v4 Result = {A.x * B.x, A.y * B.y, A.z * B.z, A.w * B.w};
+    return (Result);
+}
+
+inline v4
+Lerp(v4 A, r32 t, v4 B)
+{
+    v4 Result = (1.0f - t) * A + t * B;
+    return (Result);
+}
+
 #define HANDMADEHERO_HANDMADE_MATH_H
 
-#endif //HANDMADEHERO_HANDMADE_MATH_H
+#endif//HANDMADEHERO_HANDMADE_MATH_H

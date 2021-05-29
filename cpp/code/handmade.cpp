@@ -1288,16 +1288,20 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     GameState->Time += Input->deltatForFrame;
 
-    r32 Angle  = GameState->Time;
+    r32 Angle  = .1f * GameState->Time;
+    r32 tX     = 100.f * Cos(Angle);
     v2  Origin = ScreenCenter;
-    v2  XAxis  = (50.f + 50.f* Cos(Angle))  * V2(Cos(Angle), Sin(Angle));
-    v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
+    // Angle = 0.f;
+    v2  XAxis  = 300.f * V2(Cos(Angle), Sin(Angle));
 
-    //    v2  YAxis  = V2(-XAxis.y, XAxis.x);
+    // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
+    v2 YAxis = Perp(XAxis);
 
-    v4 Color = V4(.5f + 0.5f * Cos(Angle + 2.7f), .5f + 0.5f * Cos(Angle + 2.5f), .5f + 0.5f * Sin(Angle + 9.2f), 1);
+    v4 Color = V4(.5f + 0.5f * Cos(Angle + 2.7f),
+                  .5f + 0.5f * Cos(Angle + 2.5f),
+                  .5f + 0.5f * Sin(Angle + 9.2f), 1);
 
-    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Origin, XAxis, YAxis, Color);
+    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Origin + V2(tX, 0), XAxis, YAxis, Color, &GameState->Tree);
 
     int PIndex = 0;
 
