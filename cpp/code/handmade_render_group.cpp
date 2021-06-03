@@ -3,6 +3,7 @@
 //
 
 #include "handmade_math.h"
+
 #if HANDMADE_WIN32
 #define RED_PLACE   16
 #define GREEN_PLACE 8
@@ -44,15 +45,23 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
         s32 FloorY = FloorReal32ToInt32(TestP.y);
         s32 CeilY  = CeilReal32ToInt32(TestP.y);
 
-        if (MinX > FloorX) { MinX = FloorX; };
-        if (MinY > FloorY) { MinY = FloorY; };
-        if (MaxX < CeilX) { MaxX = CeilX; };
-        if (MaxY < CeilY) { MaxY = CeilY; };
+        if (MinX > FloorX)
+        { MinX = FloorX; };
+        if (MinY > FloorY)
+        { MinY = FloorY; };
+        if (MaxX < CeilX)
+        { MaxX = CeilX; };
+        if (MaxY < CeilY)
+        { MaxY = CeilY; };
     }
-    if (MinX < 0) { MinX = 0; };
-    if (MinY < 0) { MinY = 0; };
-    if (MaxX > Buffer->Width - 1) { MaxX = Buffer->Width - 1; };
-    if (MaxY > Buffer->Height - 1) { MaxY = Buffer->Height - 1; };
+    if (MinX < 0)
+    { MinX = 0; };
+    if (MinY < 0)
+    { MinY = 0; };
+    if (MaxX > Buffer->Width - 1)
+    { MaxX = Buffer->Width - 1; };
+    if (MaxY > Buffer->Height - 1)
+    { MaxY = Buffer->Height - 1; };
 
     u8 *Row = ((u8 *) Buffer->Memory +
                MinX * BYTES_PER_PIXEL +
@@ -176,18 +185,18 @@ DrawRectangle(loaded_bitmap *DrawBuffer, v2 vMin, v2 vMax,
     {
         MaxY = DrawBuffer->Height;
     }
-    s32 BytesPerPixel = BYTES_PER_PIXEL;
-    u32 Color         = ((RoundReal32ToUInt32(A * 255.0f) << 24) |
-                 (RoundReal32ToUInt32(R * 255.0f) << RED_PLACE) |
-                 (RoundReal32ToUInt32(G * 255.0f) << GREEN_PLACE) |
-                 (RoundReal32ToUInt32(B * 255.0f) << BLUE_PLACE));
-    u8 *Row           = ((u8 *) DrawBuffer->Memory +
-               MinX * BytesPerPixel +
-               MinY * DrawBuffer->Pitch);
-    for (int Y = MinY; Y < MaxY; ++Y)
+    s32      BytesPerPixel = BYTES_PER_PIXEL;
+    u32      Color         = ((RoundReal32ToUInt32(A * 255.0f) << 24) |
+                              (RoundReal32ToUInt32(R * 255.0f) << RED_PLACE) |
+                              (RoundReal32ToUInt32(G * 255.0f) << GREEN_PLACE) |
+                              (RoundReal32ToUInt32(B * 255.0f) << BLUE_PLACE));
+    u8       *Row          = ((u8 *) DrawBuffer->Memory +
+                              MinX * BytesPerPixel +
+                              MinY * DrawBuffer->Pitch);
+    for (int Y             = MinY; Y < MaxY; ++Y)
     {
-        u32 *Pixel = (u32 *) Row;
-        for (int X = MinX; X < MaxX; ++X)
+        u32      *Pixel = (u32 *) Row;
+        for (int X      = MinX; X < MaxX; ++X)
         {
             *Pixel++ = Color;
         }
@@ -243,15 +252,15 @@ DrawBitmap(loaded_bitmap *DrawBuffer, loaded_bitmap *Bitmap, r32 RealX, r32 Real
     u8 *SourceRow = (u8 *) Bitmap->Memory +
                     BYTES_PER_PIXEL * SourceOffsetX +
                     Bitmap->Pitch * SourceOffsetY;
-    u8 *DestRow = ((u8 *) DrawBuffer->Memory +
-                   MinX * BYTES_PER_PIXEL +
-                   MinY * DrawBuffer->Pitch);
+    u8 *DestRow   = ((u8 *) DrawBuffer->Memory +
+                     MinX * BYTES_PER_PIXEL +
+                     MinY * DrawBuffer->Pitch);
 
     for (int Y = MinY; Y < MaxY; ++Y)
     {
-        u32 *Dest   = (u32 *) DestRow;
-        u32 *Source = (u32 *) SourceRow;
-        for (int X = MinX; X < MaxX; ++X)
+        u32      *Dest   = (u32 *) DestRow;
+        u32      *Source = (u32 *) SourceRow;
+        for (int X       = MinX; X < MaxX; ++X)
         {
             r32 SA  = (r32) ((*Source >> 24) & 0xFF);
             r32 SR  = (r32) ((*Source >> RED_PLACE) & 0xFF) * CAlpha;
@@ -349,7 +358,8 @@ void RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 
         switch (Header->Type)
         {
-            case RenderGroupEntryType_render_entry_clear: {
+            case RenderGroupEntryType_render_entry_clear:
+            {
                 render_entry_clear *Entry = (render_entry_clear *) Header;
 
                 DrawRectangle(OutputTarget, V2(0, 0),
@@ -359,7 +369,8 @@ void RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 BaseAddress += sizeof(*Entry);
                 break;
             }
-            case RenderGroupEntryType_render_entry_rectangle: {
+            case RenderGroupEntryType_render_entry_rectangle:
+            {
                 render_entry_rectangle *Entry = (render_entry_rectangle *) Header;
                 BaseAddress += sizeof(*Entry);
 
@@ -370,7 +381,8 @@ void RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 break;
             }
 
-            case RenderGroupEntryType_render_entry_bitmap: {
+            case RenderGroupEntryType_render_entry_bitmap:
+            {
                 render_entry_bitmap *Entry = (render_entry_bitmap *) Header;
                 BaseAddress += sizeof(*Entry);
 
@@ -381,11 +393,12 @@ void RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 
                 break;
             }
-            case RenderGroupEntryType_render_entry_coordinate_system: {
+            case RenderGroupEntryType_render_entry_coordinate_system:
+            {
                 render_entry_coordinate_system *Entry = (render_entry_coordinate_system *) Header;
                 BaseAddress += sizeof(*Entry);
 
-                v4 Color = V4(1.f, 0, 0, 0);
+                v4 Color = V4(1.f, 1.0f, 0, 0);
                 v2 Dim   = {4, 4};
                 v2 P     = Entry->Origin;
                 DrawRectangle(OutputTarget, P, P + Dim, Color.r, Color.g, Color.b);
@@ -412,15 +425,15 @@ void RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 #endif
                 break;
             }
-                InvalidDefaultCase;
+            InvalidDefaultCase;
         }
     }
 }
 
 internal render_group *
-         AllocateRenderGroup(memory_arena *Arena, u32 MaxPushBufferSize, r32 MetersToPixel)
+AllocateRenderGroup(memory_arena *Arena, u32 MaxPushBufferSize, r32 MetersToPixel)
 {
-    render_group *Result   = PushStruct(Arena, render_group);
+    render_group *Result = PushStruct(Arena, render_group);
     Result->PushBufferBase = (u8 *) PushSize(Arena, MaxPushBufferSize);
 
     Result->DefaultBasis    = PushStruct(Arena, render_basis);
