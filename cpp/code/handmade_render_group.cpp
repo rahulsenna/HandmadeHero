@@ -18,6 +18,31 @@ GetRenderEntityBasisP(const render_group *RenderGroup, const v2 &ScreenCenter, c
 #define BLUE_PLACE  16
 #endif
 
+internal v4
+SRGB255ToLinear1(v4 C)
+{
+    r32 Inv255 = 1.0f / 255.f;
+
+    v4 Result;
+    Result.r = Square(Inv255 * C.r);
+    Result.g = Square(Inv255 * C.g);
+    Result.b = Square(Inv255 * C.b);
+    Result.a =        Inv255 * C.a;
+    
+    return(Result);
+}
+
+internal v4
+Linear1ToSRGB255(v4 C)
+{
+    v4 Result;;
+    Result.r = 255.f *  SquareRoot(C.r);
+    Result.g = 255.f *  SquareRoot(C.g);
+    Result.b = 255.f *  SquareRoot(C.b);
+    Result.a = 255.f *             C.a;
+    return(Result);
+}
+
 internal void
 DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Color, loaded_bitmap *Texture)
 {
@@ -128,32 +153,37 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                                (r32) ((TexelPtrD >> BLUE_PLACE) & 0xFF),
                                (r32) ((TexelPtrD >> 24) & 0xFF));
 
+                TexelA = SRGB255ToLinear1(TexelA);
+                TexelB = SRGB255ToLinear1(TexelB);
+                TexelC = SRGB255ToLinear1(TexelC);
+                TexelD = SRGB255ToLinear1(TexelD);
+
                 v4 Texel = Lerp(Lerp(TexelA, fX, TexelB),
                                 fY,
                                 Lerp(TexelC, fX, TexelD));
 
-                r32 SA  = (Texel.a);
-                r32 SR  = (Texel.r);
-                r32 SG  = (Texel.g);
-                r32 SB  = (Texel.b);
-                r32 RSA = (SA / 255.0f) * Color.a;
+                r32 RSA = Texel.a * Color.a;
 
-                r32 DA  = (r32) ((*Pixel >> 24) & 0xFF);
-                r32 DR  = (r32) ((*Pixel >> RED_PLACE) & 0xFF);
-                r32 DG  = (r32) ((*Pixel >> GREEN_PLACE) & 0xFF);
-                r32 DB  = (r32) ((*Pixel >> BLUE_PLACE) & 0xFF);
-                r32 RDA = (DA / 255.0f);
+                v4 Dest  = {(r32) ((*Pixel >> RED_PLACE)   & 0xFF),
+                            (r32) ((*Pixel >> GREEN_PLACE) & 0xFF),
+                            (r32) ((*Pixel >> BLUE_PLACE)  & 0xFF),
+                            (r32) ((*Pixel >> 24)          & 0xFF)};
+
+                Dest = SRGB255ToLinear1(Dest);
+                r32 RDA = Dest.a;
 
                 r32 InvRSA = (1.0f - RSA);
-                r32 A      = 255.0f * (RSA + RDA - RSA * RDA);
-                r32 R      = InvRSA * DR + SR;
-                r32 G      = InvRSA * DG + SG;
-                r32 B      = InvRSA * DB + SB;
+                v4 Blended  = {InvRSA * Dest.r + Color.a *Texel.r * Color.r,
+                               InvRSA * Dest.g + Color.a *Texel.g * Color.g,
+                               InvRSA * Dest.b + Color.a *Texel.b * Color.b,
+                               255.0f * (RSA + RDA - RSA * RDA)};
 
-                *Pixel = (((u32) (A + 0.5f) << 24) |
-                          ((u32) (R + 0.5f) << RED_PLACE) |
-                          ((u32) (G + 0.5f) << GREEN_PLACE) |
-                          ((u32) (B + 0.5f) << BLUE_PLACE));
+                v4 Blended255 = Linear1ToSRGB255(Blended);
+
+                *Pixel = (((u32) (Blended255.r + 0.5f) << RED_PLACE) |
+                          ((u32) (Blended255.g + 0.5f) << GREEN_PLACE) |
+                          ((u32) (Blended255.b + 0.5f) << BLUE_PLACE)) |
+                          ((u32) (Blended255.a + 0.5f) << 24);
             }
             ++Pixel;
         }
@@ -424,6 +454,7 @@ void RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 }
 #endif
                 break;
+
             }
             InvalidDefaultCase;
         }

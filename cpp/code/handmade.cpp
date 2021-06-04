@@ -1309,9 +1309,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
     v2 YAxis = Perp(XAxis);
 
-    v4 Color = V4(.5f + 0.5f * Cos(Angle + 2.7f),
-                  .5f + 0.5f * Cos(Angle + 2.5f),
-                  .5f + 0.5f * Sin(Angle + 9.2f), 1);
+    r32 CAngle = Angle*5.f;
+    v4 Color = V4(.5f + 0.5f * Cos(CAngle + 2.7f),
+                  .5f + 0.5f * Cos(CAngle + 2.5f),
+                  .5f + 0.5f * Sin(CAngle + 9.2f),
+                  .5f + 0.5f * Sin(CAngle));
 
     render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Origin - .5f * XAxis - .5f * YAxis,
                                                             XAxis, YAxis, Color, &GameState->Tree);
