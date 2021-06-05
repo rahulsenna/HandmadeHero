@@ -124,20 +124,21 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
             {
                 u32 C = *Source;
 
-                r32 R  = (r32) ((C & Header->RedMask) >> RedShift);
-                r32 G  = (r32) ((C & Header->GreenMask) >> GreenShift);
-                r32 B  = (r32) ((C & Header->BlueMask) >> BlueShift);
-                r32 A  = (r32) ((C & Header->AlphaMask) >> AlphaShift);
-                r32 AN = (A / 255.0f);
+                v4 Texel  = {(r32) ((C & Header->RedMask) >> RedShift),
+                             (r32) ((C & Header->GreenMask) >> GreenShift),
+                             (r32) ((C & Header->BlueMask) >> BlueShift),
+                             (r32) ((C & Header->AlphaMask) >> AlphaShift)};
+                
+                Texel = SRGB255ToLinear1(Texel);
+#if 1
+                Texel.rgb *= Texel.a;
+#endif
+                Texel = Linear1ToSRGB255(Texel);
 
-                R = R * AN;
-                G = G * AN;
-                B = B * AN;
-
-                *Source = (((u32) (A + 0.5f) << 24) |
-                           ((u32) (R + 0.5f) << RED_PLACE) |
-                           ((u32) (G + 0.5f) << GREEN_PLACE) |
-                           ((u32) (B + 0.5f) << BLUE_PLACE));
+                *Source = (((u32) (Texel.r + 0.5f) << RED_PLACE) |
+                           ((u32) (Texel.g + 0.5f) << GREEN_PLACE) |
+                           ((u32) (Texel.b + 0.5f) << BLUE_PLACE)) |
+                           ((u32) (Texel.a + 0.5f) << 24);
                 ++Source;
             }
         }

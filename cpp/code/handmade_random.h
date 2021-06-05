@@ -7,8 +7,7 @@
 #define MaxRandomNumber  0x3b925b3d
 #define MinRandomNumber  0x0002ddb6
 
-global_variable u32
-RandomNumberTable[] =
+global_variable u32 RandomNumberTable[] =
 {
 0x0784d954, 0x10fb21e2, 0x15dfe20b, 0x02c24249, 0x291332c5, 0x239711d0, 0x23cccf6a, 0x25c7194b,
 0x258fe6b8, 0x07d0d1eb, 0x1548c0be, 0x1d3f79df, 0x38e569d2, 0x26b06cf3, 0x043878bf, 0x39296615,
