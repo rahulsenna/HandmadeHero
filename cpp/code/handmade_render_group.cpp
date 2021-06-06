@@ -2,7 +2,6 @@
 // Created by AgentOfChaos on 4/10/2021.
 //
 
-#include "handmade_math.h"
 
 #if HANDMADE_WIN32
 #define RED_PLACE   16

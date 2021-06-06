@@ -1,9 +1,7 @@
 //
 // Created by AgentOfChaos on 12/8/2020.
 //
-
 #ifndef HANDMADEHERO_HANDMADE_RANDOM_H
-
 #define MaxRandomNumber  0x3b925b3d
 #define MinRandomNumber  0x0002ddb6
 
