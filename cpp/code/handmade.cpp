@@ -550,6 +550,38 @@ MakeEmptyBitmap(memory_arena *Arena, s32 Width, s32 Height, b32 ClearToZero = tr
     return (Result);
 }
 
+internal void
+MakeSphereNormalMap(loaded_bitmap *Bitmap, r32 Roughness)
+{
+    r32 InvWidth  = 1.f / (Bitmap->Width - 1.f);
+    r32 InvHeight = 1.f / (Bitmap->Height - 1.f);
+
+    u8 *Row = (u8*)Bitmap->Memory;
+    for (s32 Y = 0; Y < Bitmap->Height; ++Y)
+    {
+        u32 *Pixel = (u32 *) Row;
+        for (s32 X = 0; X < Bitmap->Width; ++X)
+        {
+            v2 BitmapUV = V2(InvWidth*(r32)X, InvHeight*(r32)Y);
+
+            v3 Normal = V3(2.f * BitmapUV.x - 1.f, 2.f * BitmapUV.y - 1.f, 0.f);
+            Normal.z = SquareRoot(1.f - Square(Normal.x) - Square(Normal.y));
+
+            v4 Color = V4(255.f * (.5f*(Normal.x + 1.f)),
+                          255.f * (.5f*(Normal.y + 1.f)),
+                          Normal.z*127.f, Roughness*255.f);
+
+            *Pixel = (((u32) (Color.r + 0.5f) << RED_PLACE) |
+                      ((u32) (Color.g + 0.5f) << GREEN_PLACE) |
+                      ((u32) (Color.b + 0.5f) << BLUE_PLACE)) |
+                      ((u32) (Color.a + 0.5f) << 24);
+
+            ++Pixel;
+        }
+        Row += Bitmap->Pitch;
+    }
+}
+
 #if 0
 
 internal void
@@ -1304,23 +1336,26 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     r32 Angle  = GameState->Time;
     r32 Disp   = 100.f * Cos(Angle);
     v2  Origin = ScreenCenter;
-    // Angle = 0.f;
+    Angle = 0.f;
     v2  XAxis  = 200.f * V2(Cos(Angle), Sin(Angle));
 
     // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
     v2 YAxis = Perp(XAxis);
-
+#if 0
     r32 CAngle = Angle*5.f;
     v4 Color = V4(.5f + 0.5f * Cos(CAngle + 2.7f),
                   .5f + 0.5f * Cos(CAngle + 2.5f),
-                  .5f + 0.5f * Sin(CAngle + 9.2f),
+                  .5f + 0.5f * Sin(CAngle + 9.2f),  
                   .5f + 0.5f * Sin(CAngle));
-
+#else
+    v4 Color = V4(1,1,1,1);
+#endif
     render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Origin - .5f * XAxis - .5f * YAxis,
-                                                            XAxis, YAxis, Color, &GameState->Tree);
+                                                            XAxis, YAxis, Color, &GameState->Tree, 0,0,0,0);
 
     int PIndex = 0;
 
+#if 0
     for (r32 Y = 0.f; Y < 1.f; Y += 0.25f)
     {
         for (r32 X = 0.f; X < 1.f; X += 0.25f)
@@ -1328,7 +1363,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             C->Points[PIndex++] = {X, Y};
         }
     }
-
+#endif
     RenderGroupToOutput(RenderGroup, DrawBuffer);
 
     EndSim(GameState, SimRegion);

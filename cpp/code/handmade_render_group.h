@@ -4,6 +4,12 @@
 
 #ifndef HANDMADEHERO_HANDMADE_RENDER_GROUP_H
 
+struct environment_map
+{
+    u32 WidthPow2;
+    u32 HeightPow2;
+    loaded_bitmap *LOD[4];
+};
 struct render_basis
 {
 
@@ -57,9 +63,13 @@ struct render_entry_coordinate_system
     v2 YAxis;
     v4 Color;
 
-    v2 Points[16];
-
     loaded_bitmap *Texture;
+
+    loaded_bitmap *NormalMap;
+    
+    environment_map *Top;
+    environment_map *Middle;
+    environment_map *Bottom;
 };
 
 struct render_group

@@ -70,12 +70,18 @@ struct v3 {
     };
 };
 
-struct v4 {
-    union
-    {
+union v4 {
         struct
         {
-            r32 x, y, z, w;
+            union
+            {
+                v3 xyz;
+                struct 
+                {
+                    r32 x, y, z;
+                };
+            };
+            r32  w;
         };
 
         struct
@@ -91,7 +97,6 @@ struct v4 {
             r32  a;
         };
         r32 e[4];
-    };
 };
 
 inline v2 V2(r32 X, r32 Y)
@@ -330,6 +335,22 @@ Length(v3 A)
 {
     r32 Result = SquareRoot(LengthSq(A));
     return (Result);
+}
+
+inline v3
+Lerp(v3 A, r32 t, v3 B)
+{
+    v3 Result = (1.0f - t) * A + t * B;
+    return (Result);
+}
+
+inline v3
+Normalize(v3 A)
+{
+    v3 Result;
+    Result = A * (1.f / Length(A));
+
+    return(Result);
 }
 
 //
@@ -612,6 +633,8 @@ GetBarycentric(rectangle3 A, v3 P)
     return (Result);
 }
 
+
+//
 inline v4
 operator+(v4 A, v4 B)
 {
