@@ -6,8 +6,6 @@
 
 struct environment_map
 {
-    u32 WidthPow2;
-    u32 HeightPow2;
     loaded_bitmap *LOD[4];
 };
 struct render_basis

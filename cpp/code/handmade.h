@@ -164,6 +164,7 @@ struct game_state
     loaded_bitmap Tuft[3];
 
     loaded_bitmap Tree;
+    loaded_bitmap TreeNormal;
     loaded_bitmap Sword;
     loaded_bitmap Familiar;
     loaded_bitmap Monster;
