@@ -5,6 +5,8 @@
 
 #ifndef HANDMADEHERO_HANDMADE_H
 
+#include "handmade_platform.h"
+
 #define MINIMUM(A, B) ((A < B) ? (A) : (B))
 #define MAXIMUM(A, B) ((A > B) ? (A) : (B))
 
@@ -90,14 +92,8 @@ ZeroSize(mem_index Size, void *Ptr)
 #include "handmade_world.h"
 #include "handmade_sim_region.h"
 #include "handmade_entity.h"
+#include "handmade_render_group.h"
 
-struct loaded_bitmap
-{
-    void *Memory;
-    s32  Width;
-    s32  Height;
-    s32  Pitch;
-};
 
 struct hero_bitmaps
 {
@@ -164,7 +160,6 @@ struct game_state
     loaded_bitmap Tuft[3];
 
     loaded_bitmap Tree;
-    loaded_bitmap TreeNormal;
     loaded_bitmap Sword;
     loaded_bitmap Familiar;
     loaded_bitmap Monster;
@@ -193,6 +188,10 @@ struct game_state
     sim_entity_collision_volume_group *StandardRoomCollision;
 
     r32 Time;
+
+    loaded_bitmap TestDiffuse;
+    loaded_bitmap TestNormal;
+
 };
 
 struct transient_state
@@ -201,6 +200,10 @@ struct transient_state
     u32           GroundBufferCount;
     ground_buffer *GroundBuffers;
     b32           IsInitialized;
+
+    s32 EnvMapWidth;
+    s32 EnvMapHeight;
+    environment_map EnvMaps[3];
 };
 
 internal low_entity *

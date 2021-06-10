@@ -1,10 +1,8 @@
 //
 // Created by AgentOfChaos on 11/20/2020.
 //
-#include "handmade_platform.h"
 
 #include "handmade.h"
-#include "handmade_render_group.h"
 #include "handmade_render_group.cpp"
 #include "handmade_world.cpp"
 #include "handmade_sim_region.cpp"
@@ -936,8 +934,30 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             GroundBuffer->P      = NullPosition();
         }
 
-        GameState->TreeNormal = MakeEmptyBitmap(&TranState->TranArena, GameState->Tree.Width, GameState->Tree.Height);
-        MakeSphereNormalMap(&GameState->TreeNormal, 1.f);
+        GameState->TestDiffuse = MakeEmptyBitmap(&TranState->TranArena, 256, 256);
+        DrawRectangle(&GameState->TestDiffuse, V2(0, 0), V2i(GameState->TestDiffuse.Width, GameState->TestDiffuse.Height),
+                      V4(.5f, .5f, .5f, 1.f));
+        GameState->TestNormal = MakeEmptyBitmap(&TranState->TranArena, GameState->TestDiffuse.Width, GameState->TestDiffuse.Height);
+        MakeSphereNormalMap(&GameState->TestNormal, 0.f);
+
+        TranState->EnvMapWidth  = 512;
+        TranState->EnvMapHeight = 256;
+
+        for (u32 MapIndex = 0; MapIndex < ArrayCount(TranState->EnvMaps); ++MapIndex)
+        {
+            u32 Width  = TranState->EnvMapWidth;
+            u32 Height = TranState->EnvMapHeight;
+
+            environment_map *Map = TranState->EnvMaps + MapIndex;
+
+            for (u32 LODIndex = 0; LODIndex < ArrayCount(Map->LOD); ++LODIndex)
+            {
+                Map->LOD[LODIndex] = MakeEmptyBitmap(&TranState->TranArena, Width, Height, false);
+
+                Width >>= 1;
+                Height >>= 1;
+            }
+        }
 
         TranState->IsInitialized = true;
     }
@@ -1045,7 +1065,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     DrawBuffer->Pitch          = Buffer->Pitch;
     DrawBuffer->Memory         = Buffer->Memory;
 
-    Clear(RenderGroup, V4(.5f, 0.5f, .5f, 0.f));
+    Clear(RenderGroup, V4(.25f, 0.25f, .25f, 0.f));
 
     v2 ScreenCenter = {(r32) DrawBuffer->Width * 0.5f,
                        (r32) DrawBuffer->Height * 0.5f};
@@ -1333,6 +1353,38 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             Basis->P = GetEntityGroundPoint(Entity);
         }
     }
+    v3 MapColor[] =
+    {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1},
+    };
+
+    for (u32 MapIndex = 0; MapIndex < ArrayCount(TranState->EnvMaps); ++MapIndex)
+    {
+        environment_map *Map = TranState->EnvMaps + MapIndex;
+        loaded_bitmap *  LOD = Map->LOD + 0;
+
+        s32 CheckerdWidth  = 16;
+        s32 CheckerdHeight = 16;
+
+        b32 Checkerd = false;
+        for (s32 Y = 0; Y < LOD->Height; Y += CheckerdHeight)
+        {
+            Checkerd = !Checkerd;
+            for (s32 X = 0; X < LOD->Width; X += CheckerdWidth)
+            {
+                Checkerd = !Checkerd;
+
+                v4 Color = Checkerd ? ToV4(MapColor[MapIndex], 1.f) : V4(0, 0, 0, 1);
+
+                v2 MinP = V2i(X, Y);
+                v2 MaxP = MinP + V2i(CheckerdWidth, CheckerdHeight);
+
+                DrawRectangle(LOD, MinP, MaxP, Color);
+            }
+        }
+    }
 
     GameState->Time += Input->deltatForFrame;
 
@@ -1354,9 +1406,24 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     v4 Color = V4(1, 1, 1, 1);
 #endif
     render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Origin - .5f * XAxis - .5f * YAxis,
-                                                            XAxis, YAxis, Color, &GameState->Tree, &GameState->TreeNormal,
-                                                            0, 0, 0);
+                                                            XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
+                                                            TranState->EnvMaps + 2,
+                                                            TranState->EnvMaps + 1,
+                                                            TranState->EnvMaps + 0);
 
+    v2 MapP = {0.f, 0.f};
+    for (u32 MapIndex = 0; MapIndex < ArrayCount(TranState->EnvMaps); ++MapIndex)
+    {
+        environment_map *Map = TranState->EnvMaps + MapIndex;
+        loaded_bitmap *  LOD = &Map->LOD[0];
+
+        XAxis = .5f * V2((r32) LOD->Width, 0);
+        YAxis = .5f * V2(0, (r32) LOD->Height);
+
+        render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, MapP, XAxis, YAxis, V4(1, 1, 1, 1), LOD, 0, 0, 0, 0);
+
+        MapP += YAxis + V2(0.f, 6.f);
+    }
     int PIndex = 0;
 
 #if 0

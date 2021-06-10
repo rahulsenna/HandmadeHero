@@ -634,7 +634,26 @@ GetBarycentric(rectangle3 A, v3 P)
 }
 
 
+inline v3
+ToV3(v2 XY, r32 z)
+{
+    v3 Result;
+    Result.xy = XY;
+    Result.z = z;
+    return (Result);
+}
+
+
 //
+
+inline v4
+ToV4(v3 XYZ, r32 w)
+{
+    v4 Result;
+    Result.xyz = XYZ;
+    Result.w = w;
+    return (Result);
+}
 inline v4
 operator+(v4 A, v4 B)
 {

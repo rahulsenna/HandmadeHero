@@ -4,9 +4,17 @@
 
 #ifndef HANDMADEHERO_HANDMADE_RENDER_GROUP_H
 
+struct loaded_bitmap
+{
+    void *Memory;
+    s32   Width;
+    s32   Height;
+    s32   Pitch;
+};
+
 struct environment_map
 {
-    loaded_bitmap *LOD[4];
+    loaded_bitmap LOD[4];
 };
 struct render_basis
 {
@@ -30,28 +38,28 @@ struct render_group_entry_header
 struct render_entity_basis
 {
     render_basis *Basis;
-    v2           Offset;
-    r32          OffsetZ;
-    r32          EntityZC;
+    v2            Offset;
+    r32           OffsetZ;
+    r32           EntityZC;
 };
 
 struct render_entry_bitmap
 {
-    loaded_bitmap             *Bitmap;
-    render_entity_basis       EntityBasis;
-    r32                       R, G, B, A;
+    loaded_bitmap *     Bitmap;
+    render_entity_basis EntityBasis;
+    v4                  Color;
 };
 
 struct render_entry_rectangle
 {
-    render_entity_basis       EntityBasis;
-    r32                       R, G, B, A;
-    v2                        Dim;
+    render_entity_basis EntityBasis;
+    v4                  Color;
+    v2                  Dim;
 };
 
 struct render_entry_clear
 {
-    v4                        Color;
+    v4 Color;
 };
 
 struct render_entry_coordinate_system
@@ -64,7 +72,7 @@ struct render_entry_coordinate_system
     loaded_bitmap *Texture;
 
     loaded_bitmap *NormalMap;
-    
+
     environment_map *Top;
     environment_map *Middle;
     environment_map *Bottom;
@@ -76,11 +84,9 @@ struct render_group
 
     r32 MetersToPixel;
 
-    game_state *GameState;
-
     u32 MaxPushBufferSize;
     u32 PushBufferSize;
-    u8  *PushBufferBase;
+    u8 *PushBufferBase;
 };
 
 #define PushRenderElement(Group, type) (type *) PushRenderElement_(Group, sizeof(type), RenderGroupEntryType_##type)
@@ -95,8 +101,8 @@ PushRenderElement_(render_group *Group, u32 Size, render_group_entry_type Type)
     if (((Group->PushBufferSize + Size) < Group->MaxPushBufferSize))
     {
         render_group_entry_header *Header = (render_group_entry_header *) (Group->PushBufferBase + Group->PushBufferSize);
-        Header->Type = Type;
-        Result = ((u8*)Header + sizeof(*Header));
+        Header->Type                      = Type;
+        Result                            = ((u8 *) Header + sizeof(*Header));
         Group->PushBufferSize += Size;
     } else
     {
@@ -107,4 +113,4 @@ PushRenderElement_(render_group *Group, u32 Size, render_group_entry_type Type)
 }
 
 #define HANDMADEHERO_HANDMADE_RENDER_GROUP_H
-#endif //HANDMADEHERO_HANDMADE_RENDER_GROUP_H
+#endif//HANDMADEHERO_HANDMADE_RENDER_GROUP_H
