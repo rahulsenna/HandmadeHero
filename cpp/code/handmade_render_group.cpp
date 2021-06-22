@@ -2,8 +2,6 @@
 // Created by AgentOfChaos on 4/10/2021.
 //
 
-#include "handmade_render_group.h"
-#include <stdlib.h>
 #if HANDMADE_WIN32
 #define RED_PLACE   16
 #define GREEN_PLACE 8
@@ -110,15 +108,26 @@ BilenearSample(loaded_bitmap *Bitmap, s32 X, s32 Y)
 }
 
 inline v3
-SampleEnvironmentMap(v2 ScreenSpaceUV, v3 Normal, r32 Roughness, environment_map *Map)
+SampleEnvironmentMap(v2 ScreenSpaceUV, v3 SampleDirection, r32 Roughness, environment_map *Map)
 {
     u32 LODIndex = (u32) (Roughness * (r32) (ArrayCount(Map->LOD) - 1) + .5f);
     Assert(LODIndex < ArrayCount(Map->LOD));
 
     loaded_bitmap *LOD = &Map->LOD[LODIndex];
 
-    r32 tX = LOD->Width / 2 + Normal.x * (LOD->Width / 2);
-    r32 tY = LOD->Height / 2 + Normal.y * (LOD->Height / 2);
+    Assert(SampleDirection.y > 0.f);
+    r32 DistanceFromMapInZ = 1.f;
+    r32 UVPerMeter         = .01f;
+    r32 C                  = (UVPerMeter * DistanceFromMapInZ) / SampleDirection.y;
+
+    v2 Offset = C * V2(SampleDirection.x, SampleDirection.z);
+    v2 UV     = ScreenSpaceUV + Offset;
+
+    UV.x = Clamp01(UV.x);
+    UV.y = Clamp01(UV.y);
+
+    r32 tX =  UV.x * (r32)(LOD->Width - 2);
+    r32 tY =  UV.y * (r32)(LOD->Height - 2);
 
     s32 X = (s32) tX;
     s32 Y = (s32) tY;
@@ -245,14 +254,18 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
 
                     Normal.xyz = Normalize(Normal.xyz);
 
+                    v3 BoundDirection = 2.f * Normal.z * Normal.xyz;
+                    BoundDirection.z -= 1.f;
+
                     environment_map *FarMap  = 0;
-                    r32              tEnvMap = Normal.y;
+                    r32              tEnvMap = BoundDirection.y;
                     r32              tFarMap = 0.f;
 
                     if (tEnvMap < -.5f)
                     {
-                        FarMap  = Bottom;
-                        tFarMap = -2.f * tEnvMap - 1.f;
+                        FarMap           = Bottom;
+                        tFarMap          = -2.f * tEnvMap - 1.f;
+                        BoundDirection.y = -BoundDirection.y;
                     } else if (tEnvMap > 0.5f)
                     {
                         FarMap  = Top;
@@ -263,8 +276,9 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
 
                     if (FarMap)
                     {
-                        v3 FarColorMap = SampleEnvironmentMap(ScreenSpaceUV, Normal.xyz, Normal.w, FarMap);
-                        LightColor     = Lerp(LightColor, tFarMap, FarColorMap);
+                        v3 FarColorMap = SampleEnvironmentMap(ScreenSpaceUV, BoundDirection, Normal.w, FarMap);
+
+                        LightColor = Lerp(LightColor, tFarMap, FarColorMap);
                     }
 
                     Texel.rgb = Texel.rgb + Texel.a * LightColor;

@@ -3,16 +3,15 @@
 // Created by AgentOfChaos on 12/7/2020.
 //
 
-
-#define WORLD_CHUNK_SAFE_MARGIN (INT32_MAX/64)
+#define WORLD_CHUNK_SAFE_MARGIN   (INT32_MAX / 64)
 #define WORLD_CHUNK_UNINITIALIZED INT32_MAX
-#define TILES_PER_CHUNK 8
+#define TILES_PER_CHUNK           8
 
 inline world_position
 NullPosition()
 {
     world_position Result = {};
-    Result.ChunkX = WORLD_CHUNK_UNINITIALIZED;
+    Result.ChunkX         = WORLD_CHUNK_UNINITIALIZED;
     return (Result);
 }
 
@@ -28,7 +27,7 @@ IsCanonical(r32 ChunkDim, r32 TileRel)
 {
     r32 Epsilon = 0.01f;
     b32 Result  = ((TileRel >= -(0.5f * ChunkDim + Epsilon)) &&
-                      (TileRel <= (0.5f * ChunkDim + Epsilon)));
+                  (TileRel <= (0.5f * ChunkDim + Epsilon)));
     return (Result);
 }
 
@@ -71,8 +70,8 @@ GetWorldChunk(world *World, s32 ChunkX, s32 ChunkY, s32 ChunkZ,
         if (Arena && (Chunk->ChunkX != WORLD_CHUNK_UNINITIALIZED) && (!Chunk->NextInHash))
         {
             Chunk->NextInHash = PushStruct(Arena, world_chunk);
-            Chunk = Chunk->NextInHash;
-            Chunk->ChunkX = WORLD_CHUNK_UNINITIALIZED;
+            Chunk             = Chunk->NextInHash;
+            Chunk->ChunkX     = WORLD_CHUNK_UNINITIALIZED;
         }
 
         if (Arena && Chunk->ChunkX == WORLD_CHUNK_UNINITIALIZED)
@@ -91,17 +90,17 @@ GetWorldChunk(world *World, s32 ChunkX, s32 ChunkY, s32 ChunkZ,
 }
 
 internal void
-InitializeWorld(world *World,v3 ChunkDimInMeters)
+InitializeWorld(world *World, v3 ChunkDimInMeters)
 {
 
     World->ChunkDimInMeters = ChunkDimInMeters;
-    World->FirstFree = 0;
+    World->FirstFree        = 0;
 
     for (u32 ChunkIndex = 0;
          ChunkIndex < ArrayCount(World->ChunkHash);
          ++ChunkIndex)
     {
-        World->ChunkHash[ChunkIndex].ChunkX = WORLD_CHUNK_UNINITIALIZED;
+        World->ChunkHash[ChunkIndex].ChunkX                 = WORLD_CHUNK_UNINITIALIZED;
         World->ChunkHash[ChunkIndex].FirstBlock.EntityCount = 0;
     }
 }
@@ -129,8 +128,6 @@ MapIntoChunkSpace(world *World, world_position BasePos, v3 Offset)
 
     return (Result);
 }
-
-
 
 inline v3
 Subtract(world *World, world_position *A, world_position *B)
@@ -161,9 +158,9 @@ inline world_position
 CenteredChunkPoint(s32 ChunkX, s32 ChunkY, s32 ChunkZ)
 {
     world_position Result = {};
-    Result.ChunkX = ChunkX;
-    Result.ChunkY = ChunkY;
-    Result.ChunkZ = ChunkZ;
+    Result.ChunkX         = ChunkX;
+    Result.ChunkY         = ChunkY;
+    Result.ChunkZ         = ChunkZ;
     return (Result);
 }
 
@@ -172,7 +169,7 @@ CenteredChunkPoint(world_chunk *Chunk)
 {
     world_position Result = CenteredChunkPoint(Chunk->ChunkX, Chunk->ChunkY, Chunk->ChunkZ);
 
-    return(Result);
+    return (Result);
 }
 
 inline void
@@ -186,16 +183,16 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, u32 LowEntityIndex,
     if (OldP && NewP && AreOnSameChunk(World, OldP, NewP))
     {
         // NOTE(rahul): Leave sim_entity where it is
-    } else
+    }
+    else
     {
         if (OldP)
         {
             // NOTE(rahul): Pull the sim_entity out of it's old sim_entity block
             world_chunk *Chunk = GetWorldChunk(World, OldP->ChunkX, OldP->ChunkY, OldP->ChunkZ);
-            Assert(Chunk)
-            if (Chunk)
+            Assert(Chunk) if (Chunk)
             {
-                b32                NotFound    = true;
+                b32                 NotFound   = true;
                 world_entity_block *FirstBlock = &Chunk->FirstBlock;
                 for (world_entity_block *Block = FirstBlock;
                      Block && NotFound;
@@ -203,8 +200,7 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, u32 LowEntityIndex,
                 {
                     for (u32 Index = 0; (Index < Block->EntityCount) && NotFound; ++Index)
                     {
-                        Assert(FirstBlock->EntityCount > 0)
-                        if (Block->LowEntityIndex[Index] == LowEntityIndex)
+                        Assert(FirstBlock->EntityCount > 0) if (Block->LowEntityIndex[Index] == LowEntityIndex)
                         {
                             Block->LowEntityIndex[Index] =
                             FirstBlock->LowEntityIndex[--FirstBlock->EntityCount];
@@ -214,9 +210,9 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, u32 LowEntityIndex,
                                 if (FirstBlock->Next)
                                 {
                                     world_entity_block *NextBlock = FirstBlock->Next;
-                                    *FirstBlock = *NextBlock;
+                                    *FirstBlock                   = *NextBlock;
 
-                                    NextBlock->Next = World->FirstFree;
+                                    NextBlock->Next  = World->FirstFree;
                                     World->FirstFree = NextBlock;
                                 }
                             }
@@ -243,8 +239,8 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, u32 LowEntityIndex,
                 {
                     OldBlock = PushStruct(Arena, world_entity_block);
                 }
-                *OldBlock = *Block;
-                Block->Next = OldBlock;
+                *OldBlock          = *Block;
+                Block->Next        = OldBlock;
                 Block->EntityCount = 0;
             }
             Assert(Block->EntityCount < ArrayCount(Block->LowEntityIndex))
@@ -282,4 +278,3 @@ ChangeEntityLocation(memory_arena *Arena, world *World, u32 LowEntityIndex,
         AddFlags(&LowEntity->Sim, EntityFlag_NonSpatial);
     }
 }
-

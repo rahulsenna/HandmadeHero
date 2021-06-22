@@ -56,6 +56,7 @@ CatStrings(size_t SourceACount, char *SourceA,
     }
 
     *Dest++ = 0;
+    r32 name = 3;
 }
 
 internal int

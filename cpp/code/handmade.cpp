@@ -6,8 +6,8 @@
 #include "handmade_render_group.cpp"
 #include "handmade_world.cpp"
 #include "handmade_sim_region.cpp"
-#include "handmade_random.h"
 #include "handmade_entity.cpp"
+#include "handmade_random.h"
 
 internal void
 GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameState)
@@ -568,7 +568,7 @@ MakeSphereNormalMap(loaded_bitmap *Bitmap, r32 Roughness)
             r32 Nz = 0.f;
 
             r32 RootTerm = 1.f - Nx * Nx - Ny * Ny;
-            v3  Normal   = V3(0, 0, 1);
+            v3  Normal   = V3(0, 0.7071067811865475f, 0.7071067811865475f);
             if (RootTerm >= 0.f)
             {
                 Nz     = SquareRoot(RootTerm);
@@ -1405,7 +1405,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #else
     v4 Color = V4(1, 1, 1, 1);
 #endif
-    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Origin - .5f * XAxis - .5f * YAxis,
+    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup,V2(Disp, 0) + Origin - .5f * XAxis - .5f * YAxis,
                                                             XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
                                                             TranState->EnvMaps + 2,
                                                             TranState->EnvMaps + 1,
