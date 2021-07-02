@@ -34,7 +34,7 @@ internal v4
 Linear1ToSRGB255(v4 C)
 {
     v4 Result;
-    ;
+
     Result.r = 255.f * SquareRoot(C.r);
     Result.g = 255.f * SquareRoot(C.g);
     Result.b = 255.f * SquareRoot(C.b);
@@ -108,17 +108,15 @@ BilenearSample(loaded_bitmap *Bitmap, s32 X, s32 Y)
 }
 
 inline v3
-SampleEnvironmentMap(v2 ScreenSpaceUV, v3 SampleDirection, r32 Roughness, environment_map *Map)
+SampleEnvironmentMap(v2 ScreenSpaceUV, v3 SampleDirection, r32 Roughness, environment_map *Map, r32 DistanceFromMapInZ)
 {
     u32 LODIndex = (u32) (Roughness * (r32) (ArrayCount(Map->LOD) - 1) + .5f);
     Assert(LODIndex < ArrayCount(Map->LOD));
 
     loaded_bitmap *LOD = &Map->LOD[LODIndex];
 
-    Assert(SampleDirection.y > 0.f);
-    r32 DistanceFromMapInZ = 1.f;
-    r32 UVPerMeter         = .01f;
-    r32 C                  = (UVPerMeter * DistanceFromMapInZ) / SampleDirection.y;
+    r32 UVPerMeter = .01f;
+    r32 C          = (UVPerMeter * DistanceFromMapInZ) / SampleDirection.y;
 
     v2 Offset = C * V2(SampleDirection.x, SampleDirection.z);
     v2 UV     = ScreenSpaceUV + Offset;
@@ -126,8 +124,8 @@ SampleEnvironmentMap(v2 ScreenSpaceUV, v3 SampleDirection, r32 Roughness, enviro
     UV.x = Clamp01(UV.x);
     UV.y = Clamp01(UV.y);
 
-    r32 tX =  UV.x * (r32)(LOD->Width - 2);
-    r32 tY =  UV.y * (r32)(LOD->Height - 2);
+    r32 tX = UV.x * (r32) (LOD->Width - 2);
+    r32 tY = UV.y * (r32) (LOD->Height - 2);
 
     s32 X = (s32) tX;
     s32 Y = (s32) tY;
@@ -153,6 +151,13 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                     environment_map *Bottom)
 {
     Color.rgb *= Color.a;
+
+    r32 XAxisLength = Length(XAxis);
+    r32 YAxisLength = Length(YAxis);
+
+    v2  NxAxis  = (YAxisLength / XAxisLength) * XAxis;
+    v2  NyAxis  = (XAxisLength / YAxisLength) * YAxis;
+    r32 NZScale = .5f * (XAxisLength + YAxisLength);
 
     r32 InvXAxisLengthSq = (1.f / LengthSq(XAxis));
     r32 InvYAxisLengthSq = (1.f / LengthSq(YAxis));
@@ -252,20 +257,26 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
 
                     Normal = UnscaledAndBiasNormal(Normal);
 
+                    Normal.xy = Normal.x * NxAxis + Normal.y * NyAxis;
+                    Normal.z *= NZScale;
                     Normal.xyz = Normalize(Normal.xyz);
 
                     v3 BoundDirection = 2.f * Normal.z * Normal.xyz;
                     BoundDirection.z -= 1.f;
 
-                    environment_map *FarMap  = 0;
-                    r32              tEnvMap = BoundDirection.y;
-                    r32              tFarMap = 0.f;
+                    BoundDirection.z = -BoundDirection.z;
+
+                    environment_map *FarMap = 0;
+
+                    r32 DistanceFromMapInZ = 1.f;
+                    r32 tEnvMap            = BoundDirection.y;
+                    r32 tFarMap            = 0.f;
 
                     if (tEnvMap < -.5f)
                     {
-                        FarMap           = Bottom;
-                        tFarMap          = -2.f * tEnvMap - 1.f;
-                        BoundDirection.y = -BoundDirection.y;
+                        FarMap             = Bottom;
+                        tFarMap            = -2.f * tEnvMap - 1.f;
+                        DistanceFromMapInZ = -DistanceFromMapInZ;
                     } else if (tEnvMap > 0.5f)
                     {
                         FarMap  = Top;
@@ -276,7 +287,7 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
 
                     if (FarMap)
                     {
-                        v3 FarColorMap = SampleEnvironmentMap(ScreenSpaceUV, BoundDirection, Normal.w, FarMap);
+                        v3 FarColorMap = SampleEnvironmentMap(ScreenSpaceUV, BoundDirection, Normal.w, FarMap, DistanceFromMapInZ);
 
                         LightColor = Lerp(LightColor, tFarMap, FarColorMap);
                     }

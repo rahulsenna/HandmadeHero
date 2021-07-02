@@ -31,7 +31,8 @@ SafeRatio1(r32 Numerator, r32 Divisor)
     return (Result);
 }
 
-struct v2 {
+struct v2
+{
     union
     {
         struct
@@ -42,7 +43,8 @@ struct v2 {
     };
 };
 
-struct v3 {
+struct v3
+{
     union
     {
         struct
@@ -70,33 +72,55 @@ struct v3 {
     };
 };
 
-union v4 {
-        struct
+union v4
+{
+    struct
+    {
+        union
         {
-            union
+            v3 xyz;
+            struct
             {
-                v3 xyz;
-                struct 
-                {
-                    r32 x, y, z;
-                };
+                r32 x, y, z;
             };
-            r32  w;
         };
+        r32 w;
+    };
 
-        struct
+    struct
+    {
+        union
         {
-            union
+            v3 rgb;
+            struct
             {
-                v3 rgb;
-                struct 
-                {
-                    r32 r, g, b;
-                };
+                r32 r, g, b;
             };
-            r32  a;
         };
-        r32 e[4];
+        r32 a;
+    };
+
+    struct
+    {
+        v2  xy;
+        r32 Ignore0_;
+        r32 Ignore1_;
+    };
+
+    struct
+    {
+        r32 Ignore2_;
+        v2  yz;
+        r32 Ignore3_;
+    };
+    struct
+    {
+        r32 Ignore4_;
+        r32 Ignore5_;
+        v2  zw;
+    };
+    
+    r32 e[4];
 };
 
 inline v2 V2(r32 X, r32 Y)
@@ -144,12 +168,14 @@ inline v4 V4(r32 R, r32 G, r32 B, r32 A)
     return (Result);
 }
 
-struct rectangle2 {
+struct rectangle2
+{
     v2 Min;
     v2 Max;
 };
 
-struct rectangle3 {
+struct rectangle3
+{
     v3 Min;
     v3 Max;
 };
@@ -350,7 +376,7 @@ Normalize(v3 A)
     v3 Result;
     Result = A * (1.f / Length(A));
 
-    return(Result);
+    return (Result);
 }
 
 //
@@ -633,16 +659,14 @@ GetBarycentric(rectangle3 A, v3 P)
     return (Result);
 }
 
-
 inline v3
 ToV3(v2 XY, r32 z)
 {
     v3 Result;
     Result.xy = XY;
-    Result.z = z;
+    Result.z  = z;
     return (Result);
 }
-
 
 //
 
@@ -651,7 +675,7 @@ ToV4(v3 XYZ, r32 w)
 {
     v4 Result;
     Result.xyz = XYZ;
-    Result.w = w;
+    Result.w   = w;
     return (Result);
 }
 inline v4

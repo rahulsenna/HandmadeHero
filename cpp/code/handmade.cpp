@@ -1391,7 +1391,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     r32 Angle  = GameState->Time;
     r32 Disp   = 100.f * Cos(Angle);
     v2  Origin = ScreenCenter;
-    Angle      = 0.f;
+    // Angle      = 0.f;
     v2 XAxis   = 200.f * V2(Cos(Angle), Sin(Angle));
 
     // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
@@ -1405,7 +1405,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #else
     v4 Color = V4(1, 1, 1, 1);
 #endif
-    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup,V2(Disp, 0) + Origin - .5f * XAxis - .5f * YAxis,
+    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, V2(Disp, 0) + Origin - .5f * XAxis - .5f * YAxis,
                                                             XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
                                                             TranState->EnvMaps + 2,
                                                             TranState->EnvMaps + 1,
