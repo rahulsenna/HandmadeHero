@@ -589,6 +589,48 @@ MakeSphereNormalMap(loaded_bitmap *Bitmap, r32 Roughness)
     }
 }
 
+internal void
+MakeSphereDiffuseMap(loaded_bitmap *Bitmap)
+{
+    r32 InvWidth  = 1.f / (r32) (Bitmap->Width - 1);
+    r32 InvHeight = 1.f / (r32) (Bitmap->Height - 1);
+
+    u8 *Row = (u8 *) Bitmap->Memory;
+    for (s32 Y = 0; Y < Bitmap->Height; ++Y)
+    {
+        u32 *Pixel = (u32 *) Row;
+        for (s32 X = 0; X < Bitmap->Width; ++X)
+        {
+            v2 BitmapUV = V2(InvWidth * (r32) X, InvHeight * (r32) Y);
+
+            r32 Nx = 2.f * BitmapUV.x - 1.f;
+            r32 Ny = 2.f * BitmapUV.y - 1.f;
+            r32 Nz = 0.f;
+
+            r32 Alpha    = 0.f;
+            r32 RootTerm = 1.f - Nx * Nx - Ny * Ny;
+            if (RootTerm >= 0.f)
+            {
+                Alpha = 1.f;
+            }
+
+            v3 BaseColor = V3(0.f, 0.f, 0.f);
+
+            Alpha *= 255.f;
+            v4 Color = V4(Alpha * BaseColor.r,
+                          Alpha * BaseColor.g,
+                          Alpha * BaseColor.b,
+                          Alpha);
+
+            *Pixel++ = (((u32) (Color.r + 0.5f) << RED_PLACE) |
+                        ((u32) (Color.g + 0.5f) << GREEN_PLACE) |
+                        ((u32) (Color.b + 0.5f) << BLUE_PLACE)) |
+                       ((u32) (Color.a + 0.5f) << 24);
+        }
+        Row += Bitmap->Pitch;
+    }
+}
+
 #if 0
 
 internal void
@@ -939,6 +981,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                       V4(.5f, .5f, .5f, 1.f));
         GameState->TestNormal = MakeEmptyBitmap(&TranState->TranArena, GameState->TestDiffuse.Width, GameState->TestDiffuse.Height);
         MakeSphereNormalMap(&GameState->TestNormal, 0.f);
+        MakeSphereDiffuseMap(&GameState->TestDiffuse);
 
         TranState->EnvMapWidth  = 512;
         TranState->EnvMapHeight = 256;
@@ -1385,14 +1428,17 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
         }
     }
+    TranState->EnvMaps[0].Pz = -8.f;
+    TranState->EnvMaps[1].Pz = 0.f;
+    TranState->EnvMaps[2].Pz = 8.f;
 
     GameState->Time += Input->deltatForFrame;
 
-    r32 Angle  = GameState->Time;
-    r32 Disp   = 100.f * Cos(Angle);
+    r32 Angle  = .1f* GameState->Time;
+    v2 Disp   = {100.f * Cos(5.f*Angle), 100.f * Sin(3.f*Angle),};
     v2  Origin = ScreenCenter;
     // Angle      = 0.f;
-    v2 XAxis   = 200.f * V2(Cos(Angle), Sin(Angle));
+    v2 XAxis = 100.f * V2(Cos(10.f*Angle), Sin(10.f*Angle));
 
     // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
     v2 YAxis = Perp(XAxis);
@@ -1405,7 +1451,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #else
     v4 Color = V4(1, 1, 1, 1);
 #endif
-    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, V2(Disp, 0) + Origin - .5f * XAxis - .5f * YAxis,
+    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Disp + Origin - .5f * XAxis - .5f * YAxis,
                                                             XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
                                                             TranState->EnvMaps + 2,
                                                             TranState->EnvMaps + 1,
