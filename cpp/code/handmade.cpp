@@ -99,6 +99,7 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
         Result.Height = Header->Height;
         Result.Memory = Pixels;
 
+        Assert(Result.Height >= 0);
         Assert(Header->Compression == 3)
 
         bit_scan_result RedScan   = FindLeastSignificantSetBit(Header->RedMask);
@@ -143,8 +144,12 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
         }
     }
 
-    Result.Pitch  = -Result.Width * BYTES_PER_PIXEL;
-    Result.Memory = (u8 *) Result.Memory - Result.Pitch * (Result.Height - 1);
+    Result.Pitch = Result.Width * BYTES_PER_PIXEL;
+
+#if 0
+        Result.Memory = (u8 *) Result.Memory + Result.Pitch * (Result.Height - 1);
+        Result.Pitch  = -Result.Pitch;
+#endif
 
     return (Result);
 }
@@ -466,7 +471,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
 
             random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
 
-            v2 Center = V2(ChunkOffsetX * Width, -ChunkOffsetY * Height);
+            v2 Center = V2(ChunkOffsetX * Width, ChunkOffsetY * Height);
 
             for (u32 GrassIndex = 0; GrassIndex < 100; ++GrassIndex)
             {
@@ -501,7 +506,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
 
             random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
 
-            v2 Center = V2(ChunkOffsetX * Width, -ChunkOffsetY * Height);
+            v2 Center = V2(ChunkOffsetX * Width, ChunkOffsetY * Height);
 
             for (u32 GrassIndex = 0; GrassIndex < 20; ++GrassIndex)
             {
@@ -644,6 +649,19 @@ RequestGroundBuffers(world_position CenterP, rectangle3 Bounds)
 
 #endif
 
+inline v2
+TopDownAlign(loaded_bitmap *Bitmap, v2 Align)
+{
+    Align.y = (Bitmap->Height - 1) - Align.y;
+    return (Align);
+}
+
+internal void
+SetTopDownAlign(hero_bitmaps *Bitmap, v2 Align)
+{
+    Bitmap->Align = TopDownAlign(&Bitmap->HeroHead, Align);
+}
+
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
@@ -771,7 +789,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         Bitmap->HeroCape  = DEBUGLoadBMP(Thread,
                                         Memory->DEBUGPlatformReadEntireFile,
                                         "test/test_hero_back_cape.bmp");
-        Bitmap->Align     = V2(72, 182);
+        SetTopDownAlign(Bitmap, V2(72, 182));
         ++Bitmap;
 
         Bitmap->HeroHead  = DEBUGLoadBMP(Thread,
@@ -783,7 +801,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         Bitmap->HeroCape  = DEBUGLoadBMP(Thread,
                                         Memory->DEBUGPlatformReadEntireFile,
                                         "test/test_hero_front_cape.bmp");
-        Bitmap->Align     = V2(72, 182);
+        SetTopDownAlign(Bitmap, V2(72, 182));
         ++Bitmap;
 
         Bitmap->HeroHead  = DEBUGLoadBMP(Thread,
@@ -795,7 +813,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         Bitmap->HeroCape  = DEBUGLoadBMP(Thread,
                                         Memory->DEBUGPlatformReadEntireFile,
                                         "test/test_hero_right_cape.bmp");
-        Bitmap->Align     = V2(72, 182);
+        SetTopDownAlign(Bitmap, V2(72, 182));
         ++Bitmap;
 
         Bitmap->HeroHead  = DEBUGLoadBMP(Thread,
@@ -807,7 +825,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         Bitmap->HeroCape  = DEBUGLoadBMP(Thread,
                                         Memory->DEBUGPlatformReadEntireFile,
                                         "test/test_hero_left_cape.bmp");
-        Bitmap->Align     = V2(72, 182);
+        SetTopDownAlign(Bitmap, V2(72, 182));
         ++Bitmap;
 
         u32 ScreenBaseX = 0;
@@ -1184,8 +1202,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                         }
 
                         v3 RelP = Subtract(World, &ChunkCenterP, &GameState->CameraP);
-                        PushRectOutline(RenderGroup, RelP.xy, 0.f, World->ChunkDimInMeters.xy,
-                                        V4(1.0f, 1.0f, 0.0f, 1.0f));
+#if 0
+                            PushRectOutline(RenderGroup, RelP.xy, 0.f, World->ChunkDimInMeters.xy,
+                                                                    V4(1.0f, 1.0f, 0.0f, 1.0f));
+#endif
                     }
                 }
             }
@@ -1273,8 +1293,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     break;
                 }
                 case EntityType_Wall: {
-                    PushBitmap(RenderGroup, &GameState->Tree,
-                               V2(0, 0), 0, V2(40, 80));
+                    v2 Alignment = TopDownAlign(&GameState->Tree, V2(40, 80));
+                    PushBitmap(RenderGroup, &GameState->Tree, V2(0, 0), 0, Alignment);
                     break;
                 }
 
@@ -1309,11 +1329,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                         ClearCollisionRuleFor(GameState, Entity->StorageIndex);
                         MakeEntityNonSpatial(Entity);
                     }
-
-                    PushBitmap(RenderGroup, &GameState->HeroShadow, V2(0, 0), 0,
-                               HeroBitmaps->Align, ShadowAlpha, 0.0f);
-                    PushBitmap(RenderGroup, &GameState->Sword,
-                               V2(0, 0), 0, V2(29, 10));
+                    v2 Alignment = TopDownAlign(&GameState->Sword, V2(29, 10));
+                    PushBitmap(RenderGroup, &GameState->Sword, V2(0, 0), 0, Alignment);
+                    PushBitmap(RenderGroup, &GameState->HeroShadow, V2(0, 0), 0, HeroBitmaps->Align, ShadowAlpha, 0.0f);
                     break;
                 }
 
@@ -1432,54 +1450,56 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     TranState->EnvMaps[1].Pz = 0.f;
     TranState->EnvMaps[2].Pz = 8.f;
 
-    GameState->Time += Input->deltatForFrame;
-
-    r32 Angle  = .1f* GameState->Time;
-    v2 Disp   = {100.f * Cos(5.f*Angle), 100.f * Sin(3.f*Angle),};
-    v2  Origin = ScreenCenter;
-    // Angle      = 0.f;
-    v2 XAxis = 100.f * V2(Cos(10.f*Angle), Sin(10.f*Angle));
-
-    // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
-    v2 YAxis = Perp(XAxis);
+#if 1
+        GameState->Time += Input->deltatForFrame;
+    
+        r32 Angle  = .1f* GameState->Time;
+        v2 Disp   = {100.f * Cos(5.f*Angle), 100.f * Sin(3.f*Angle),};
+        v2  Origin = ScreenCenter;
+        // Angle      = 0.f;
+        v2 XAxis = 100.f * V2(Cos(10.f*Angle), Sin(10.f*Angle));
+    
+        // v2  YAxis  = (50.f + 50.f * Cos(Angle)) * V2(Cos(Angle + 1.f), Sin(Angle + 1.f));
+        v2 YAxis = Perp(XAxis);
 #if 0
-    r32 CAngle = Angle*5.f;
-    v4 Color = V4(.5f + 0.5f * Cos(CAngle + 2.7f),
-                  .5f + 0.5f * Cos(CAngle + 2.5f),
-                  .5f + 0.5f * Sin(CAngle + 9.2f),  
-                  .5f + 0.5f * Sin(CAngle));
+        r32 CAngle = Angle*5.f;
+        v4 Color = V4(.5f + 0.5f * Cos(CAngle + 2.7f),
+                      .5f + 0.5f * Cos(CAngle + 2.5f),
+                      .5f + 0.5f * Sin(CAngle + 9.2f),  
+                      .5f + 0.5f * Sin(CAngle));
 #else
-    v4 Color = V4(1, 1, 1, 1);
+        v4 Color = V4(1, 1, 1, 1);
 #endif
-    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Disp + Origin - .5f * XAxis - .5f * YAxis,
-                                                            XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
-                                                            TranState->EnvMaps + 2,
-                                                            TranState->EnvMaps + 1,
-                                                            TranState->EnvMaps + 0);
-
-    v2 MapP = {0.f, 0.f};
-    for (u32 MapIndex = 0; MapIndex < ArrayCount(TranState->EnvMaps); ++MapIndex)
-    {
-        environment_map *Map = TranState->EnvMaps + MapIndex;
-        loaded_bitmap *  LOD = &Map->LOD[0];
-
-        XAxis = .5f * V2((r32) LOD->Width, 0);
-        YAxis = .5f * V2(0, (r32) LOD->Height);
-
-        render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, MapP, XAxis, YAxis, V4(1, 1, 1, 1), LOD, 0, 0, 0, 0);
-
-        MapP += YAxis + V2(0.f, 6.f);
-    }
-    int PIndex = 0;
+        render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Disp + Origin - .5f * XAxis - .5f * YAxis,
+                                                                XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
+                                                                TranState->EnvMaps + 2,
+                                                                TranState->EnvMaps + 1,
+                                                                TranState->EnvMaps + 0);
+    
+        v2 MapP = {0.f, 0.f};
+        for (u32 MapIndex = 0; MapIndex < ArrayCount(TranState->EnvMaps); ++MapIndex)
+        {
+            environment_map *Map = TranState->EnvMaps + MapIndex;
+            loaded_bitmap *  LOD = &Map->LOD[0];
+    
+            XAxis = .5f * V2((r32) LOD->Width, 0);
+            YAxis = .5f * V2(0, (r32) LOD->Height);
+    
+            render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, MapP, XAxis, YAxis, V4(1, 1, 1, 1), LOD, 0, 0, 0, 0);
+    
+            MapP += YAxis + V2(0.f, 6.f);
+        }
+        int PIndex = 0;
 
 #if 0
-    for (r32 Y = 0.f; Y < 1.f; Y += 0.25f)
-    {
-        for (r32 X = 0.f; X < 1.f; X += 0.25f)
+        for (r32 Y = 0.f; Y < 1.f; Y += 0.25f)
         {
-            C->Points[PIndex++] = {X, Y};
+            for (r32 X = 0.f; X < 1.f; X += 0.25f)
+            {
+                C->Points[PIndex++] = {X, Y};
+            }
         }
-    }
+#endif
 #endif
     RenderGroupToOutput(RenderGroup, DrawBuffer);
 
