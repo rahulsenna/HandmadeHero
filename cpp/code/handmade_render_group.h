@@ -6,6 +6,7 @@
 
 struct loaded_bitmap
 {
+    v2    Align;
     void *Memory;
     s32   Width;
     s32   Height;
@@ -15,7 +16,7 @@ struct loaded_bitmap
 struct environment_map
 {
     loaded_bitmap LOD[4];
-    r32 Pz;
+    r32           Pz;
 };
 struct render_basis
 {
@@ -39,9 +40,7 @@ struct render_group_entry_header
 struct render_entity_basis
 {
     render_basis *Basis;
-    v2            Offset;
-    r32           OffsetZ;
-    r32           EntityZC;
+    v3            Offset;
 };
 
 struct render_entry_bitmap

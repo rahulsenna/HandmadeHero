@@ -97,7 +97,6 @@ ZeroSize(mem_index Size, void *Ptr)
 
 struct hero_bitmaps
 {
-    v2            Align;
     loaded_bitmap HeroHead;
     loaded_bitmap HeroTorso;
     loaded_bitmap HeroCape;
