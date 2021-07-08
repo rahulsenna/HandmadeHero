@@ -87,6 +87,8 @@ struct render_group
     u32 MaxPushBufferSize;
     u32 PushBufferSize;
     u8 *PushBufferBase;
+
+    r32 GlobalAlpha;
 };
 
 #define PushRenderElement(Group, type) (type *) PushRenderElement_(Group, sizeof(type), RenderGroupEntryType_##type)

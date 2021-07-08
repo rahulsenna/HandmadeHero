@@ -835,8 +835,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
         for (u32 ScreenIndex = 0; ScreenIndex < 2000; ++ScreenIndex)
         {
-            //            u32 DoorDirection = RandomChoice(&Series, (DoorDown || DoorUp) ? 2 : 3);
+#if 1
+            u32 DoorDirection = RandomChoice(&Series, (DoorDown || DoorUp) ? 2 : 3);
+#else
             u32 DoorDirection = RandomChoice(&Series, 2);
+#endif
 
             b32 ZDoorCreated = false;
             if (DoorDirection == 2)
@@ -1070,33 +1073,43 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 }
             }
 
-            if (Controller->ActionDown.EndedDown)
-            {
-                ConHero->accel *= 50.0f;
-            }
-
             if (Controller->Start.EndedDown)
             {
                 ConHero->dZ = 4.0f;
             }
-
             ConHero->dSword = {};
+
+#if 0
+                if (Controller->ActionUp.EndedDown)
+                {
+                    ConHero->dSword = {0.0f, 1.0f};
+                }
+                if (Controller->ActionDown.EndedDown)
+                {
+                    ConHero->accel *= 50.0f;
+                    ConHero->dSword = {0.0f, -1.0f};
+                }
+                if (Controller->ActionLeft.EndedDown)
+                {
+                    ConHero->dSword = {-1.0f, 0.0f};
+                }
+                if (Controller->ActionRight.EndedDown)
+                {
+                    ConHero->dSword = {1.0f, 0.0f};
+                }
+#else
+            r32 ZoomRate      = 0.f;
             if (Controller->ActionUp.EndedDown)
             {
-                ConHero->dSword = {0.0f, 1.0f};
+                ZoomRate = 1.f;
             }
             if (Controller->ActionDown.EndedDown)
             {
-                ConHero->dSword = {0.0f, -1.0f};
+                ZoomRate = -1.f;
             }
-            if (Controller->ActionLeft.EndedDown)
-            {
-                ConHero->dSword = {-1.0f, 0.0f};
-            }
-            if (Controller->ActionRight.EndedDown)
-            {
-                ConHero->dSword = {1.0f, 0.0f};
-            }
+            GameState->ZOffset += ZoomRate * Input->deltatForFrame;
+
+#endif
         }
     }
 
@@ -1105,6 +1118,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     render_group *RenderGroup = AllocateRenderGroup(&TranState->TranArena,
                                                     Megabytes(4),
                                                     GameState->MetersToPixel);
+    RenderGroup->GlobalAlpha = Clamp01(1.f - GameState->ZOffset);
 
     loaded_bitmap  DrawBuffer_ = {};
     loaded_bitmap *DrawBuffer  = &DrawBuffer_;
@@ -1123,21 +1137,26 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     rectangle3 CameraBoundsInMeters = RectCenterDim(V3(0, 0, 0),
                                                     V3(ScreenWidthInMeters, ScreenHeightInMeters, 0.0f));
 
-    for (u32 GroundBufferIndex = 0;
-         GroundBufferIndex < TranState->GroundBufferCount;
-         ++GroundBufferIndex)
-    {
-        ground_buffer *GroundBuffer = TranState->GroundBuffers + GroundBufferIndex;
-        if (IsValid(GroundBuffer->P))
+#if 0
+        for (u32 GroundBufferIndex = 0;
+             GroundBufferIndex < TranState->GroundBufferCount;
+             ++GroundBufferIndex)
         {
-            loaded_bitmap *Bitmap = &GroundBuffer->Bitmap;
-            Bitmap->Align         = .5f * V2i(Bitmap->Width, Bitmap->Height);
-            v3 Delta              = Subtract(GameState->World, &GroundBuffer->P, &GameState->CameraP);
-
-            PushBitmap(RenderGroup, Bitmap, Delta);
+            ground_buffer *GroundBuffer = TranState->GroundBuffers + GroundBufferIndex;
+            if (IsValid(GroundBuffer->P))
+            {
+                loaded_bitmap *Bitmap = &GroundBuffer->Bitmap;
+                Bitmap->Align         = .5f * V2i(Bitmap->Width, Bitmap->Height);
+                v3 Delta              = Subtract(GameState->World, &GroundBuffer->P, &GameState->CameraP);
+    
+                render_basis *Basis       = PushStruct(&TranState->TranArena, render_basis);
+                RenderGroup->DefaultBasis = Basis;
+    
+                Basis->P = Delta + V3(0,0, GameState->ZOffset);
+                PushBitmap(RenderGroup, Bitmap, V3(0,0,0));
+            }
         }
-    }
-
+    
     {
         world_position MinChunkP = MapIntoChunkSpace(World, GameState->CameraP, GetMinCorner(CameraBoundsInMeters));
         world_position MaxChunkP = MapIntoChunkSpace(World, GameState->CameraP, GetMaxCorner(CameraBoundsInMeters));
@@ -1200,6 +1219,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
         }
     }
+#endif
 
     v3         SimBoundsExpansion = {15.0f, 15.0f, 15.0f};
     rectangle3 SimBounds          = AddRadiusTo(CameraBoundsInMeters, SimBoundsExpansion);
@@ -1388,7 +1408,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 MoveEntity(GameState, SimRegion, Entity, accelOfEntity, &MoveSpec, Input->deltatForFrame);
             }
 
-            Basis->P = GetEntityGroundPoint(Entity);
+            Basis->P = GetEntityGroundPoint(Entity) + V3(0, 0, GameState->ZOffset);
         }
     }
     v3 MapColor[] =
@@ -1429,7 +1449,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     DrawBitmap(&TranState->EnvMaps[0].LOD[0], &TranState->GroundBuffers[TranState->GroundBufferCount - 1].Bitmap, 130.f, 100.f);
 
-#if 1
+#if 0
     GameState->Time += Input->deltatForFrame;
 
     r32 Angle = .1f * GameState->Time;
