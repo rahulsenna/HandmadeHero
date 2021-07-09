@@ -510,9 +510,9 @@ GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenCenter, render_entity_
 {
     entity_basis_p_result Result            = {};
     v3                    EntityBaseP       = EntityBasis->Basis->P * RenderGroup->MetersToPixel;
-    r32                   ZFudge            = 1.0f + 0.001f * EntityBaseP.z;
+    r32                   ZFudge            = 1.0f + 0.0015f * EntityBaseP.z;
     v2                    EntityGroundPoint = ScreenCenter + (EntityBaseP.xy + EntityBasis->Offset.xy) * ZFudge;
-    v2                    Center            = {EntityGroundPoint + V2(0, EntityBaseP.z + EntityBasis->Offset.z)};
+    v2                    Center            = EntityGroundPoint;
 
     Result.P     = Center;
     Result.Scale = ZFudge;
@@ -551,8 +551,7 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 BaseAddress += sizeof(*Entry);
 
                 entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenCenter, &Entry->EntityBasis);
-
-                // DrawRectangle(OutputTarget, Basis.P, Basis.P + Basis.Scale*Entry->Dim, Entry->Color);
+                DrawRectangle(OutputTarget, Basis.P, Basis.P + Basis.Scale*Entry->Dim, Entry->Color);
 
                 break;
             }

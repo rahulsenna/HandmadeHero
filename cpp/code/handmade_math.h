@@ -119,7 +119,7 @@ union v4
         r32 Ignore5_;
         v2  zw;
     };
-    
+
     r32 e[4];
 };
 
@@ -416,6 +416,19 @@ inline r32
 Clamp01(r32 Value)
 {
     r32 Result = Clamp(0.0f, Value, 1.0f);
+    return (Result);
+}
+
+inline r32
+Clamp01MapToRange(r32 Min, r32 t, r32 Max)
+{
+    r32 Result = 0.f;
+
+    r32 Range = Max - Min;
+    if (Range != 0.f)
+    {
+        Result = Clamp01((t - Min) / Range);
+    }
     return (Result);
 }
 

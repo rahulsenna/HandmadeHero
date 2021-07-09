@@ -191,7 +191,6 @@ struct game_state
     loaded_bitmap TestDiffuse;
     loaded_bitmap TestNormal;
 
-    r32 ZOffset;
 };
 
 struct transient_state
