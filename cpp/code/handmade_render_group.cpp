@@ -503,19 +503,28 @@ struct entity_basis_p_result
 {
     v2  P;
     r32 Scale;
+    b32 Valid;
 };
 
 inline entity_basis_p_result
 GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenCenter, render_entity_basis *EntityBasis)
 {
-    entity_basis_p_result Result            = {};
-    v3                    EntityBaseP       = EntityBasis->Basis->P * RenderGroup->MetersToPixel;
-    r32                   ZFudge            = 1.0f + 0.0015f * EntityBaseP.z;
-    v2                    EntityGroundPoint = ScreenCenter + (EntityBaseP.xy + EntityBasis->Offset.xy) * ZFudge;
-    v2                    Center            = EntityGroundPoint;
+    entity_basis_p_result Result = {};
 
-    Result.P     = Center;
-    Result.Scale = ZFudge;
+    v3  EntityBaseP               = EntityBasis->Basis->P * RenderGroup->MetersToPixel;
+    r32 FocalLength               = 20.f * RenderGroup->MetersToPixel;
+    r32 CameraDistanceAboveGround = 20.f * RenderGroup->MetersToPixel;
+    r32 DistanceToPz              = CameraDistanceAboveGround - EntityBaseP.z;
+    r32 NearClipPlane             = .2f * RenderGroup->MetersToPixel;
+    v3  RealXY                    = V3((EntityBaseP.xy + EntityBasis->Offset.xy), 1.f);
+
+    if (DistanceToPz > NearClipPlane)
+    {
+        v3 ProjectedXY = (1.f / DistanceToPz) * FocalLength * RealXY;
+        Result.P       = ScreenCenter + ProjectedXY.xy;
+        Result.Scale   = ProjectedXY.z;
+        Result.Valid   = true;
+    }
 
     return Result;
 }
@@ -551,7 +560,7 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 BaseAddress += sizeof(*Entry);
 
                 entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenCenter, &Entry->EntityBasis);
-                DrawRectangle(OutputTarget, Basis.P, Basis.P + Basis.Scale*Entry->Dim, Entry->Color);
+                DrawRectangle(OutputTarget, Basis.P, Basis.P + Basis.Scale * Entry->Dim, Entry->Color);
 
                 break;
             }
