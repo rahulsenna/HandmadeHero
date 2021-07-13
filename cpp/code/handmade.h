@@ -162,6 +162,7 @@ struct game_state
     loaded_bitmap Sword;
     loaded_bitmap Familiar;
     loaded_bitmap Monster;
+    loaded_bitmap Stair;
     loaded_bitmap MonsterDead;
 
     loaded_bitmap Stairwell;
@@ -170,9 +171,6 @@ struct game_state
     loaded_bitmap HeroShadow;
 
     hero_bitmaps HeroBitmaps[4];
-
-    r32 MetersToPixel;
-    r32 PixelsToMeters;
 
     pairwise_collision_rule *CollisionRuleHash[256];
     pairwise_collision_rule *FirstFreeCollisionRule;

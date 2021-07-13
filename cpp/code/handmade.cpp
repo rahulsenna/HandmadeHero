@@ -100,11 +100,12 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
         Result.Height = Header->Height;
         Result.Memory = Pixels;
 
-        Result.Align.x = (r32) AlignX;
-        Result.Align.y = (r32) ((Result.Height - 1) - TopDownAlignY);
+        Result.AlignPercentage.x = SafeRatio0((r32) AlignX, (r32) Result.Width);
+        Result.AlignPercentage.y = SafeRatio0((r32) ((Result.Height - 1) - TopDownAlignY), (r32) Result.Height);
+        Result.WidthOverHeight   = SafeRatio0((r32) Result.Width, (r32) Result.Height);
 
         Assert(Result.Height >= 0);
-        Assert(Header->Compression == 3)
+        Assert(Header->Compression == 3);
 
         bit_scan_result RedScan   = FindLeastSignificantSetBit(Header->RedMask);
         bit_scan_result GreenScan = FindLeastSignificantSetBit(Header->GreenMask);
@@ -451,7 +452,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
                 ground_buffer *GroundBuffer, world_position *ChunkP)
 {
     temporary_memory RenderMemory = BeginTempMemory(&TranState->TranArena);
-    render_group *   RenderGroup  = AllocateRenderGroup(&TranState->TranArena, Megabytes(4), 1.f);
+    render_group *   RenderGroup  = AllocateRenderGroup(&TranState->TranArena, Megabytes(4));
 
     loaded_bitmap *Buffer = &GroundBuffer->Bitmap;
 
@@ -491,7 +492,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
                 v2 BitmapCenter = 0.5f * V2i(GameState->Grass[0].Width, GameState->Grass[0].Height);
                 v2 Offset       = {Width * RandomUnilateral(&Series), Height * RandomUnilateral(&Series)};
                 v2 P            = Center + Offset - BitmapCenter;
-                PushBitmap(RenderGroup, Stamp, V3(P, 0.f));
+                PushBitmap(RenderGroup, Stamp, V3(P, 0.f), 1.f);
             }
         }
     }
@@ -521,7 +522,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
                 v2 BitmapCenter = 0.5f * V2i(GameState->Grass[0].Width, GameState->Grass[0].Height);
                 v2 Offset       = {Width * RandomUnilateral(&Series), Height * RandomUnilateral(&Series)};
                 v2 P            = Center + Offset - BitmapCenter;
-                PushBitmap(RenderGroup, Stamp, V3(P, 0.f));
+                PushBitmap(RenderGroup, Stamp, V3(P, 0.f), 1.f);
             }
         }
     }
@@ -660,6 +661,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     u32 GroundBufferWidth  = 256;
     u32 GroundBufferHeight = 256;
 
+    //TODO(rahul): Remove this
+    r32 PixelsToMeters = 1.f / 42.f;
+
     game_state *GameState = (game_state *) Memory->PermanentStorage;
     if (!Memory->IsInitialized)
     {
@@ -673,11 +677,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->World = PushStruct(&GameState->WorldArena, world);
 
         GameState->TypicalFloorHeight = 3.0f;
-        GameState->MetersToPixel      = 42.0f;
-        GameState->PixelsToMeters     = 1.0f / GameState->MetersToPixel;
 
-        v3 WorldChunkDimInMeters = {GameState->PixelsToMeters * (r32) GroundBufferWidth,
-                                    GameState->PixelsToMeters * (r32) GroundBufferHeight,
+        v3 WorldChunkDimInMeters = {PixelsToMeters * (r32) GroundBufferWidth,
+                                    PixelsToMeters * (r32) GroundBufferHeight,
                                     GameState->TypicalFloorHeight};
 
         world *World = GameState->World;
@@ -754,9 +756,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                         Memory->DEBUGPlatformReadEntireFile,
                                         "new/sword.bmp", 29, 10);
 
-        GameState->Familiar    = DEBUGLoadBMP(Thread,
+        GameState->Familiar = DEBUGLoadBMP(Thread,
                                            Memory->DEBUGPlatformReadEntireFile,
                                            "new/familiar.bmp");
+
+        GameState->Stair       = DEBUGLoadBMP(Thread,
+                                        Memory->DEBUGPlatformReadEntireFile,
+                                        "new/stair.bmp", 73, 72);
         GameState->Monster     = DEBUGLoadBMP(Thread,
                                           Memory->DEBUGPlatformReadEntireFile,
                                           "new/monster.bmp");
@@ -1029,9 +1035,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     }
 #endif
 
-    world *World          = GameState->World;
-    r32    MetersToPixel  = GameState->MetersToPixel;
-    r32    PixelsToMeters = GameState->PixelsToMeters;
+    world *World = GameState->World;
 
     for (int ControllerIndex = 0;
          ControllerIndex < ArrayCount(Input->Controllers);
@@ -1103,9 +1107,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     temporary_memory RenderMemory = BeginTempMemory(&TranState->TranArena);
 
-    render_group * RenderGroup = AllocateRenderGroup(&TranState->TranArena,
-                                                    Megabytes(4),
-                                                    GameState->MetersToPixel);
+    render_group * RenderGroup = AllocateRenderGroup(&TranState->TranArena, Megabytes(4));
     loaded_bitmap  DrawBuffer_ = {};
     loaded_bitmap *DrawBuffer  = &DrawBuffer_;
     DrawBuffer->Width          = Buffer->Width;
@@ -1297,23 +1299,24 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                             }
                         }
                     }
-
-                    PushBitmap(RenderGroup, &HeroBitmaps->HeroTorso, V3(0, 0, 0));
-                    PushBitmap(RenderGroup, &HeroBitmaps->HeroCape, V3(0, 0, 0));
-                    PushBitmap(RenderGroup, &HeroBitmaps->HeroHead, V3(0, 0, 0));
-                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), V4(1, 1, 1, ShadowAlpha));
+                    r32 HeroSizeC = 2.f;
+                    PushBitmap(RenderGroup, &HeroBitmaps->HeroTorso, V3(0, 0, 0), HeroSizeC * 1.2f);
+                    PushBitmap(RenderGroup, &HeroBitmaps->HeroCape, V3(0, 0, 0), HeroSizeC * 1.2f);
+                    PushBitmap(RenderGroup, &HeroBitmaps->HeroHead, V3(0, 0, 0), HeroSizeC * 1.2f);
+                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), HeroSizeC * 1.f, V4(1, 1, 1, ShadowAlpha));
 
                     DrawHitPoints(Entity, RenderGroup);
                     break;
                 }
                 case EntityType_Wall: {
-                    PushBitmap(RenderGroup, &GameState->Tree, V3(0, 0, 0));
+                    PushBitmap(RenderGroup, &GameState->Tree, V3(0, 0, 0), 2.5f);
                     break;
                 }
 
                 case EntityType_Stairwell: {
-                    PushRect(RenderGroup, V3(0, 0, 0), Entity->WalkableDim, V4(1, 0.5f, 0, 1));
-                    PushRect(RenderGroup, V3(0, 0, Entity->WalkableHeight), Entity->WalkableDim, V4(1, 1, 0, 1));
+                    PushBitmap(RenderGroup, &GameState->Stair, V3(0, 0, 0), 4.f);
+                    // PushRect(RenderGroup, V3(0, 0, 0), Entity->WalkableDim, V4(1, 0.5f, 0, 1));
+                    // PushRect(RenderGroup, V3(0, 0, Entity->WalkableHeight), Entity->WalkableDim, V4(1, 1, 0, 1));
                     break;
                 }
 
@@ -1340,8 +1343,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                         ClearCollisionRuleFor(GameState, Entity->StorageIndex);
                         MakeEntityNonSpatial(Entity);
                     }
-                    PushBitmap(RenderGroup, &GameState->Sword, V3(0, 0, 0));
-                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), V4(1, 1, 1, ShadowAlpha));
+                    PushBitmap(RenderGroup, &GameState->Sword, V3(0, 0, 0), 1.f);
+                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), 1.f, V4(1, 1, 1, ShadowAlpha));
                     break;
                 }
 
@@ -1383,9 +1386,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                     }
 
                     r32 SinBob = Sin(4.0f * Entity->tBob);
-                    PushBitmap(RenderGroup, &GameState->Familiar, V3(0, 0, 0.25f * SinBob));
+                    PushBitmap(RenderGroup, &GameState->Familiar, V3(0, 0, 0.25f * SinBob), 2.f);
 
-                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0),
+                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), 2.f,
                                V4(1, 1, 1, (0.5f * ShadowAlpha) + 0.2f * SinBob));
                     break;
                 }
@@ -1394,13 +1397,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
                     if (Entity->HitPointMax < 1)
                     {
-                        PushBitmap(RenderGroup, &GameState->MonsterDead, V3(0, 0, 0));
+                        PushBitmap(RenderGroup, &GameState->MonsterDead, V3(0, 0, 0), 5.f);
                     } else
                     {
-                        PushBitmap(RenderGroup, &GameState->Monster, V3(0, 0, 0));
+                        PushBitmap(RenderGroup, &GameState->Monster, V3(0, 0, 0), 5.f);
                     }
 
-                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), V4(1, 1, 1, ShadowAlpha));
+                    PushBitmap(RenderGroup, &GameState->HeroShadow, V3(0, 0, 0), 1.f, V4(1, 1, 1, ShadowAlpha));
 
                     DrawHitPoints(Entity, RenderGroup);
                     break;

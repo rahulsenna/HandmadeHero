@@ -6,7 +6,9 @@
 
 struct loaded_bitmap
 {
-    v2    Align;
+    v2  AlignPercentage;
+    r32 WidthOverHeight;
+
     void *Memory;
     s32   Width;
     s32   Height;
@@ -48,6 +50,7 @@ struct render_entry_bitmap
     loaded_bitmap *     Bitmap;
     render_entity_basis EntityBasis;
     v4                  Color;
+    v2                  Size;
 };
 
 struct render_entry_rectangle
@@ -81,8 +84,6 @@ struct render_entry_coordinate_system
 struct render_group
 {
     render_basis *DefaultBasis;
-
-    r32 MetersToPixel;
 
     u32 MaxPushBufferSize;
     u32 PushBufferSize;

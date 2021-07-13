@@ -8,7 +8,7 @@
 #define BLUE_PLACE  0
 
 static v2
-GetRenderEntityBasisP(render_group *RenderGroup, v2 &ScreenCenter, render_entry_rectangle *Entry);
+GetRenderEntityBasisP(render_group *RenderGroup, v2 &ScreenCenter, render_entry_rectangle *Entry, r32 MetersToPixel);
 
 #else
 #define RED_PLACE   0
@@ -507,23 +507,24 @@ struct entity_basis_p_result
 };
 
 inline entity_basis_p_result
-GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenCenter, render_entity_basis *EntityBasis)
+GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenDim, render_entity_basis *EntityBasis, r32 MetersToPixel)
 {
     entity_basis_p_result Result = {};
 
-    v3  EntityBaseP               = EntityBasis->Basis->P * RenderGroup->MetersToPixel;
-    r32 FocalLength               = 20.f * RenderGroup->MetersToPixel;
-    r32 CameraDistanceAboveGround = 20.f * RenderGroup->MetersToPixel;
+    v3  EntityBaseP               = EntityBasis->Basis->P;
+    r32 FocalLength               = 6.f;
+    r32 CameraDistanceAboveGround = 5.f;
     r32 DistanceToPz              = CameraDistanceAboveGround - EntityBaseP.z;
-    r32 NearClipPlane             = .2f * RenderGroup->MetersToPixel;
+    r32 NearClipPlane             = .2f;
     v3  RealXY                    = V3((EntityBaseP.xy + EntityBasis->Offset.xy), 1.f);
 
     if (DistanceToPz > NearClipPlane)
     {
-        v3 ProjectedXY = (1.f / DistanceToPz) * FocalLength * RealXY;
-        Result.P       = ScreenCenter + ProjectedXY.xy;
-        Result.Scale   = ProjectedXY.z;
-        Result.Valid   = true;
+        v2 ScreenCenter = ScreenDim * .5f;
+        v3 ProjectedXY  = (1.f / DistanceToPz) * FocalLength * RealXY;
+        Result.P        = ScreenCenter + ProjectedXY.xy * MetersToPixel;
+        Result.Scale    = ProjectedXY.z * MetersToPixel;
+        Result.Valid    = true;
     }
 
     return Result;
@@ -532,9 +533,11 @@ GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenCenter, render_entity_
 internal void
 RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 {
-    r32 PixelsToMeter = 1.f / RenderGroup->MetersToPixel;
-    v2  ScreenCenter  = {0.5f * (r32) OutputTarget->Width,
-                       0.5f * (r32) OutputTarget->Height};
+    v2  ScreenDim     = {(r32) OutputTarget->Width,
+                    (r32) OutputTarget->Height};
+    
+    r32 MetersToPixel = ScreenDim.x / 23.f;//42.f;
+    r32 PixelsToMeter = 1.f / MetersToPixel;
 
     for (u32 BaseAddress = 0;
          BaseAddress < RenderGroup->PushBufferSize;)
@@ -559,7 +562,7 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 render_entry_rectangle *Entry = (render_entry_rectangle *) Data;
                 BaseAddress += sizeof(*Entry);
 
-                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenCenter, &Entry->EntityBasis);
+                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenDim, &Entry->EntityBasis, MetersToPixel);
                 DrawRectangle(OutputTarget, Basis.P, Basis.P + Basis.Scale * Entry->Dim, Entry->Color);
 
                 break;
@@ -570,15 +573,15 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 BaseAddress += sizeof(*Entry);
 #if 1
 
-                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenCenter, &Entry->EntityBasis);
+                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenDim, &Entry->EntityBasis, MetersToPixel);
                 Assert(Entry->Bitmap);
 
 #if 0
                 DrawBitmap(OutputTarget, Entry->Bitmap, P.x, P.y, Entry->Color.a);
 #else
                 DrawRectangleSlowly(OutputTarget, Basis.P,
-                                    Basis.Scale * V2i(Entry->Bitmap->Width, 0),
-                                    Basis.Scale * V2i(0, Entry->Bitmap->Height),
+                                    Basis.Scale * V2(Entry->Size.x, 0),
+                                    Basis.Scale * V2(0, Entry->Size.y),
                                     Entry->Color, Entry->Bitmap, 0, 0, 0, 0, PixelsToMeter);
 #endif
 #endif
@@ -622,14 +625,13 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 }
 
 internal render_group *
-         AllocateRenderGroup(memory_arena *Arena, u32 MaxPushBufferSize, r32 MetersToPixel)
+         AllocateRenderGroup(memory_arena *Arena, u32 MaxPushBufferSize)
 {
     render_group *Result = PushStruct(Arena, render_group);
 
     Result->PushBufferBase    = (u8 *) PushSize(Arena, MaxPushBufferSize);
     Result->DefaultBasis      = PushStruct(Arena, render_basis);
     Result->DefaultBasis->P   = V3(0, 0, 0);
-    Result->MetersToPixel     = MetersToPixel;
     Result->MaxPushBufferSize = MaxPushBufferSize;
     Result->PushBufferSize    = 0;
     Result->GlobalAlpha       = 1.f;
@@ -638,14 +640,18 @@ internal render_group *
 }
 
 inline void
-PushBitmap(render_group *Group, loaded_bitmap *Bitmap, v3 Offset, v4 Color = V4(1, 1, 1, 1))
+PushBitmap(render_group *Group, loaded_bitmap *Bitmap, v3 Offset, r32 Height, v4 Color = V4(1, 1, 1, 1))
 {
     render_entry_bitmap *Entry = PushRenderElement(Group, render_entry_bitmap);
     if (Entry)
     {
-        Entry->EntityBasis.Basis  = Group->DefaultBasis;
-        Entry->Bitmap             = Bitmap;
-        Entry->EntityBasis.Offset = Group->MetersToPixel * Offset - V3(Bitmap->Align, 0);
+        Entry->EntityBasis.Basis = Group->DefaultBasis;
+        Entry->Bitmap            = Bitmap;
+        Entry->Size              = V2(Height * Bitmap->WidthOverHeight, Height);
+
+        v2 Align = Hadamard(Bitmap->AlignPercentage, Entry->Size);
+
+        Entry->EntityBasis.Offset = Offset - V3(Align, 0);
         Entry->Color              = Color * Group->GlobalAlpha;
     }
 }
@@ -657,9 +663,9 @@ PushRect(render_group *Group, v3 Offset, v2 Dim, v4 Color = V4(1, 1, 1, 1))
     if (Piece)
     {
         Piece->EntityBasis.Basis  = Group->DefaultBasis;
-        Piece->EntityBasis.Offset = Group->MetersToPixel * (Offset - V3(0.5f * Dim, 0));
+        Piece->EntityBasis.Offset = (Offset - V3(0.5f * Dim, 0));
         Piece->Color              = Color;
-        Piece->Dim                = Group->MetersToPixel * Dim;
+        Piece->Dim                = Dim;
     }
 }
 
