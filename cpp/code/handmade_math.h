@@ -451,6 +451,13 @@ V2i(u32 X, u32 Y)
 }
 
 inline v2
+GetDim(rectangle2 Rect)
+{
+    v2 Result = Rect.Max - Rect.Min;
+    return (Result);
+}
+
+inline v2
 GetMinCorner(rectangle2 Rect)
 {
     v2 Result = Rect.Min;
@@ -572,6 +579,13 @@ inline v3
 GetMaxCorner(rectangle3 Rect)
 {
     v3 Result = Rect.Max;
+    return (Result);
+}
+
+inline v3
+GetDim(rectangle3 Rect)
+{
+    v3 Result = Rect.Max - Rect.Min;
     return (Result);
 }
 

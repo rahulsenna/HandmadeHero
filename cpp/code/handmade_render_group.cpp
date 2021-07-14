@@ -507,23 +507,21 @@ struct entity_basis_p_result
 };
 
 inline entity_basis_p_result
-GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenDim, render_entity_basis *EntityBasis, r32 MetersToPixel)
+GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenDim, render_entity_basis *EntityBasis)
 {
     entity_basis_p_result Result = {};
 
-    v3  EntityBaseP               = EntityBasis->Basis->P;
-    r32 FocalLength               = 6.f;
-    r32 CameraDistanceAboveGround = 5.f;
-    r32 DistanceToPz              = CameraDistanceAboveGround - EntityBaseP.z;
-    r32 NearClipPlane             = .2f;
-    v3  RealXY                    = V3((EntityBaseP.xy + EntityBasis->Offset.xy), 1.f);
+    v3  EntityBaseP   = EntityBasis->Basis->P;
+    r32 DistanceToPz  = RenderGroup->RenderCamera.DistanceAboveGround - EntityBaseP.z;
+    r32 NearClipPlane = .2f;
+    v3  RawXY         = V3((EntityBaseP.xy + EntityBasis->Offset.xy), 1.f);
 
     if (DistanceToPz > NearClipPlane)
     {
         v2 ScreenCenter = ScreenDim * .5f;
-        v3 ProjectedXY  = (1.f / DistanceToPz) * FocalLength * RealXY;
-        Result.P        = ScreenCenter + ProjectedXY.xy * MetersToPixel;
-        Result.Scale    = ProjectedXY.z * MetersToPixel;
+        v3 ProjectedXY  = (1.f / DistanceToPz) * RenderGroup->RenderCamera.FocalLength * RawXY;
+        Result.P        = ScreenCenter + ProjectedXY.xy * RenderGroup->MetersToPixel;
+        Result.Scale    = ProjectedXY.z * RenderGroup->MetersToPixel;
         Result.Valid    = true;
     }
 
@@ -533,11 +531,10 @@ GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenDim, render_entity_bas
 internal void
 RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 {
-    v2  ScreenDim     = {(r32) OutputTarget->Width,
+    v2 ScreenDim = {(r32) OutputTarget->Width,
                     (r32) OutputTarget->Height};
-    
-    r32 MetersToPixel = ScreenDim.x / 23.f;//42.f;
-    r32 PixelsToMeter = 1.f / MetersToPixel;
+
+    r32 PixelsToMeter = 1.f / RenderGroup->MetersToPixel;
 
     for (u32 BaseAddress = 0;
          BaseAddress < RenderGroup->PushBufferSize;)
@@ -562,7 +559,7 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 render_entry_rectangle *Entry = (render_entry_rectangle *) Data;
                 BaseAddress += sizeof(*Entry);
 
-                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenDim, &Entry->EntityBasis, MetersToPixel);
+                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenDim, &Entry->EntityBasis);
                 DrawRectangle(OutputTarget, Basis.P, Basis.P + Basis.Scale * Entry->Dim, Entry->Color);
 
                 break;
@@ -573,7 +570,7 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 BaseAddress += sizeof(*Entry);
 #if 1
 
-                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenDim, &Entry->EntityBasis, MetersToPixel);
+                entity_basis_p_result Basis = GetRenderEntityBasisP(RenderGroup, ScreenDim, &Entry->EntityBasis);
                 Assert(Entry->Bitmap);
 
 #if 0
@@ -625,17 +622,24 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 }
 
 internal render_group *
-         AllocateRenderGroup(memory_arena *Arena, u32 MaxPushBufferSize)
+         AllocateRenderGroup(memory_arena *Arena, u32 MaxPushBufferSize, u32 ResolutionPixelX, u32 ResolutionPixelY)
 {
     render_group *Result = PushStruct(Arena, render_group);
 
-    Result->PushBufferBase    = (u8 *) PushSize(Arena, MaxPushBufferSize);
-    Result->DefaultBasis      = PushStruct(Arena, render_basis);
-    Result->DefaultBasis->P   = V3(0, 0, 0);
-    Result->MaxPushBufferSize = MaxPushBufferSize;
-    Result->PushBufferSize    = 0;
-    Result->GlobalAlpha       = 1.f;
+    Result->PushBufferBase                   = (u8 *) PushSize(Arena, MaxPushBufferSize);
+    Result->DefaultBasis                     = PushStruct(Arena, render_basis);
+    Result->DefaultBasis->P                  = V3(0, 0, 0);
+    Result->MaxPushBufferSize                = MaxPushBufferSize;
+    Result->PushBufferSize                   = 0;
+    Result->GlobalAlpha                      = 1.f;
+    Result->GameCamera.FocalLength           = .6f;
+    Result->GameCamera.DistanceAboveGround   = 9.f;
+    Result->RenderCamera                     = Result->GameCamera;
+    Result->RenderCamera.DistanceAboveGround = 30.f;
 
+    Result->MetersToPixel          = (r32) ResolutionPixelX * 0.625f;
+    r32 PixelsToMeter              = 1.f / Result->MetersToPixel;
+    Result->MonitorHalfDimInMeters = V2(.5f * ResolutionPixelX * PixelsToMeter, .5f * ResolutionPixelY * PixelsToMeter);
     return (Result);
 }
 
@@ -708,4 +712,29 @@ GetCoordinateSystem(render_group *Group, v2 Origin, v2 XAxis, v2 YAxis, v4 Color
         Piece->Bottom    = Bottom;
     }
     return (Piece);
+}
+
+inline v2
+Unproject(render_group *Group, v2 ProjectedXY, r32 AtDistanceFromCamera)
+{
+    v2 WorldXY = (AtDistanceFromCamera / Group->GameCamera.FocalLength) * ProjectedXY;
+    return (WorldXY);
+}
+
+inline rectangle2
+GetCameraRectangleAtDistance(render_group *Group, r32 DistanceFromCamera)
+{
+    rectangle2 Result;
+
+    v2 RawXY = Unproject(Group, Group->MonitorHalfDimInMeters, DistanceFromCamera);
+
+    Result = RectCenterHalfDim(V2(0, 0), RawXY);
+    return (Result);
+}
+
+inline rectangle2
+GetCameraRectangleAtTarget(render_group *Group)
+{
+    rectangle2 Result = GetCameraRectangleAtDistance(Group, Group->GameCamera.DistanceAboveGround);
+    return (Result);
 }

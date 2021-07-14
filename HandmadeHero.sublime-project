@@ -1,0 +1,30 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+		},
+	],
+	"build_systems":
+    [
+        {
+        	"cancel": {"kill": true,},
+            "name": "Build",
+		    "file_regex": "^.*(^.*)\\((\\d*),(\\d*)\\)\\s*:\\s*(.*)", 
+		    "line_regex": "^.*\\((\\d*),(\\d*)\\)\\s*:\\s*(.*)",
+		    "working_dir": "${project_path}",
+			"cmd": "${project_path}\\misc\\build.bat",        
+            // "selector": "source.c++",
+        }
+	],
+	"settings":
+	{
+		"LSP":
+		{
+			"LSP-pylsp":
+			{
+				"enabled": false,
+			},
+		},
+	},
+}

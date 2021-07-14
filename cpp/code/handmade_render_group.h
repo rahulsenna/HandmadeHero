@@ -81,8 +81,21 @@ struct render_entry_coordinate_system
     environment_map *Bottom;
 };
 
+struct render_group_camera
+{
+    r32 FocalLength;
+    r32 DistanceAboveGround;
+};
+
 struct render_group
 {
+    render_group_camera GameCamera;
+    render_group_camera RenderCamera;
+
+    v2 MonitorHalfDimInMeters;
+
+    r32 MetersToPixel;
+
     render_basis *DefaultBasis;
 
     u32 MaxPushBufferSize;
