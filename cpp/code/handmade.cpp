@@ -471,71 +471,73 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
 
     GroundBuffer->P = *ChunkP;
 
-    r32 Width   = GameState->World->ChunkDimInMeters.x;
-    r32 Height  = GameState->World->ChunkDimInMeters.y;
-    v2  HalfDim = .5f * V2(Width, Height);
-    HalfDim = 2.f * HalfDim;
-
-    for (s32 ChunkOffsetY = -1;
-         ChunkOffsetY <= 1;
-         ++ChunkOffsetY)
-    {
-        for (s32 ChunkOffsetX = -1;
-             ChunkOffsetX <= 1;
-             ++ChunkOffsetX)
+#if 0
+        r32 Width   = GameState->World->ChunkDimInMeters.x;
+        r32 Height  = GameState->World->ChunkDimInMeters.y;
+        v2  HalfDim = .5f * V2(Width, Height);
+        HalfDim = 2.f * HalfDim;
+    
+        for (s32 ChunkOffsetY = -1;
+             ChunkOffsetY <= 1;
+             ++ChunkOffsetY)
         {
-            s32 ChunkX = ChunkP->ChunkX + ChunkOffsetX;
-            s32 ChunkY = ChunkP->ChunkY + ChunkOffsetY;
-            s32 ChunkZ = ChunkP->ChunkZ;
-
-            random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
-
-            v2 Center = V2(ChunkOffsetX * Width, ChunkOffsetY * Height);
-
-            for (u32 GrassIndex = 0; GrassIndex < 100; ++GrassIndex)
+            for (s32 ChunkOffsetX = -1;
+                 ChunkOffsetX <= 1;
+                 ++ChunkOffsetX)
             {
-                loaded_bitmap *Stamp;
-                if (RandomChoice(&Series, 2))
+                s32 ChunkX = ChunkP->ChunkX + ChunkOffsetX;
+                s32 ChunkY = ChunkP->ChunkY + ChunkOffsetY;
+                s32 ChunkZ = ChunkP->ChunkZ;
+    
+                random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
+    
+                v2 Center = V2(ChunkOffsetX * Width, ChunkOffsetY * Height);
+    
+                for (u32 GrassIndex = 0; GrassIndex < 100; ++GrassIndex)
                 {
-                    Stamp = GameState->Grass + (RandomChoice(&Series, ArrayCount(GameState->Grass)));
-                } else
-                {
-                    Stamp = GameState->Ground + (RandomChoice(&Series, ArrayCount(GameState->Ground)));
+                    loaded_bitmap *Stamp;
+                    if (RandomChoice(&Series, 2))
+                    {
+                        Stamp = GameState->Grass + (RandomChoice(&Series, ArrayCount(GameState->Grass)));
+                    } else
+                    {
+                        Stamp = GameState->Ground + (RandomChoice(&Series, ArrayCount(GameState->Ground)));
+                    }
+                    v2 P = Center + Hadamard(HalfDim, V2(RandomBilateral(&Series), RandomBilateral(&Series)));
+                    PushBitmap(RenderGroup, Stamp, V3(P, 0.f), 4.f);
                 }
-                v2 P = Center + Hadamard(HalfDim, V2(RandomBilateral(&Series), RandomBilateral(&Series)));
-                PushBitmap(RenderGroup, Stamp, V3(P, 0.f), 4.f);
             }
         }
-    }
-
-    for (s32 ChunkOffsetY = -1;
-         ChunkOffsetY <= 1;
-         ++ChunkOffsetY)
-    {
-        for (s32 ChunkOffsetX = -1;
-             ChunkOffsetX <= 1;
-             ++ChunkOffsetX)
+    
+        for (s32 ChunkOffsetY = -1;
+             ChunkOffsetY <= 1;
+             ++ChunkOffsetY)
         {
-            s32 ChunkX = ChunkP->ChunkX + ChunkOffsetX;
-            s32 ChunkY = ChunkP->ChunkY + ChunkOffsetY;
-            s32 ChunkZ = ChunkP->ChunkZ;
-
-            random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
-
-            v2 Center = V2(ChunkOffsetX * Width, ChunkOffsetY * Height);
-
-            for (u32 GrassIndex = 0; GrassIndex < 20; ++GrassIndex)
+            for (s32 ChunkOffsetX = -1;
+                 ChunkOffsetX <= 1;
+                 ++ChunkOffsetX)
             {
-                loaded_bitmap *Stamp;
-
-                Stamp = GameState->Tuft + (RandomChoice(&Series, ArrayCount(GameState->Tuft)));
-
-                v2 P = Center + Hadamard(HalfDim, V2(RandomBilateral(&Series), RandomBilateral(&Series)));
-                PushBitmap(RenderGroup, Stamp, V3(P, 0.f), .4f);
+                s32 ChunkX = ChunkP->ChunkX + ChunkOffsetX;
+                s32 ChunkY = ChunkP->ChunkY + ChunkOffsetY;
+                s32 ChunkZ = ChunkP->ChunkZ;
+    
+                random_series Series = Seed(139 * ChunkX + 425 * ChunkY + 513 * ChunkZ);
+    
+                v2 Center = V2(ChunkOffsetX * Width, ChunkOffsetY * Height);
+    
+                for (u32 GrassIndex = 0; GrassIndex < 20; ++GrassIndex)
+                {
+                    loaded_bitmap *Stamp;
+    
+                    Stamp = GameState->Tuft + (RandomChoice(&Series, ArrayCount(GameState->Tuft)));
+    
+                    v2 P = Center + Hadamard(HalfDim, V2(RandomBilateral(&Series), RandomBilateral(&Series)));
+                    PushBitmap(RenderGroup, Stamp, V3(P, 0.f), .4f);
+                }
             }
         }
-    }
 
+#endif
     RenderGroupToOutput(RenderGroup, Buffer);
     EndTempMemory(RenderMemory);
 }
@@ -663,10 +665,18 @@ RequestGroundBuffers(world_position CenterP, rectangle3 Bounds)
 
 #endif
 
+#if HANDMADE_INTERNAL
+game_memory *DebugGlobalMemory;
+#endif
+
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
+    BEGIN_TIMED_BLOCK(GameUpdateAndRender);
     Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
 
+#if HANDMADE_INTERNAL
+    DebugGlobalMemory = Memory;
+#endif
     u32 GroundBufferWidth  = 256;
     u32 GroundBufferHeight = 256;
 
@@ -1145,14 +1155,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             if (Delta.z >= -1.f && Delta.z <= 1.f)
             {
                 render_basis *Basis       = PushStruct(&TranState->TranArena, render_basis);
-                            RenderGroup->DefaultBasis = Basis;
-                
-                            Basis->P               = Delta;
-                            r32 GroundSideInMeters = World->ChunkDimInMeters.x;
-                            PushBitmap(RenderGroup, Bitmap, V3(0, 0, 0), GroundSideInMeters);
-                #if 1
-                            PushRectOutline(RenderGroup, V3(0, 0, 0), V2(GroundSideInMeters, GroundSideInMeters), V4(1.0f, 1.0f, 0.0f, 1.0f));
-                #endif
+                RenderGroup->DefaultBasis = Basis;
+
+                Basis->P               = Delta;
+                r32 GroundSideInMeters = World->ChunkDimInMeters.x;
+                PushBitmap(RenderGroup, Bitmap, V3(0, 0, 0), GroundSideInMeters);
+#if 1
+                PushRectOutline(RenderGroup, V3(0, 0, 0), V2(GroundSideInMeters, GroundSideInMeters), V4(1.0f, 1.0f, 0.0f, 1.0f));
+#endif
             }
         }
     }
@@ -1539,6 +1549,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
     CheckArena(&GameState->WorldArena);
     CheckArena(&TranState->TranArena);
+
+    END_TIMED_BLOCK(GameUpdateAndRender);
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)

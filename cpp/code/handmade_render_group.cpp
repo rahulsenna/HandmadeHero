@@ -151,6 +151,8 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                     environment_map *Bottom,
                     r32              PixelsToMeter)
 {
+    BEGIN_TIMED_BLOCK(DrawRectangleSlowly);
+
     Color.rgb *= Color.a;
 
     r32 XAxisLength = Length(XAxis);
@@ -214,6 +216,8 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
 
         for (s32 X = MinX; X < MaxX; ++X)
         {
+            BEGIN_TIMED_BLOCK(TestPixel);
+
             v2 PixelP = V2i(X, Y);
             v2 d      = PixelP - Origin;
 
@@ -227,6 +231,8 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                 (EdgeTest2 < 0) &&
                 (EdgeTest3 < 0))
             {
+                BEGIN_TIMED_BLOCK(FillPixel);
+
                 v2 ScreenSpaceUV = V2(InvWidthMax * X, FixedCastY);
 
                 r32 ZDiff = PixelsToMeter * ((r32) Y - OriginY);
@@ -252,62 +258,64 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                 bilinear_sample TexelSample = BilenearSample(Texture, X, Y);
                 v4              Texel       = SRGBBilinearBlend(TexelSample, fX, fY);
 
-                if (NormalMap)
-                {
-                    bilinear_sample NormalSample = BilenearSample(NormalMap, X, Y);
-
-                    v4 NormalA = UnPack(NormalSample.A);
-                    v4 NormalB = UnPack(NormalSample.B);
-                    v4 NormalC = UnPack(NormalSample.C);
-                    v4 NormalD = UnPack(NormalSample.D);
-
-                    v4 Normal = Lerp(Lerp(NormalA, fX, NormalB),
-                                     fY,
-                                     Lerp(NormalC, fX, NormalD));
-
-                    Normal = UnscaledAndBiasNormal(Normal);
-
-                    Normal.xy = Normal.x * NxAxis + Normal.y * NyAxis;
-                    Normal.z *= NZScale;
-                    Normal.xyz = Normalize(Normal.xyz);
-
-                    v3 BoundDirection = 2.f * Normal.z * Normal.xyz;
-                    BoundDirection.z -= 1.f;
-
-                    BoundDirection.z = -BoundDirection.z;
-
-                    environment_map *FarMap = 0;
-
-                    r32 Pz      = OriginZ + ZDiff;
-                    r32 MapZ    = 1.f;
-                    r32 tEnvMap = BoundDirection.y;
-                    r32 tFarMap = 0.f;
-
-                    if (tEnvMap < -.5f)
+#if 0
+                    if (NormalMap)
                     {
-                        FarMap  = Bottom;
-                        tFarMap = -2.f * tEnvMap - 1.f;
-                    } else if (tEnvMap > 0.5f)
-                    {
-                        FarMap  = Top;
-                        tFarMap = 2.f * (tEnvMap - .5f);
+                        bilinear_sample NormalSample = BilenearSample(NormalMap, X, Y);
+    
+                        v4 NormalA = UnPack(NormalSample.A);
+                        v4 NormalB = UnPack(NormalSample.B);
+                        v4 NormalC = UnPack(NormalSample.C);
+                        v4 NormalD = UnPack(NormalSample.D);
+    
+                        v4 Normal = Lerp(Lerp(NormalA, fX, NormalB),
+                                         fY,
+                                         Lerp(NormalC, fX, NormalD));
+    
+                        Normal = UnscaledAndBiasNormal(Normal);
+    
+                        Normal.xy = Normal.x * NxAxis + Normal.y * NyAxis;
+                        Normal.z *= NZScale;
+                        Normal.xyz = Normalize(Normal.xyz);
+    
+                        v3 BoundDirection = 2.f * Normal.z * Normal.xyz;
+                        BoundDirection.z -= 1.f;
+    
+                        BoundDirection.z = -BoundDirection.z;
+    
+                        environment_map *FarMap = 0;
+    
+                        r32 Pz      = OriginZ + ZDiff;
+                        r32 MapZ    = 1.f;
+                        r32 tEnvMap = BoundDirection.y;
+                        r32 tFarMap = 0.f;
+    
+                        if (tEnvMap < -.5f)
+                        {
+                            FarMap  = Bottom;
+                            tFarMap = -2.f * tEnvMap - 1.f;
+                        } else if (tEnvMap > 0.5f)
+                        {
+                            FarMap  = Top;
+                            tFarMap = 2.f * (tEnvMap - .5f);
+                        }
+                        tFarMap *= tFarMap;
+                        tFarMap *= tFarMap;
+    
+                        v3 LightColor = V3(0, 0, 0);// SampleEnvironmentMap(ScreenSpaceUV, Normal.rgb, Normal.w, Middle);
+    
+                        if (FarMap)
+                        {
+                            r32 DistanceFromMapInZ = FarMap->Pz - Pz;
+    
+                            v3 FarColorMap = SampleEnvironmentMap(ScreenSpaceUV, BoundDirection, Normal.w, FarMap, DistanceFromMapInZ);
+                            LightColor     = Lerp(LightColor, tFarMap, FarColorMap);
+                        }
+    
+                        Texel.rgb = Texel.rgb + Texel.a * LightColor;
                     }
-                    tFarMap *= tFarMap;
-                    tFarMap *= tFarMap;
-
-                    v3 LightColor = V3(0, 0, 0);// SampleEnvironmentMap(ScreenSpaceUV, Normal.rgb, Normal.w, Middle);
-
-                    if (FarMap)
-                    {
-                        r32 DistanceFromMapInZ = FarMap->Pz - Pz;
-
-                        v3 FarColorMap = SampleEnvironmentMap(ScreenSpaceUV, BoundDirection, Normal.w, FarMap, DistanceFromMapInZ);
-                        LightColor     = Lerp(LightColor, tFarMap, FarColorMap);
-                    }
-
-                    Texel.rgb = Texel.rgb + Texel.a * LightColor;
-                }
-
+    
+#endif
                 Texel   = Hadamard(Texel, Color);
                 Texel.r = Clamp01(Texel.r);
                 Texel.g = Clamp01(Texel.g);
@@ -327,11 +335,15 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                           ((u32) (Blended255.g + 0.5f) << GREEN_PLACE) |
                           ((u32) (Blended255.b + 0.5f) << BLUE_PLACE)) |
                          ((u32) (Blended255.a + 0.5f) << 24);
+                END_TIMED_BLOCK(FillPixel);
             }
             ++Pixel;
+
+            END_TIMED_BLOCK(TestPixel);
         }
         Row += Buffer->Pitch;
     }
+    END_TIMED_BLOCK(DrawRectangleSlowly);
 }
 
 internal void
@@ -531,6 +543,7 @@ GetRenderEntityBasisP(render_group *RenderGroup, v2 ScreenDim, render_entity_bas
 internal void
 RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
 {
+    BEGIN_TIMED_BLOCK(RenderGroupToOutput);
     v2 ScreenDim = {(r32) OutputTarget->Width,
                     (r32) OutputTarget->Height};
 
@@ -619,6 +632,8 @@ RenderGroupToOutput(render_group *RenderGroup, loaded_bitmap *OutputTarget)
                 InvalidDefaultCase;
         }
     }
+
+    END_TIMED_BLOCK(RenderGroupToOutput);
 }
 
 internal render_group *
@@ -626,15 +641,15 @@ internal render_group *
 {
     render_group *Result = PushStruct(Arena, render_group);
 
-    Result->PushBufferBase                   = (u8 *) PushSize(Arena, MaxPushBufferSize);
-    Result->DefaultBasis                     = PushStruct(Arena, render_basis);
-    Result->DefaultBasis->P                  = V3(0, 0, 0);
-    Result->MaxPushBufferSize                = MaxPushBufferSize;
-    Result->PushBufferSize                   = 0;
-    Result->GlobalAlpha                      = 1.f;
-    Result->GameCamera.FocalLength           = .6f;
-    Result->GameCamera.DistanceAboveGround   = 9.f;
-    Result->RenderCamera                     = Result->GameCamera;
+    Result->PushBufferBase                 = (u8 *) PushSize(Arena, MaxPushBufferSize);
+    Result->DefaultBasis                   = PushStruct(Arena, render_basis);
+    Result->DefaultBasis->P                = V3(0, 0, 0);
+    Result->MaxPushBufferSize              = MaxPushBufferSize;
+    Result->PushBufferSize                 = 0;
+    Result->GlobalAlpha                    = 1.f;
+    Result->GameCamera.FocalLength         = .6f;
+    Result->GameCamera.DistanceAboveGround = 9.f;
+    Result->RenderCamera                   = Result->GameCamera;
     // Result->RenderCamera.DistanceAboveGround = 39.f;
 
     Result->MetersToPixel          = (r32) ResolutionPixelX * 0.625f;
