@@ -39,6 +39,10 @@ struct v2
         {
             r32 x, y;
         };
+        struct
+        {
+            r32 u, v;
+        };
         r32 E[2];
     };
 };
@@ -59,6 +63,11 @@ struct v3
 
         struct
         {
+            r32 u, v, w;
+        };
+
+        struct
+        {
             v2  xy;
             r32 Ignore0_;
         };
@@ -67,6 +76,18 @@ struct v3
         {
             r32 Ignore1_;
             v2  yz;
+        };
+
+        struct
+        {
+            v2  uv;
+            r32 Ignore2_;
+        };
+
+        struct
+        {
+            v2  vw;
+            r32 Ignore3_;
         };
         r32 e[3];
     };

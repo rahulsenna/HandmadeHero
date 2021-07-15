@@ -635,7 +635,7 @@ internal render_group *
     Result->GameCamera.FocalLength           = .6f;
     Result->GameCamera.DistanceAboveGround   = 9.f;
     Result->RenderCamera                     = Result->GameCamera;
-    Result->RenderCamera.DistanceAboveGround = 30.f;
+    // Result->RenderCamera.DistanceAboveGround = 39.f;
 
     Result->MetersToPixel          = (r32) ResolutionPixelX * 0.625f;
     r32 PixelsToMeter              = 1.f / Result->MetersToPixel;
