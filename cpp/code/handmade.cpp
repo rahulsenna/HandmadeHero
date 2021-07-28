@@ -1012,7 +1012,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         GameState->TestDiffuse = MakeEmptyBitmap(&TranState->TranArena, 256, 256);
         DrawRectangle(&GameState->TestDiffuse, V2(0, 0), V2i(GameState->TestDiffuse.Width, GameState->TestDiffuse.Height),
                       V4(.5f, .5f, .5f, 1.f));
-        GameState->TestNormal = MakeEmptyBitmap(&TranState->TranArena, GameState->TestDiffuse.Width, GameState->TestDiffuse.Height);
+        GameState->TestNormal = MakeEmptyBitmap(&TranState->TranArena, GameState->TestDiffuse.Width,
+                                                GameState->TestDiffuse.Height);
         MakeSphereNormalMap(&GameState->TestNormal, 0.f);
         MakeSphereDiffuseMap(&GameState->TestDiffuse);
 
@@ -1161,7 +1162,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 r32 GroundSideInMeters = World->ChunkDimInMeters.x;
                 PushBitmap(RenderGroup, Bitmap, V3(0, 0, 0), GroundSideInMeters);
 #if 1
-                PushRectOutline(RenderGroup, V3(0, 0, 0), V2(GroundSideInMeters, GroundSideInMeters), V4(1.0f, 1.0f, 0.0f, 1.0f));
+                PushRectOutline(RenderGroup, V3(0, 0, 0), V2(GroundSideInMeters, GroundSideInMeters),
+                                V4(1.0f, 1.0f, 0.0f, 1.0f));
 #endif
             }
         }
@@ -1525,7 +1527,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         XAxis = .5f * V2((r32) LOD->Width, 0);
         YAxis = .5f * V2(0, (r32) LOD->Height);
 
-        render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, MapP, XAxis, YAxis, V4(1, 1, 1, 1), LOD, 0, 0, 0, 0);
+        render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, MapP, 
+            XAxis, YAxis, V4(1, 1, 1, 1), LOD, 0, 0, 0, 0);
 
         MapP += YAxis + V2(0.f, 6.f);
     }

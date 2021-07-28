@@ -6,7 +6,8 @@ if not exist build mkdir build
 pushd build
 
 set Definitions=/DHANDMADE_SLOW=1 /DHANDMADE_INTERNAL=1 /DHANDMADE_WIN32=1
-set CommonCompilerFlags=%Definitions% /nologo /FC /WX /W4 /wd4100 /wd4089 /wd4068 /wd4505 /diagnostics:column /wd4456 /wd4201 /wd4100 /wd4505 /wd4189 /wd4457 /MTd /Oi /Ox /GR- /Gm- /EHa- /Zi
+set CommonCompilerFlags=%Definitions% /nologo /FC /WX /W4 /wd4100 /wd4089 /wd4068 /wd4505 /diagnostics:column /wd4456 /wd4201 /wd4100 /wd4505 /wd4189 /wd4457 ^
+/MTd /Oi /Ox /GR- /Gm- /EHa- /Zi
 set CommonLinkerFlags=-incremental:no -opt:ref user32.lib gdi32.lib winmm.lib
 
 rem 32-bit build

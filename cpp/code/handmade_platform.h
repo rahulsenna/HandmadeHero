@@ -116,6 +116,7 @@ enum
     DebugCylceCounter_GameUpdateAndRender,
     DebugCylceCounter_RenderGroupToOutput,
     DebugCylceCounter_DrawRectangleSlowly,
+    DebugCylceCounter_DrawRectangleHopefullyQuickly,
     DebugCylceCounter_TestPixel,
     DebugCylceCounter_FillPixel,
     DebugCylceCounter_Count,
