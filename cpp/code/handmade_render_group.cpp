@@ -170,8 +170,8 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAx
                    (RoundReal32ToUInt32(Color.g * 255.0f) << GREEN_PLACE) |
                    (RoundReal32ToUInt32(Color.b * 255.0f) << BLUE_PLACE));
 
-    s32 WidthMax  = (Buffer->Width - 1);
-    s32 HeightMax = (Buffer->Height - 1);
+    s32 WidthMax  = (Buffer->Width - 1) - 3;
+    s32 HeightMax = (Buffer->Height - 1) - 3;
 
     r32 InvWidthMax  = 1.f / (r32) WidthMax;
     r32 InvHeightMax = 1.f / (r32) HeightMax;
@@ -214,151 +214,225 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAx
     v2 nYAxis = YAxis * InvYAxisLengthSq;
 
     r32 Inv255 = 1.0f / 255.f;
+    r32 One255 = 255.f;
 
+    __m128 Inv255_4x = _mm_set1_ps(Inv255);
+    __m128 One255_4x = _mm_set1_ps(One255);
+
+    __m128 One  = _mm_set1_ps(1.0f);
+    __m128 Zero = _mm_set1_ps(0.0f);
+
+    __m128 Colorr_4x = _mm_set1_ps(Color.r);
+    __m128 Colorg_4x = _mm_set1_ps(Color.g);
+    __m128 Colorb_4x = _mm_set1_ps(Color.b);
+    __m128 Colora_4x = _mm_set1_ps(Color.a);
+
+    __m128 Originx_4x = _mm_set1_ps(Origin.x);
+    __m128 Originy_4x = _mm_set1_ps(Origin.y);
+
+    __m128 nXAxisx_4x = _mm_set1_ps(nXAxis.x);
+    __m128 nXAxisy_4x = _mm_set1_ps(nXAxis.y);
+    __m128 nYAxisx_4x = _mm_set1_ps(nYAxis.x);
+    __m128 nYAxisy_4x = _mm_set1_ps(nYAxis.y);
+
+#define mmSquare(a) _mm_mul_ps(a, a)
+#define M(a, i)     ((float *) &(a))[i]
+
+    BEGIN_TIMED_BLOCK(ProcessPixel);
     for (s32 Y = MinY; Y < MaxY; ++Y)
     {
         u32 *Pixel = (u32 *) Row;
 
-        for (s32 X = MinX; X < MaxX; ++X)
+        for (s32 XI = MinX; XI < MaxX; XI += 4)
         {
-            BEGIN_TIMED_BLOCK(TestPixel);
+            __m128 TexelAr = _mm_set1_ps(0.0f);
+            __m128 TexelAg = _mm_set1_ps(0.0f);
+            __m128 TexelAb = _mm_set1_ps(0.0f);
+            __m128 TexelAa = _mm_set1_ps(0.0f);
 
-            v2 PixelP = V2i(X, Y);
-            v2 d      = PixelP - Origin;
+            __m128 TexelBr = _mm_set1_ps(0.0f);
+            __m128 TexelBg = _mm_set1_ps(0.0f);
+            __m128 TexelBb = _mm_set1_ps(0.0f);
+            __m128 TexelBa = _mm_set1_ps(0.0f);
 
-            r32 U = DotProduct(nXAxis, d);
-            r32 V = DotProduct(d, nYAxis);
+            __m128 TexelCr = _mm_set1_ps(0.0f);
+            __m128 TexelCg = _mm_set1_ps(0.0f);
+            __m128 TexelCb = _mm_set1_ps(0.0f);
+            __m128 TexelCa = _mm_set1_ps(0.0f);
 
-            if ((U <= 1.f) &&
-                (U >= 0.f) &&
-                (V <= 1.f) &&
-                (V >= 0.f))
+            __m128 TexelDr = _mm_set1_ps(0.0f);
+            __m128 TexelDg = _mm_set1_ps(0.0f);
+            __m128 TexelDb = _mm_set1_ps(0.0f);
+            __m128 TexelDa = _mm_set1_ps(0.0f);
+
+            __m128 Destr = _mm_set1_ps(0.0f);
+            __m128 Destg = _mm_set1_ps(0.0f);
+            __m128 Destb = _mm_set1_ps(0.0f);
+            __m128 Desta = _mm_set1_ps(0.0f);
+
+            __m128 Blendedr = _mm_set1_ps(0.0f);
+            __m128 Blendedg = _mm_set1_ps(0.0f);
+            __m128 Blendedb = _mm_set1_ps(0.0f);
+            __m128 Blendeda = _mm_set1_ps(0.0f);
+
+            __m128 fX = _mm_set1_ps(0.0f);
+            __m128 fY = _mm_set1_ps(0.0f);
+
+            b32 ShouldFill[4];
+
+            __m128 PixelPx = _mm_set_ps((r32) (XI + 3),
+                                        (r32) (XI + 2),
+                                        (r32) (XI + 1),
+                                        (r32) (XI + 0));
+            __m128 PixelPy = _mm_set1_ps((r32) Y);
+
+            __m128 dX = _mm_sub_ps(PixelPx, Originx_4x);
+            __m128 dY = _mm_sub_ps(PixelPy, Originy_4x);
+
+            __m128 U = _mm_add_ps(_mm_mul_ps(nXAxisx_4x, dX), _mm_mul_ps(nXAxisy_4x, dY));
+            __m128 V = _mm_add_ps(_mm_mul_ps(nYAxisx_4x, dX), _mm_mul_ps(nYAxisy_4x, dY));
+
+            for (int I = 0; I < 4; ++I)
             {
-                BEGIN_TIMED_BLOCK(FillPixel);
+                ShouldFill[I] = ((M(U, I) <= 1.f) &&
+                                 (M(U, I) >= 0.f) &&
+                                 (M(V, I) <= 1.f) &&
+                                 (M(V, I) >= 0.f));
+                if (ShouldFill[I])
+                {
+                    r32 tX = 1.f + (M(U, I) * ((r32) (Texture->Width - 3)) + .5f);
+                    r32 tY = 1.f + (M(V, I) * ((r32) (Texture->Height - 3)) + .5f);
 
-                r32 tX = 1.f + (U * ((r32) (Texture->Width - 3)) + .5f);
-                r32 tY = 1.f + (V * ((r32) (Texture->Height - 3)) + .5f);
+                    s32 X = (s32) tX;
+                    s32 Y = (s32) tY;
 
-                s32 X = (s32) tX;
-                s32 Y = (s32) tY;
+                    M(fX, I) = tX - (r32) X;
+                    M(fY, I) = tY - (r32) Y;
 
-                r32 fX = tX - (r32) X;
-                r32 fY = tY - (r32) Y;
+                    Assert((X >= 0) && (X < Texture->Width));
+                    Assert((Y >= 0) && (Y < Texture->Height));
 
-                Assert((X >= 0) && (X < Texture->Width));
-                Assert((Y >= 0) && (Y < Texture->Height));
+                    //NOTE(rahul): Bilenear Sample
+                    u8 *TexelPtr = ((u8 *) Texture->Memory) + (Y * Texture->Pitch) + X * sizeof(u32);
 
-                //NOTE(rahul): Bilenear Sample
-                u8 *TexelPtr = ((u8 *) Texture->Memory) + (Y * Texture->Pitch) + X * sizeof(u32);
+                    u32 TexelSampleA = *(u32 *) TexelPtr;
+                    u32 TexelSampleB = *(u32 *) (TexelPtr + sizeof(u32));
+                    u32 TexelSampleC = *(u32 *) (TexelPtr + Texture->Pitch);
+                    u32 TexelSampleD = *(u32 *) (TexelPtr + Texture->Pitch + sizeof(u32));
 
-                u32 TexelSampleA = *(u32 *) TexelPtr;
-                u32 TexelSampleB = *(u32 *) (TexelPtr + sizeof(u32));
-                u32 TexelSampleC = *(u32 *) (TexelPtr + Texture->Pitch);
-                u32 TexelSampleD = *(u32 *) (TexelPtr + Texture->Pitch + sizeof(u32));
+                    //NOTE(rahul): Convert texture from sRGB to "linear" brightness space
+                    M(TexelAr, I) = (r32) ((TexelSampleA >> RED_PLACE) & 0xFF);
+                    M(TexelAg, I) = (r32) ((TexelSampleA >> GREEN_PLACE) & 0xFF);
+                    M(TexelAb, I) = (r32) ((TexelSampleA >> BLUE_PLACE) & 0xFF);
+                    M(TexelAa, I) = (r32) ((TexelSampleA >> 24) & 0xFF);
 
-                //NOTE(rahul): Convert texture from sRGB to "linear" brightness space
-                r32 TexelAr = (r32) ((TexelSampleA >> RED_PLACE) & 0xFF);
-                r32 TexelAg = (r32) ((TexelSampleA >> GREEN_PLACE) & 0xFF);
-                r32 TexelAb = (r32) ((TexelSampleA >> BLUE_PLACE) & 0xFF);
-                r32 TexelAa = (r32) ((TexelSampleA >> 24) & 0xFF);
+                    M(TexelBr, I) = (r32) ((TexelSampleB >> RED_PLACE) & 0xFF);
+                    M(TexelBg, I) = (r32) ((TexelSampleB >> GREEN_PLACE) & 0xFF);
+                    M(TexelBb, I) = (r32) ((TexelSampleB >> BLUE_PLACE) & 0xFF);
+                    M(TexelBa, I) = (r32) ((TexelSampleB >> 24) & 0xFF);
 
-                r32 TexelBr = (r32) ((TexelSampleB >> RED_PLACE) & 0xFF);
-                r32 TexelBg = (r32) ((TexelSampleB >> GREEN_PLACE) & 0xFF);
-                r32 TexelBb = (r32) ((TexelSampleB >> BLUE_PLACE) & 0xFF);
-                r32 TexelBa = (r32) ((TexelSampleB >> 24) & 0xFF);
+                    M(TexelCr, I) = (r32) ((TexelSampleC >> RED_PLACE) & 0xFF);
+                    M(TexelCg, I) = (r32) ((TexelSampleC >> GREEN_PLACE) & 0xFF);
+                    M(TexelCb, I) = (r32) ((TexelSampleC >> BLUE_PLACE) & 0xFF);
+                    M(TexelCa, I) = (r32) ((TexelSampleC >> 24) & 0xFF);
 
-                r32 TexelCr = (r32) ((TexelSampleC >> RED_PLACE) & 0xFF);
-                r32 TexelCg = (r32) ((TexelSampleC >> GREEN_PLACE) & 0xFF);
-                r32 TexelCb = (r32) ((TexelSampleC >> BLUE_PLACE) & 0xFF);
-                r32 TexelCa = (r32) ((TexelSampleC >> 24) & 0xFF);
+                    M(TexelDr, I) = (r32) ((TexelSampleD >> RED_PLACE) & 0xFF);
+                    M(TexelDg, I) = (r32) ((TexelSampleD >> GREEN_PLACE) & 0xFF);
+                    M(TexelDb, I) = (r32) ((TexelSampleD >> BLUE_PLACE) & 0xFF);
+                    M(TexelDa, I) = (r32) ((TexelSampleD >> 24) & 0xFF);
 
-                r32 TexelDr = (r32) ((TexelSampleD >> RED_PLACE) & 0xFF);
-                r32 TexelDg = (r32) ((TexelSampleD >> GREEN_PLACE) & 0xFF);
-                r32 TexelDb = (r32) ((TexelSampleD >> BLUE_PLACE) & 0xFF);
-                r32 TexelDa = (r32) ((TexelSampleD >> 24) & 0xFF);
-
-                TexelAr = Square(Inv255 * TexelAr);
-                TexelAg = Square(Inv255 * TexelAg);
-                TexelAb = Square(Inv255 * TexelAb);
-                TexelAa = Inv255 * TexelAa;
-
-                TexelBr = Square(Inv255 * TexelBr);
-                TexelBg = Square(Inv255 * TexelBg);
-                TexelBb = Square(Inv255 * TexelBb);
-                TexelBa = Inv255 * TexelBa;
-
-                TexelCr = Square(Inv255 * TexelCr);
-                TexelCg = Square(Inv255 * TexelCg);
-                TexelCb = Square(Inv255 * TexelCb);
-                TexelCa = Inv255 * TexelCa;
-
-                TexelDr = Square(Inv255 * TexelDr);
-                TexelDg = Square(Inv255 * TexelDg);
-                TexelDb = Square(Inv255 * TexelDb);
-                TexelDa = Inv255 * TexelDa;
-
-                //NOTE(rahul): Bilinear texture blend
-                r32 ifX = (1.f - fX);
-                r32 ifY = (1.f - fY);
-                r32 l0  = ifY * ifX;
-                r32 l1  = ifY * fX;
-                r32 l2  = fY * ifX;
-                r32 l3  = fY * fX;
-
-                r32 Texelr = l0 * TexelAr + l1 * TexelBr + l2 * TexelCr + l3 * TexelDr;
-                r32 Texelg = l0 * TexelAg + l1 * TexelBg + l2 * TexelCg + l3 * TexelDg;
-                r32 Texelb = l0 * TexelAb + l1 * TexelBb + l2 * TexelCb + l3 * TexelDb;
-                r32 Texela = l0 * TexelAa + l1 * TexelBa + l2 * TexelCa + l3 * TexelDa;
-
-                //NOTE(rahul): Modulate by incoming color
-                Texelr = Texelr * Color.r;
-                Texelg = Texelg * Color.g;
-                Texelb = Texelb * Color.b;
-                Texela = Texela * Color.a;
-
-                //NOTE(rahul): Clamp colors to valid range
-                Texelr = Clamp01(Texelr);
-                Texelg = Clamp01(Texelg);
-                Texelb = Clamp01(Texelb);
-
-                //NOTE(rahul): Load Destinatioln
-                r32 Destr = (r32) ((*Pixel >> RED_PLACE) & 0xFF);
-                r32 Destg = (r32) ((*Pixel >> GREEN_PLACE) & 0xFF);
-                r32 Destb = (r32) ((*Pixel >> BLUE_PLACE) & 0xFF);
-                r32 Desta = (r32) ((*Pixel >> 24) & 0xFF);
-
-                //NOTE(rahul): SRGB to  Linear
-                Destr = Square(Inv255 * Destr);
-                Destg = Square(Inv255 * Destg);
-                Destb = Square(Inv255 * Destb);
-                Desta = Inv255 * Desta;
-
-                //NOTE(rahul): Destination blend
-                r32 InvTexelA = 1.0f - Texela;
-                r32 Blendedr  = InvTexelA * Destr + Texelr;
-                r32 Blendedg  = InvTexelA * Destg + Texelg;
-                r32 Blendedb  = InvTexelA * Destb + Texelb;
-                r32 Blendeda  = InvTexelA * Desta + Texela;
-
-                //NOTE(rahul):Linear to SRGB
-                Blendedr = 255.f * SquareRoot(Blendedr);
-                Blendedg = 255.f * SquareRoot(Blendedg);
-                Blendedb = 255.f * SquareRoot(Blendedb);
-                Blendeda = 255.f * Blendeda;
-
-                //NOTE(rahul): Repack
-                *Pixel = (((u32) (Blendedr + 0.5f) << RED_PLACE) |
-                          ((u32) (Blendedg + 0.5f) << GREEN_PLACE) |
-                          ((u32) (Blendedb + 0.5f) << BLUE_PLACE)) |
-                         ((u32) (Blendeda + 0.5f) << 24);
-                END_TIMED_BLOCK(FillPixel);
+                    //NOTE(rahul): Load Destinatioln
+                    M(Destr, I) = (r32) ((*(Pixel + I) >> RED_PLACE) & 0xFF);
+                    M(Destg, I) = (r32) ((*(Pixel + I) >> GREEN_PLACE) & 0xFF);
+                    M(Destb, I) = (r32) ((*(Pixel + I) >> BLUE_PLACE) & 0xFF);
+                    M(Desta, I) = (r32) ((*(Pixel + I) >> 24) & 0xFF);
+                }
             }
-            ++Pixel;
 
-            END_TIMED_BLOCK(TestPixel);
+            TexelAr = mmSquare(_mm_mul_ps(Inv255_4x, TexelAr));
+            TexelAg = mmSquare(_mm_mul_ps(Inv255_4x, TexelAg));
+            TexelAb = mmSquare(_mm_mul_ps(Inv255_4x, TexelAb));
+            TexelAa = _mm_mul_ps(Inv255_4x, TexelAa);
+
+            TexelBr = mmSquare(_mm_mul_ps(Inv255_4x, TexelBr));
+            TexelBg = mmSquare(_mm_mul_ps(Inv255_4x, TexelBg));
+            TexelBb = mmSquare(_mm_mul_ps(Inv255_4x, TexelBb));
+            TexelBa = _mm_mul_ps(Inv255_4x, TexelBa);
+
+            TexelCr = mmSquare(_mm_mul_ps(Inv255_4x, TexelCr));
+            TexelCg = mmSquare(_mm_mul_ps(Inv255_4x, TexelCg));
+            TexelCb = mmSquare(_mm_mul_ps(Inv255_4x, TexelCb));
+            TexelCa = _mm_mul_ps(Inv255_4x, TexelCa);
+
+            TexelDr = mmSquare(_mm_mul_ps(Inv255_4x, TexelDr));
+            TexelDg = mmSquare(_mm_mul_ps(Inv255_4x, TexelDg));
+            TexelDb = mmSquare(_mm_mul_ps(Inv255_4x, TexelDb));
+            TexelDa = _mm_mul_ps(Inv255_4x, TexelDa);
+
+            //NOTE(rahul): Bilinear texture blend
+            __m128 ifX = _mm_sub_ps(One, fX);
+            __m128 ifY = _mm_sub_ps(One, fY);
+            __m128 l0  = _mm_mul_ps(ifY, ifX);
+            __m128 l1  = _mm_mul_ps(ifY, fX);
+            __m128 l2  = _mm_mul_ps(fY, ifX);
+            __m128 l3  = _mm_mul_ps(fY, fX);
+
+            __m128 Texelr = _mm_add_ps(_mm_add_ps(_mm_mul_ps(l0, TexelAr), _mm_mul_ps(l1, TexelBr)),
+                                       _mm_add_ps(_mm_mul_ps(l2, TexelCr), _mm_mul_ps(l3, TexelDr)));
+            __m128 Texelg = _mm_add_ps(_mm_add_ps(_mm_mul_ps(l0, TexelAg), _mm_mul_ps(l1, TexelBg)),
+                                       _mm_add_ps(_mm_mul_ps(l2, TexelCg), _mm_mul_ps(l3, TexelDg)));
+            __m128 Texelb = _mm_add_ps(_mm_add_ps(_mm_mul_ps(l0, TexelAb), _mm_mul_ps(l1, TexelBb)),
+                                       _mm_add_ps(_mm_mul_ps(l2, TexelCb), _mm_mul_ps(l3, TexelDb)));
+            __m128 Texela = _mm_add_ps(_mm_add_ps(_mm_mul_ps(l0, TexelAa), _mm_mul_ps(l1, TexelBa)),
+                                       _mm_add_ps(_mm_mul_ps(l2, TexelCa), _mm_mul_ps(l3, TexelDa)));
+
+            //NOTE(rahul): Modulate by incoming color
+            Texelr = _mm_mul_ps(Texelr, Colorr_4x);
+            Texelg = _mm_mul_ps(Texelg, Colorg_4x);
+            Texelb = _mm_mul_ps(Texelb, Colorb_4x);
+            Texela = _mm_mul_ps(Texela, Colora_4x);
+
+            //NOTE(rahul): Clamp colors to valid range
+            Texelr = _mm_min_ps(_mm_max_ps(Texelr, Zero), One);
+            Texelg = _mm_min_ps(_mm_max_ps(Texelg, Zero), One);
+            Texelb = _mm_min_ps(_mm_max_ps(Texelb, Zero), One);
+
+            //NOTE(rahul): SRGB to  Linear
+            Destr = mmSquare(_mm_mul_ps(Inv255_4x, Destr));
+            Destg = mmSquare(_mm_mul_ps(Inv255_4x, Destg));
+            Destb = mmSquare(_mm_mul_ps(Inv255_4x, Destb));
+            Desta = _mm_mul_ps(Inv255_4x, Desta);
+
+            //NOTE(rahul): Destination blend
+            __m128 InvTexelA = _mm_sub_ps(One, Texela);
+            Blendedr         = _mm_add_ps(_mm_mul_ps(InvTexelA, Destr), Texelr);
+            Blendedg         = _mm_add_ps(_mm_mul_ps(InvTexelA, Destg), Texelg);
+            Blendedb         = _mm_add_ps(_mm_mul_ps(InvTexelA, Destb), Texelb);
+            Blendeda         = _mm_add_ps(_mm_mul_ps(InvTexelA, Desta), Texela);
+
+            //NOTE(rahul):Linear to SRGB
+            Blendedr = _mm_mul_ps(One255_4x, _mm_sqrt_ps(Blendedr));
+            Blendedg = _mm_mul_ps(One255_4x, _mm_sqrt_ps(Blendedg));
+            Blendedb = _mm_mul_ps(One255_4x, _mm_sqrt_ps(Blendedb));
+            Blendeda = _mm_mul_ps(One255_4x, Blendeda);
+
+            for (int I = 0; I < 4; ++I)
+            {
+                if (ShouldFill[I])
+                {
+                    //NOTE(rahul): Repack
+                    *(Pixel + I) = (((u32) (M(Blendedr, I) + 0.5f) << RED_PLACE) |
+                                    ((u32) (M(Blendedg, I) + 0.5f) << GREEN_PLACE) |
+                                    ((u32) (M(Blendedb, I) + 0.5f) << BLUE_PLACE)) |
+                                   ((u32) (M(Blendeda, I) + 0.5f) << 24);
+                }
+            }
+            Pixel += 4;
         }
         Row += Buffer->Pitch;
     }
+    END_TIMED_BLOCK_COUNTED(ProcessPixel, (MaxX - MinX + 1) * (MaxY - MinY + 1));
+
     END_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
 }
 
@@ -436,8 +510,6 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
 
         for (s32 X = MinX; X < MaxX; ++X)
         {
-            BEGIN_TIMED_BLOCK(TestPixel);
-
             v2 PixelP = V2i(X, Y);
             v2 d      = PixelP - Origin;
 
@@ -451,8 +523,6 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                 (EdgeTest2 < 0) &&
                 (EdgeTest3 < 0))
             {
-                BEGIN_TIMED_BLOCK(FillPixel);
-
                 v2 ScreenSpaceUV = V2(InvWidthMax * X, FixedCastY);
 
                 r32 ZDiff = PixelsToMeter * ((r32) Y - OriginY);
@@ -555,11 +625,8 @@ DrawRectangleSlowly(loaded_bitmap *Buffer, v2 Origin, v2 XAxis, v2 YAxis, v4 Col
                           ((u32) (Blended255.g + 0.5f) << GREEN_PLACE) |
                           ((u32) (Blended255.b + 0.5f) << BLUE_PLACE)) |
                          ((u32) (Blended255.a + 0.5f) << 24);
-                END_TIMED_BLOCK(FillPixel);
             }
             ++Pixel;
-
-            END_TIMED_BLOCK(TestPixel);
         }
         Row += Buffer->Pitch;
     }
