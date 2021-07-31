@@ -1266,8 +1266,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             move_spec MoveSpec      = DefaultMoveSpec();
             v3        accelOfEntity = {};
 
-            render_basis *Basis       = PushStruct(&TranState->TranArena, render_basis);
-            RenderGroup->DefaultBasis = Basis;
+            render_basis *PBasis = PushStruct(&TranState->TranArena, render_basis);
+            RenderGroup->DefaultBasis = PBasis;
 
             v3 CameraRelativeGroundP = GetEntityGroundPoint(Entity) - CameraP;
 
@@ -1446,7 +1446,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 MoveEntity(GameState, SimRegion, Entity, accelOfEntity, &MoveSpec, Input->deltatForFrame);
             }
 
-            Basis->P = GetEntityGroundPoint(Entity);
+            PBasis->P = GetEntityGroundPoint(Entity);
         }
     }
     RenderGroup->GlobalAlpha = 1.f;
