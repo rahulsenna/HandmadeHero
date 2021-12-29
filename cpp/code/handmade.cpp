@@ -140,9 +140,9 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_entire_file *ReadEntire
 #endif
                 Texel = Linear1ToSRGB255(Texel);
 
-                *Source = (((u32) (Texel.r + 0.5f) << RED_PLACE) |
-                           ((u32) (Texel.g + 0.5f) << GREEN_PLACE) |
-                           ((u32) (Texel.b + 0.5f) << BLUE_PLACE)) |
+                *Source = (((u32) (Texel.r + 0.5f) << RED_SPACE) |
+                           ((u32) (Texel.g + 0.5f) << GREEN_SPACE) |
+                           ((u32) (Texel.b + 0.5f) << BLUE_SPACE)) |
                           ((u32) (Texel.a + 0.5f) << 24);
                 ++Source;
             }
@@ -538,7 +538,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
         }
 
 #endif
-    RenderGroupToOutput(RenderGroup, Buffer);
+    TiledRenderGroupToOutput(RenderGroup, Buffer);
     EndTempMemory(RenderMemory);
 }
 
@@ -601,9 +601,9 @@ MakeSphereNormalMap(loaded_bitmap *Bitmap, r32 Roughness)
                           255.f * (.5f * (Normal.z + 1.f)),
                           Roughness * 255.f);
 
-            *Pixel++ = (((u32) (Color.r + 0.5f) << RED_PLACE) |
-                        ((u32) (Color.g + 0.5f) << GREEN_PLACE) |
-                        ((u32) (Color.b + 0.5f) << BLUE_PLACE)) |
+            *Pixel++ = (((u32) (Color.r + 0.5f) << RED_SPACE) |
+                        ((u32) (Color.g + 0.5f) << GREEN_SPACE) |
+                        ((u32) (Color.b + 0.5f) << BLUE_SPACE)) |
                        ((u32) (Color.a + 0.5f) << 24);
         }
         Row += Bitmap->Pitch;
@@ -643,9 +643,9 @@ MakeSphereDiffuseMap(loaded_bitmap *Bitmap)
                           Alpha * BaseColor.b,
                           Alpha);
 
-            *Pixel++ = (((u32) (Color.r + 0.5f) << RED_PLACE) |
-                        ((u32) (Color.g + 0.5f) << GREEN_PLACE) |
-                        ((u32) (Color.b + 0.5f) << BLUE_PLACE)) |
+            *Pixel++ = (((u32) (Color.r + 0.5f) << RED_SPACE) |
+                        ((u32) (Color.g + 0.5f) << GREEN_SPACE) |
+                        ((u32) (Color.b + 0.5f) << BLUE_SPACE)) |
                        ((u32) (Color.a + 0.5f) << 24);
         }
         Row += Bitmap->Pitch;
@@ -1010,8 +1010,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
 
         GameState->TestDiffuse = MakeEmptyBitmap(&TranState->TranArena, 256, 256);
-        DrawRectangle(&GameState->TestDiffuse, V2(0, 0), V2i(GameState->TestDiffuse.Width, GameState->TestDiffuse.Height),
-                      V4(.5f, .5f, .5f, 1.f));
+        
         GameState->TestNormal = MakeEmptyBitmap(&TranState->TranArena, GameState->TestDiffuse.Width,
                                                 GameState->TestDiffuse.Height);
         MakeSphereNormalMap(&GameState->TestNormal, 0.f);
@@ -1132,7 +1131,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     DrawBuffer->Pitch          = Buffer->Pitch;
     DrawBuffer->Memory         = Buffer->Memory;
 
-    render_group *RenderGroup = AllocateRenderGroup(&TranState->TranArena, Megabytes(4), DrawBuffer->Width, DrawBuffer->Height);
+    render_group *RenderGroup = 
+    AllocateRenderGroup(&TranState->TranArena, Megabytes(4), DrawBuffer->Width, DrawBuffer->Height);
 
     Clear(RenderGroup, V4(.25f, 0.25f, .25f, 0.f));
 
@@ -1479,7 +1479,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 v2 MinP = V2i(X, Y);
                 v2 MaxP = MinP + V2i(CheckerdWidth, CheckerdHeight);
 
-                DrawRectangle(LOD, MinP, MaxP, Color);
+                // DrawRectangle(LOD, MinP, MaxP, Color);
             }
         }
     }
@@ -1487,7 +1487,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     TranState->EnvMaps[1].Pz = 0.f;
     TranState->EnvMaps[2].Pz = 8.f;
 
-    DrawBitmap(&TranState->EnvMaps[0].LOD[0], &TranState->GroundBuffers[TranState->GroundBufferCount - 1].Bitmap, 130.f, 100.f);
+    DrawBitmap(&TranState->EnvMaps[0].LOD[0],
+     &TranState->GroundBuffers[TranState->GroundBufferCount - 1].Bitmap, 130.f, 100.f);
 
 #if 0
     GameState->Time += Input->deltatForFrame;
@@ -1512,11 +1513,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #else
     v4 Color = V4(1, 1, 1, 1);
 #endif
-    render_entry_coordinate_system *C = GetCoordinateSystem(RenderGroup, Disp + Origin - .5f * XAxis - .5f * YAxis,
-                                                            XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
-                                                            TranState->EnvMaps + 2,
-                                                            TranState->EnvMaps + 1,
-                                                            TranState->EnvMaps + 0);
+    render_entry_coordinate_system *C = 
+    GetCoordinateSystem(RenderGroup, Disp + Origin - .5f * XAxis - .5f * YAxis,
+                                                        XAxis, YAxis, Color, &GameState->TestDiffuse, &GameState->TestNormal,
+                                                        TranState->EnvMaps + 2,
+                                                        TranState->EnvMaps + 1,
+                                                        TranState->EnvMaps + 0);
 
     v2 MapP = {0.f, 0.f};
     for (u32 MapIndex = 0; MapIndex < ArrayCount(TranState->EnvMaps); ++MapIndex)
@@ -1544,7 +1546,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
 #endif
 #endif
-    RenderGroupToOutput(RenderGroup, DrawBuffer);
+    TiledRenderGroupToOutput(RenderGroup, DrawBuffer);
 
     EndSim(GameState, SimRegion);
     EndTempMemory(SimMemory);

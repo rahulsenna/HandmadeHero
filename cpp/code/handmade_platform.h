@@ -7,6 +7,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <limits.h>
 #include <float.h>
 
 #ifndef COMPILER_MSVC
@@ -29,6 +30,10 @@ extern "C" {
 
 #if COMPILER_MSVC
 #include <intrin.h>
+#elif COMPILER_LLVM
+#include <x86intrin.h>
+#else
+#error SSE2 Not available for this compiler yet!!!
 #endif
 
 #define WIDTH           960
@@ -48,6 +53,9 @@ typedef int16_t s16;
 typedef int32_t s32;
 typedef int64_t s64;
 typedef int32_t b32;
+
+typedef intptr_t sptr;
+typedef uintptr_t uptr;
 
 typedef float  r32;
 typedef double r64;
@@ -131,8 +139,12 @@ extern struct game_memory *DebugGlobalMemory;
 
 #if _MSC_VER
 #define BEGIN_TIMED_BLOCK(ID) u64 StartCycleCount##ID = __rdtsc();
-#define END_TIMED_BLOCK(ID)   DebugGlobalMemory->Counters[DebugCycleCounter_##ID].CycleCount += __rdtsc() - StartCycleCount##ID; ++DebugGlobalMemory->Counters[DebugCycleCounter_##ID].HitCount;
-#define END_TIMED_BLOCK_COUNTED(ID, Count)   DebugGlobalMemory->Counters[DebugCycleCounter_##ID].CycleCount += __rdtsc() - StartCycleCount##ID; DebugGlobalMemory->Counters[DebugCycleCounter_##ID].HitCount += (Count);
+#define END_TIMED_BLOCK(ID)                                                                            \
+    DebugGlobalMemory->Counters[DebugCycleCounter_##ID].CycleCount += __rdtsc() - StartCycleCount##ID; \
+    ++DebugGlobalMemory->Counters[DebugCycleCounter_##ID].HitCount;
+#define END_TIMED_BLOCK_COUNTED(ID, Count)                                                             \
+    DebugGlobalMemory->Counters[DebugCycleCounter_##ID].CycleCount += __rdtsc() - StartCycleCount##ID; \
+    DebugGlobalMemory->Counters[DebugCycleCounter_##ID].HitCount += (Count);
 #else
 #define BEGIN_TIMED_BLOCK(ID)
 #define END_TIMED_BLOCK(ID)
