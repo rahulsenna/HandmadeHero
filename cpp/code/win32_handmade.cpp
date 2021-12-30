@@ -951,6 +951,19 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
     }
 }
 
+DWORD WINAPI
+ThreadProc(LPVOID Parameter)
+{
+    char *StringToPrint = (char *) Parameter;
+
+    for (;;)
+    {
+        OutputDebugString(StringToPrint);
+        Sleep(1000);
+    }
+    // return (0);
+}
+
 int CALLBACK
 WinMain(
 HINSTANCE hInstance,
@@ -958,6 +971,11 @@ HINSTANCE hPrevInstance,
 LPSTR     lpCmdLine,
 int       nShowCmd)
 {
+    char * Param = "Thread Started!\n";
+    DWORD  ThreadID;
+    HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, Param, 0, &ThreadID);
+    CloseHandle(ThreadHandle);
+
     win32_state Win32State = {};
 
     Win32GetEXEFilename(&Win32State);
