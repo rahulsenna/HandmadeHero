@@ -951,15 +951,44 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
     }
 }
 
+struct work_queue_entry
+{
+    char *StringToPring;
+};
+
+global_variable u32 NextEntryToDo;
+global_variable u32 EntryCount;
+
+work_queue_entry Entries[256];
+
+internal void
+PushString(char *String)
+{
+    Assert(EntryCount < ArrayCount(Entries));
+    work_queue_entry *Entry = Entries + EntryCount++;
+    Entry->StringToPring    = String;
+}
+
+struct win32_thread_info
+{
+    s32 LogicalThreadIndex;
+};
+
 DWORD WINAPI
 ThreadProc(LPVOID Parameter)
 {
-    char *StringToPrint = (char *) Parameter;
+    win32_thread_info *ThreadInfo = (win32_thread_info *) Parameter;
 
     for (;;)
     {
-        OutputDebugString(StringToPrint);
-        Sleep(1000);
+        if (NextEntryToDo < EntryCount)
+        {
+            Sleep(100);
+            work_queue_entry *Entry = Entries + NextEntryToDo++;
+            char              Buffer[256];
+            wsprintf(Buffer, "Thread %u: %s\n", ThreadInfo->LogicalThreadIndex, Entry->StringToPring);
+            OutputDebugString(Buffer);
+        }
     }
     // return (0);
 }
@@ -971,10 +1000,28 @@ HINSTANCE hPrevInstance,
 LPSTR     lpCmdLine,
 int       nShowCmd)
 {
-    char * Param = "Thread Started!\n";
-    DWORD  ThreadID;
-    HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, Param, 0, &ThreadID);
-    CloseHandle(ThreadHandle);
+    win32_thread_info ThreadInfo[4];
+
+    for (s32 ThreadIndex = 0; ThreadIndex < ArrayCount(ThreadInfo); ThreadIndex++)
+    {
+        win32_thread_info *Info  = ThreadInfo + ThreadIndex;
+        Info->LogicalThreadIndex = ThreadIndex;
+
+        DWORD  ThreadID;
+        HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, Info, 0, &ThreadID);
+        CloseHandle(ThreadHandle);
+    }
+
+    PushString("String 0");
+    PushString("String 1");
+    PushString("String 2");
+    PushString("String 3");
+    PushString("String 4");
+    PushString("String 5");
+    PushString("String 6");
+    PushString("String 7");
+    PushString("String 8");
+    PushString("String 9");
 
     win32_state Win32State = {};
 
