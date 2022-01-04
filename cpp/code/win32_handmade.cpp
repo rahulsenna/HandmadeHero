@@ -951,27 +951,38 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
     }
 }
 
+#define CompletePastWritesBeforeFutureWrites \
+    _WriteBarrier();                         \
+    _mm_sfence()
+#define CompletePastReadsBeforeFutureReads _ReadBarrier()
+
 struct work_queue_entry
 {
     char *StringToPring;
 };
 
-global_variable u32 NextEntryToDo;
-global_variable u32 EntryCount;
+global_variable u32 volatile NextEntryToDo;
+global_variable u32 volatile EntryCount;
+global_variable u32 volatile EntryCompletionCount;
 
 work_queue_entry Entries[256];
 
 internal void
-PushString(char *String)
+PushString(HANDLE Semaphore, char *String)
 {
     Assert(EntryCount < ArrayCount(Entries));
-    work_queue_entry *Entry = Entries + EntryCount++;
+    work_queue_entry *Entry = Entries + EntryCount;
     Entry->StringToPring    = String;
+
+    CompletePastWritesBeforeFutureWrites;
+    ++EntryCount;
+    ReleaseSemaphore(Semaphore, 1, 0);
 }
 
 struct win32_thread_info
 {
-    s32 LogicalThreadIndex;
+    s32    LogicalThreadIndex;
+    HANDLE SemaphoreHandle;
 };
 
 DWORD WINAPI
@@ -981,13 +992,19 @@ ThreadProc(LPVOID Parameter)
 
     for (;;)
     {
+        // InterlockedCompareExchange(&NextEntryToDo, NextEntryToDo++, EntryCount);
         if (NextEntryToDo < EntryCount)
         {
-            Sleep(100);
-            work_queue_entry *Entry = Entries + NextEntryToDo++;
+            s32 EntryIndex = InterlockedIncrement((LONG volatile *) &NextEntryToDo) - 1;
+            CompletePastReadsBeforeFutureReads;
+            work_queue_entry *Entry = Entries + EntryIndex;
             char              Buffer[256];
             wsprintf(Buffer, "Thread %u: %s\n", ThreadInfo->LogicalThreadIndex, Entry->StringToPring);
             OutputDebugString(Buffer);
+            InterlockedIncrement((LONG volatile *) &EntryCompletionCount);
+        } else
+        {
+            WaitForSingleObjectEx(ThreadInfo->SemaphoreHandle, INFINITE, FALSE);
         }
     }
     // return (0);
@@ -1002,26 +1019,51 @@ int       nShowCmd)
 {
     win32_thread_info ThreadInfo[4];
 
-    for (s32 ThreadIndex = 0; ThreadIndex < ArrayCount(ThreadInfo); ThreadIndex++)
+    s32    ThreadCount     = ArrayCount(ThreadInfo);
+    s32    InitialCount    = 0;
+    HANDLE SemaphoreHandle = CreateSemaphoreEx(0,
+                                               InitialCount, ThreadCount,
+                                               0, 0, SEMAPHORE_ALL_ACCESS);
+
+    for (s32 ThreadIndex = 0; ThreadIndex < ThreadCount; ThreadIndex++)
     {
+        Sleep(100);
         win32_thread_info *Info  = ThreadInfo + ThreadIndex;
         Info->LogicalThreadIndex = ThreadIndex;
+        Info->SemaphoreHandle    = SemaphoreHandle;
 
         DWORD  ThreadID;
         HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, Info, 0, &ThreadID);
         CloseHandle(ThreadHandle);
     }
 
-    PushString("String 0");
-    PushString("String 1");
-    PushString("String 2");
-    PushString("String 3");
-    PushString("String 4");
-    PushString("String 5");
-    PushString("String 6");
-    PushString("String 7");
-    PushString("String 8");
-    PushString("String 9");
+    PushString(SemaphoreHandle, "String A0");
+    PushString(SemaphoreHandle, "String A1");
+    PushString(SemaphoreHandle, "String A2");
+    PushString(SemaphoreHandle, "String A3");
+    PushString(SemaphoreHandle, "String A4");
+    PushString(SemaphoreHandle, "String A5");
+    PushString(SemaphoreHandle, "String A6");
+    PushString(SemaphoreHandle, "String A7");
+    PushString(SemaphoreHandle, "String A8");
+    PushString(SemaphoreHandle, "String A9");
+
+    Sleep(5000);
+
+    PushString(SemaphoreHandle, "String B0");
+    PushString(SemaphoreHandle, "String B1");
+    PushString(SemaphoreHandle, "String B2");
+    PushString(SemaphoreHandle, "String B3");
+    PushString(SemaphoreHandle, "String B4");
+    PushString(SemaphoreHandle, "String B5");
+    PushString(SemaphoreHandle, "String B6");
+    PushString(SemaphoreHandle, "String B7");
+    PushString(SemaphoreHandle, "String B8");
+    PushString(SemaphoreHandle, "String B9");
+
+
+    while (EntryCompletionCount != EntryCount)
+        ;
 
     win32_state Win32State = {};
 
