@@ -1010,8 +1010,8 @@ struct tile_render_work
     rectangle2i    ClipRect;
 };
 
-internal void
-DoTileRenderWork(void *Data)
+internal
+PLATFORM_WORK_QUEUE_CALLBACK(DoTileRenderWork)
 {
     tile_render_work *Work = (tile_render_work *) Data;
     RenderGroupToOutput(Work->RenderGroup, Work->OutputTarget, Work->ClipRect, true);
@@ -1019,8 +1019,8 @@ DoTileRenderWork(void *Data)
 }
 
 internal void
- TiledRenderGroupToOutput(//platform_work_queue *RenderQueue,
-    render_group *RenderGroup, loaded_bitmap *OutputTarget)
+TiledRenderGroupToOutput(platform_work_queue *RenderQueue,
+                         render_group *RenderGroup, loaded_bitmap *OutputTarget)
 {
     s32 const TileCountX = 4;
     s32 const TileCountY = 4;
@@ -1044,20 +1044,18 @@ internal void
             ClipRect.MinY = TileY * TileHeight + 4;
             ClipRect.MaxY = ClipRect.MinY + TileHeight - 4;
 
-            Work->ClipRect = ClipRect;
+            Work->ClipRect     = ClipRect;
             Work->OutputTarget = OutputTarget;
-            Work->RenderGroup = RenderGroup;
-
-            // RenderQueue->AddEntry(DoTileRenderWork, Work);
+            Work->RenderGroup  = RenderGroup;
+#if 1
+            PlatformAddEntry(RenderQueue, DoTileRenderWork, Work);
+#else
+            DoTileRenderWork(RenderQueue, Work);
+#endif            
         }
     }
 
-    // RenderQueue->CompleteAllWork(RenderQueue);
-    for (s32 WorkIndex = 0; WorkIndex < WorkCount; ++WorkIndex)
-    {
-        tile_render_work *Work = WorkArray + WorkIndex;
-        DoTileRenderWork(Work);
-    }
+    PlatformCompleteAllWork(RenderQueue);
 }
 
 internal render_group *

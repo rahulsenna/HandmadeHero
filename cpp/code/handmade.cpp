@@ -538,7 +538,7 @@ FillGroundChunk(transient_state *TranState, game_state *GameState,
         }
 
 #endif
-    TiledRenderGroupToOutput(RenderGroup, Buffer);
+    TiledRenderGroupToOutput(TranState->RenderQueue, RenderGroup, Buffer);
     EndTempMemory(RenderMemory);
 }
 
@@ -686,6 +686,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     game_state *GameState = (game_state *) Memory->PermanentStorage;
     if (!Memory->IsInitialized)
     {
+        PlatformAddEntry = Memory->PlatformAddEntry;
+        PlatformCompleteAllWork = Memory->PlatformCompleteAllWork;
         u32 TilesPerHeight = 9;
         u32 TilesPerWidth  = 17;
 
@@ -995,6 +997,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         TranState->GroundBufferCount = 64;// 128;
         TranState->GroundBuffers     = PushArray(&TranState->TranArena,
                                              TranState->GroundBufferCount, ground_buffer);
+
+        TranState->RenderQueue = Memory->HighPriorityQueue;
 
         for (u32 GroundBufferIndex = 0;
              GroundBufferIndex < TranState->GroundBufferCount;
@@ -1546,7 +1550,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
 #endif
 #endif
-    TiledRenderGroupToOutput(RenderGroup, DrawBuffer);
+    TiledRenderGroupToOutput(TranState->RenderQueue, RenderGroup, DrawBuffer);
 
     EndSim(GameState, SimRegion);
     EndTempMemory(SimMemory);

@@ -36,8 +36,8 @@ extern "C" {
 #error SSE2 Not available for this compiler yet!!!
 #endif
 
-#define WIDTH           960
-#define HEIGHT          540
+#define WIDTH           (960*2)
+#define HEIGHT          (540*2)
 
 #define internal        static
 #define global_variable static
@@ -150,6 +150,15 @@ extern struct game_memory *DebugGlobalMemory;
 #define END_TIMED_BLOCK(ID)
 #endif
 
+struct platform_work_queue;
+
+#define PLATFORM_WORK_QUEUE_CALLBACK(Name) void Name(platform_work_queue *Queue, void *Data)
+
+typedef PLATFORM_WORK_QUEUE_CALLBACK(platform_work_queue_callback);
+typedef void platform_add_entry(platform_work_queue *Queue, platform_work_queue_callback *Callback, void *Data);
+typedef void platform_complete_all_work(platform_work_queue *Queue);
+
+
 struct game_memory
 {
     b32   IsInitialized;
@@ -158,6 +167,10 @@ struct game_memory
 
     u64   TransientStorageSize;
     void *TransientStorage;
+
+    platform_work_queue *HighPriorityQueue;
+    platform_add_entry *PlatformAddEntry;
+    platform_complete_all_work *PlatformCompleteAllWork;
 
     debug_platform_read_entire_file * DEBUGPlatformReadEntireFile;
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;

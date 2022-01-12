@@ -198,6 +198,8 @@ struct transient_state
     ground_buffer *GroundBuffers;
     b32           IsInitialized;
 
+    platform_work_queue *RenderQueue;
+
     s32 EnvMapWidth;
     s32 EnvMapHeight;
     environment_map EnvMaps[3];
@@ -219,6 +221,10 @@ AddCollisionRule(game_state *GameState, u32 StorageIndexA, u32 StorageIndexB, b3
 
 internal void
 ClearCollisionRuleFor(game_state *GameState, u32 StorageIndex);
+
+global_variable platform_add_entry *PlatformAddEntry;
+global_variable platform_complete_all_work *PlatformCompleteAllWork;
+
 
 #define HANDMADEHERO_HANDMADE_H
 #endif //HANDMADEHERO_HANDMADE_H
