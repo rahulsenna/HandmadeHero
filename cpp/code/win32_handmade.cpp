@@ -56,7 +56,6 @@ CatStrings(size_t SourceACount, char *SourceA,
     }
 
     *Dest++  = 0;
-    r32 name = 3;
 }
 
 internal int
@@ -295,10 +294,10 @@ Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer, HDC DeviceContext, in
         int OffsetX = 10;
         int OffsetY = 10;
 
-        PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
-        PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
-        PatBlt(DeviceContext, 0, Buffer->Height + OffsetY, WindowWidth, WindowHeight - Buffer->Height, BLACKNESS);
-        PatBlt(DeviceContext, Buffer->Width + OffsetX, 0, WindowWidth - Buffer->Width, WindowHeight, BLACKNESS);
+        // PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+        // PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+        // PatBlt(DeviceContext, 0, Buffer->Height + OffsetY, WindowWidth, WindowHeight - Buffer->Height, BLACKNESS);
+        // PatBlt(DeviceContext, Buffer->Width + OffsetX, 0, WindowWidth - Buffer->Width, WindowHeight, BLACKNESS);
 
         StretchDIBits(DeviceContext,
                       OffsetX, OffsetY, Buffer->Width, Buffer->Height,
@@ -975,6 +974,12 @@ struct platform_work_queue
     platform_work_queue_entry Entries[256];
 };
 
+struct win32_thread_info
+{
+    s32                  LogicalThreadIndex;
+    platform_work_queue *Queue;
+};
+
 internal void
 Win32AddEntry(platform_work_queue *Queue, platform_work_queue_callback *Callback, void *Data)
 {
@@ -1040,11 +1045,6 @@ PLATFORM_WORK_QUEUE_CALLBACK(DoWorkerWork)
     OutputDebugStringA(Buffer);
 }
 
-struct win32_thread_info
-{
-    s32                  LogicalThreadIndex;
-    platform_work_queue *Queue;
-};
 
 DWORD WINAPI
 ThreadProc(LPVOID Parameter)
@@ -1088,27 +1088,27 @@ int       nShowCmd)
         CloseHandle(ThreadHandle);
     }
 
-    Win32AddEntry(&Queue, DoWorkerWork, "String A0");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A1");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A2");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A3");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A4");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A5");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A6");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A7");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A8");
-    Win32AddEntry(&Queue, DoWorkerWork, "String A9");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A0");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A1");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A2");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A3");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A4");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A5");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A6");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A7");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A8");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String A9");
 
-    Win32AddEntry(&Queue, DoWorkerWork, "String B0");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B1");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B2");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B3");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B4");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B5");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B6");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B7");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B8");
-    Win32AddEntry(&Queue, DoWorkerWork, "String B9");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B0");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B1");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B2");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B3");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B4");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B5");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B6");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B7");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B8");
+    Win32AddEntry(&Queue, DoWorkerWork, (void *) "String B9");
 
     Win32CompleteAllWork(&Queue);
 
@@ -1140,6 +1140,11 @@ int       nShowCmd)
 
     WNDCLASS WindowClass = {};
     Win32ResizeDIBSection(&GlobalBackBuffer, WIDTH, HEIGHT);
+             game_offscreen_buffer Buffer = {};
+                        Buffer.Height                = GlobalBackBuffer.Height;
+                        Buffer.Width                 = GlobalBackBuffer.Width;
+                        Buffer.Pitch                 = GlobalBackBuffer.Pitch;
+                        Buffer.Memory                = GlobalBackBuffer.Memory;
 
     WindowClass.style       = CS_VREDRAW | CS_HREDRAW;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
@@ -1423,11 +1428,7 @@ int       nShowCmd)
 
                         thread_context Thread = {};
 
-                        game_offscreen_buffer Buffer = {};
-                        Buffer.Height                = GlobalBackBuffer.Height;
-                        Buffer.Width                 = GlobalBackBuffer.Width;
-                        Buffer.Pitch                 = GlobalBackBuffer.Pitch;
-                        Buffer.Memory                = GlobalBackBuffer.Memory;
+               
 
                         if (Win32State.InputRecordingIndex)
                         {
@@ -1595,10 +1596,10 @@ int       nShowCmd)
 #endif
 
 #if 1
-                        u64 EndCycleCount = __rdtsc();
-                        u64 CyclesElapsed = EndCycleCount - LastCycleCount;
-                        r32 FramePerSecond = 0.0f; //(r32) GlobalQPerfFrequency / (r32) CounterElapsed;
-                        r32 MCPF = (r32) (CyclesElapsed / (1000.0f * 1000.0f));
+                        u64 EndCycleCount  = __rdtsc();
+                        u64 CyclesElapsed  = EndCycleCount - LastCycleCount;
+                        r32 FramePerSecond = 0.0f;//(r32) GlobalQPerfFrequency / (r32) CounterElapsed;
+                        r32 MCPF           = (r32) (CyclesElapsed / (1000.0f * 1000.0f));
 
                         char FrameBuffer[256];
 
